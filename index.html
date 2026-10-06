@@ -1,0 +1,2662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INE Media Budget & Pacing Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              shopee: '#EE4D2D',
+              tiktok: '#000000',
+              facebook: '#1877F2',
+              lazada: '#0F146D',
+              ine: '#6366F1'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .badge-dday { background-color: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+    .badge-payday { background-color: #fef3c7; color: #d97706; border-color: #fcd34d; }
+    .badge-midmonth { background-color: #e0e7ff; color: #4f46e5; border-color: #a5b4fc; }
+    .badge-normal { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col font-sans">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-indigo-200">
+          INE
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 id="headerProfileTitle" class="text-lg font-bold text-slate-900 leading-tight">Project INE • Ads Budget</h1>
+            <button onclick="openRenameProfileModal()" class="text-slate-400 hover:text-indigo-600 text-xs" title="Rename active plan">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </button>
+          </div>
+          <p class="text-xs text-slate-500">Multi-Channel E-Commerce Campaign Pacing</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <!-- Auto-save Status Indicator -->
+        <div class="hidden sm:flex items-center space-x-1.5 text-xs text-slate-500 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg">
+          <span id="autoSaveIndicatorDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span id="autoSaveStatusText" class="font-medium text-[11px]">Auto-saved</span>
+        </div>
+
+        <!-- Profile Manager Bar -->
+        <div class="hidden md:flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl text-xs">
+          <span class="text-slate-500 font-semibold px-2">Plan:</span>
+          <select id="selectProfileList" onchange="switchPlanProfile(this.value)" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-xs">
+            <!-- Populated via JS -->
+          </select>
+          <button onclick="saveCurrentProfile()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-xs transition flex items-center space-x-1" title="Save plan changes">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+            <span>Save</span>
+          </button>
+          <button onclick="openNewProfileModal()" class="px-2 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-lg shadow-xs transition" title="Save as new copy">
+            + New
+          </button>
+          <button onclick="requestDeleteProfile()" class="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition" title="Delete this plan">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+
+        <div class="flex items-center bg-slate-100 rounded-lg p-1 text-xs font-semibold text-slate-600">
+          <button id="viewTabDaily" onclick="switchView('daily')" class="px-3 py-1.5 rounded-md bg-white text-indigo-600 shadow-sm transition">Daily Tracker</button>
+          <button id="viewTabChannels" onclick="switchView('channels')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">Channel Allocation</button>
+          <button id="viewTabWeights" onclick="switchView('weights')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">Day Type Planner</button>
+        </div>
+        <button onclick="openImportExcelModal()" class="inline-flex items-center px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-lg text-xs font-bold transition shadow-xs" title="Paste data directly from Excel or download template">
+          <svg class="w-4 h-4 mr-1.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Import from Excel
+        </button>
+        <button onclick="openDailySpendModal()" class="inline-flex items-center px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm shadow-indigo-300 transition">
+          <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Log Spend
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- KPI Summary Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <span>Monthly Target Budget</span>
+          <span class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiTargetBudget" class="text-2xl font-bold text-slate-900">฿0</span>
+          <span class="text-xs text-slate-400">Total Planned</span>
+        </div>
+        <div class="mt-2 text-xs text-slate-500 flex justify-between">
+          <span>Daily Planned Avg:</span>
+          <span id="kpiAvgDailyPlan" class="font-semibold text-slate-700">฿0</span>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <span>Actual Spent MTD</span>
+          <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiActualSpent" class="text-2xl font-bold text-slate-900">฿0</span>
+          <span id="kpiSpentPercent" class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">0%</span>
+        </div>
+        <div class="mt-2 text-xs text-slate-500 flex justify-between">
+          <span>Planned to Date:</span>
+          <span id="kpiPlannedToDate" class="font-semibold text-slate-700">฿0</span>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <span>Budget Variance</span>
+          <span id="kpiVarianceIcon" class="p-1.5 rounded-lg bg-slate-50 text-slate-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiVariance" class="text-2xl font-bold text-slate-900">฿0</span>
+          <span id="kpiVarianceTag" class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">On Track</span>
+        </div>
+        <div class="mt-2 text-xs text-slate-500 flex justify-between">
+          <span>Actual vs Planned MTD:</span>
+          <span id="kpiPacingRate" class="font-semibold text-slate-700">100.0%</span>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <span>Remaining Budget</span>
+          <span class="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="kpiRemaining" class="text-2xl font-bold text-slate-900">฿0</span>
+          <span id="kpiDaysLeft" class="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-medium">-- days left</span>
+        </div>
+        <div class="mt-2 text-xs text-slate-500 flex justify-between">
+          <span>Recommended Daily Spend:</span>
+          <span id="kpiRecDailySpend" class="font-semibold text-amber-700">฿0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Platform Quick Breakdown Pill Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="platformCardsContainer">
+      <!-- Generated dynamically in JS -->
+    </div>
+
+    <!-- Main View Section: Tabs for Daily Tracker, Channel Allocation, Day Type Planner -->
+    <div id="viewDailyTracker" class="space-y-6">
+      <!-- Chart Row -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Project INE • Daily Pacing (Plan vs Actual)</h2>
+            <p class="text-xs text-slate-500">Track day-to-day burn rate with campaign tier indicators (D-Day, Payday, Mid-Month, Normal)</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="inline-flex items-center text-xs font-medium text-slate-600">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-200 mr-1.5 border border-indigo-400"></span> Planned
+            </span>
+            <span class="inline-flex items-center text-xs font-medium text-slate-600">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-1.5"></span> Actual Spend
+            </span>
+          </div>
+        </div>
+        <div class="h-64 w-full">
+          <canvas id="dailyPacingChart"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="text-base font-bold text-slate-900">Daily Channel Budget & Spend Log</h3>
+              <span id="activeViewModeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Platform View</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Track daily burn, day tier weights, and channel allocations</p>
+          </div>
+          
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- View Mode Switcher -->
+            <div class="inline-flex p-1 bg-slate-100 rounded-lg text-xs font-semibold text-slate-600">
+              <button id="btnViewPlatform" onclick="setDailyTableViewMode('platform')" class="px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs transition">Platforms</button>
+              <button id="btnViewMatrix" onclick="setDailyTableViewMode('matrix')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition">All 10 Channels</button>
+              <button id="btnViewFocus" onclick="setDailyTableViewMode('focus')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition font-bold">Channel Tabs</button>
+            </div>
+
+            <!-- Single Channel Selector (shown when in focus view) -->
+            <select id="selectFocusChannel" onchange="selectChannelTab(this.value)" class="hidden text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium">
+              <!-- Dynamically populated -->
+            </select>
+
+            <!-- Day Type Filter -->
+            <div class="relative">
+              <select id="filterDayType" onchange="renderDailyTable()" class="text-xs bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium">
+                <option value="ALL">All Days</option>
+                <option value="DDAY">D-Days Only</option>
+                <option value="MIDMONTH">Mid-Month Only</option>
+                <option value="PAYDAY">Payday Only</option>
+                <option value="NORMAL">Normal Days Only</option>
+              </select>
+            </div>
+
+            <!-- Export CSV -->
+            <button onclick="exportSpendToCSV()" class="inline-flex items-center text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-medium transition" title="Export daily planned and actual spends to CSV">
+              <svg class="w-3.5 h-3.5 mr-1 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Export CSV
+            </button>
+
+            <!-- Paste from Excel Quick Button -->
+            <button onclick="openImportExcelModal()" class="inline-flex items-center text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg font-bold shadow-xs transition" title="Paste rows copied directly from Excel">
+              📋 Paste Excel
+            </button>
+
+            <!-- Auto Recalculate -->
+            <button onclick="autoDistributePlannedBudget()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-lg font-semibold transition" title="Recalculate daily planned amounts based on channel budgets and day type weights">
+              ⚡ Auto-Spread
+            </button>
+          </div>
+        </div>
+
+        <!-- Channel Navigation Tab Bar (Shown in Channel Tabs view mode) -->
+        <div id="channelTabsBarWrapper" class="hidden bg-slate-50/80 px-5 py-3 border-b border-slate-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Select Ad Channel Tab:</span>
+            <span id="activeChannelBadgePlatform" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-700">Shopee</span>
+          </div>
+          <div id="channelTabPillsContainer" class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+            <!-- Populated dynamically via JS -->
+          </div>
+
+          <!-- Channel Metric Summary Strip -->
+          <div id="channelSummaryStrip" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Channel Budget</span>
+              <div id="activeTabTotalBudget" class="text-base font-bold text-slate-900 mt-0.5">฿0</div>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Actual Spend MTD</span>
+              <div id="activeTabTotalSpent" class="text-base font-bold text-indigo-600 mt-0.5">฿0</div>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Remaining Budget</span>
+              <div id="activeTabRemaining" class="text-base font-bold text-emerald-600 mt-0.5">฿0</div>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+              <span class="text-[10px] font-bold text-slate-400 uppercase">Burn Rate (% Spent)</span>
+              <div id="activeTabBurnPct" class="text-base font-bold text-slate-800 mt-0.5">0.0%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-[640px]" id="dailyTableScrollWrapper">
+          <table class="w-full text-left border-collapse text-xs" id="dailyMainTable">
+            <thead class="bg-slate-50/95 sticky top-0 z-20 backdrop-blur-sm border-b border-slate-200 text-slate-600 font-semibold" id="dailyTableHead">
+              <!-- Dynamically populated based on mode -->
+            </thead>
+            <tbody id="dailyTableBody" class="divide-y divide-slate-100 text-slate-700 font-medium">
+              <!-- Dynamically populated -->
+            </tbody>
+            <tfoot class="bg-slate-100 font-bold text-slate-900 sticky bottom-0 z-20 border-t-2 border-slate-300" id="dailyTableFoot">
+              <!-- Dynamically populated -->
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="viewChannelAllocation" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Monthly Budget Setup Column -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 class="text-base font-bold text-slate-900">Project INE Total Budget</h2>
+              <p class="text-xs text-slate-500">Edit individual channels or change master total</p>
+            </div>
+            <span class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">฿</span>
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-semibold text-slate-600 uppercase">Monthly Master Budget (THB)</label>
+              <span id="budgetSumStatus" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Auto-Synced</span>
+            </div>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold">฿</span>
+              <input type="number" id="inputMasterBudget" onchange="updateMasterBudget(this.value)" class="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-lg font-bold text-slate-800" value="500000" step="5000">
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1.5">Changing master total scales all channels proportionally. Editing any channel below recalculates the master total automatically.</p>
+          </div>
+
+          <div class="pt-2">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-xs font-bold text-slate-600 uppercase">Set Channel Budgets</h3>
+              <button onclick="openAddChannelModal()" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-md transition flex items-center space-x-1">
+                <span>+ Add Channel</span>
+              </button>
+            </div>
+            <div class="space-y-3" id="channelListControl">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Channel Visual Distribution Chart & Summary -->
+        <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-base font-bold text-slate-900">Budget Share by Platform & Channel</h3>
+                <p class="text-xs text-slate-500">Live planned share vs actual spend distribution</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+              <div class="h-64 relative flex items-center justify-center">
+                <canvas id="channelSharePieChart"></canvas>
+              </div>
+              <div class="space-y-3" id="channelShareSummaryList">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap gap-2 items-center justify-between text-xs text-slate-500">
+            <span id="channelCountFooterNote">Calculated from active channels for Project INE</span>
+            <div class="space-x-3">
+              <button onclick="saveCurrentProfile()" class="text-emerald-700 hover:text-emerald-900 font-bold bg-emerald-50 px-2.5 py-1 rounded-md transition">Save Channel Plan</button>
+              <button onclick="resetDefaultChannels()" class="text-indigo-600 hover:text-indigo-800 font-semibold underline">Restore INE Defaults</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="viewDayTypePlanner" class="hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">Campaign Day Tier Weight Configuration</h2>
+            <p class="text-xs text-slate-500">Define weight multipliers for E-Commerce campaign events (D-Day, Mid-Month, Payday, Normal) to automatically distribute daily budgets</p>
+          </div>
+          <button onclick="autoDistributePlannedBudget()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-200 transition">
+            Apply Weights to Daily Plan
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          <!-- D-Day Card -->
+          <div class="p-4 rounded-xl border border-red-200 bg-red-50/30">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-red-100 text-red-700 border border-red-300">DDAY</span>
+              <span class="text-xs font-semibold text-slate-400">Mega Tier</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-2 font-medium">Double-digit campaign (e.g. 10.10, 11.11, 12.12)</p>
+            <div class="mt-4">
+              <label class="block text-[11px] font-semibold text-slate-500 uppercase">Weight Multiplier</label>
+              <input type="number" id="weightDday" value="4.0" step="0.5" min="1" onchange="updateWeights()" class="mt-1 w-full px-3 py-1.5 rounded-lg border border-red-300 font-bold text-slate-800 text-sm focus:ring-red-400 focus:outline-none">
+            </div>
+            <p class="text-[11px] text-red-600 mt-2" id="summaryDdayAlloc">Planned/Day: ~฿0</p>
+          </div>
+
+          <!-- Mid-Month Card -->
+          <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50/30">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-indigo-100 text-indigo-700 border border-indigo-300">MID-MONTH</span>
+              <span class="text-xs font-semibold text-slate-400">Mid Tier</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-2 font-medium">Mid-month flash events (usually 14th - 16th)</p>
+            <div class="mt-4">
+              <label class="block text-[11px] font-semibold text-slate-500 uppercase">Weight Multiplier</label>
+              <input type="number" id="weightMidmonth" value="2.2" step="0.1" min="1" onchange="updateWeights()" class="mt-1 w-full px-3 py-1.5 rounded-lg border border-indigo-300 font-bold text-slate-800 text-sm focus:ring-indigo-400 focus:outline-none">
+            </div>
+            <p class="text-[11px] text-indigo-600 mt-2" id="summaryMidmonthAlloc">Planned/Day: ~฿0</p>
+          </div>
+
+          <!-- Payday Card -->
+          <div class="p-4 rounded-xl border border-amber-200 bg-amber-50/30">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 border border-amber-300">PAYDAY</span>
+              <span class="text-xs font-semibold text-slate-400">Payday Tier</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-2 font-medium">Month-end salary rush (25th through month-end)</p>
+            <div class="mt-4">
+              <label class="block text-[11px] font-semibold text-slate-500 uppercase">Weight Multiplier</label>
+              <input type="number" id="weightPayday" value="2.8" step="0.1" min="1" onchange="updateWeights()" class="mt-1 w-full px-3 py-1.5 rounded-lg border border-amber-300 font-bold text-slate-800 text-sm focus:ring-amber-400 focus:outline-none">
+            </div>
+            <p class="text-[11px] text-amber-700 mt-2" id="summaryPaydayAlloc">Planned/Day: ~฿0</p>
+          </div>
+
+          <!-- Normal Day Card -->
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-slate-200 text-slate-700 border border-slate-300">NORMAL</span>
+              <span class="text-xs font-semibold text-slate-400">Evergreen</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-2 font-medium">Standard BAU (Business-As-Usual) pacing days</p>
+            <div class="mt-4">
+              <label class="block text-[11px] font-semibold text-slate-500 uppercase">Weight Multiplier (Base)</label>
+              <input type="number" id="weightNormal" value="1.0" step="0.1" min="0.5" onchange="updateWeights()" class="mt-1 w-full px-3 py-1.5 rounded-lg border border-slate-300 font-bold text-slate-800 text-sm focus:ring-slate-400 focus:outline-none">
+            </div>
+            <p class="text-[11px] text-slate-600 mt-2" id="summaryNormalAlloc">Planned/Day: ~฿0</p>
+          </div>
+        </div>
+
+        <div class="mt-8 border-t border-slate-200 pt-5">
+          <h3 class="text-sm font-bold text-slate-900 mb-3">Calendar Day Type Assignments (Current Month: 31 Days)</h3>
+          <p class="text-xs text-slate-500 mb-4">Click any day pill below to cycle through types: Normal &rarr; DDAY &rarr; Mid-Month &rarr; Payday.</p>
+          <div class="grid grid-cols-4 sm:grid-cols-7 md:grid-cols-10 gap-2" id="calendarDayTypeSelector">
+            <!-- Rendered in JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="spendModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900" id="modalTitle">Log Daily Spend • Day 1</h3>
+          <p class="text-xs text-slate-500" id="modalSubtitle">Update actual ad expenditure per channel</p>
+        </div>
+        <button onclick="closeDailySpendModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">✕</button>
+      </div>
+
+      <div class="py-4 overflow-y-auto space-y-4 flex-1">
+        <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-500 uppercase">Day Type</label>
+            <select id="modalDayTypeSelect" class="text-xs font-semibold rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-800 mt-1">
+              <option value="NORMAL">Normal Day</option>
+              <option value="DDAY">D-DAY</option>
+              <option value="MIDMONTH">Mid-Month</option>
+              <option value="PAYDAY">Payday</option>
+            </select>
+          </div>
+          <div class="text-right">
+            <span class="block text-[11px] font-bold text-slate-500 uppercase">Day Target Budget</span>
+            <input type="number" id="modalDailyPlanInput" class="w-28 text-right font-bold text-sm bg-white border border-slate-200 rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide">Channel Spend Breakdown (THB)</h4>
+        <div class="space-y-4" id="modalChannelInputGroups">
+          <!-- Injected via JS grouped by Shopee, Tiktok, Facebook, Lazada -->
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+        <div class="text-xs font-medium text-slate-500">
+          Total Logged for Day: <span id="modalTotalLogged" class="font-bold text-slate-900 text-sm ml-1">฿0</span>
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="closeDailySpendModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">Cancel</button>
+          <button onclick="saveModalSpend()" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 transition">Save Spend</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Excel Import & Paste Modal -->
+  <div id="importExcelModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-black">XLS</span>
+            Import Spend from Excel / Google Sheets
+          </h3>
+          <p class="text-xs text-slate-500">Copy cells in Excel (Ctrl+C) and paste below (Ctrl+V) or download the formula template</p>
+        </div>
+        <button onclick="closeImportExcelModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">✕</button>
+      </div>
+
+      <div class="py-4 overflow-y-auto space-y-4 flex-1">
+        <!-- Template Download Banner -->
+        <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+              <span>Ready-to-Use Excel Template with Formulas</span>
+              <span class="text-[10px] bg-emerald-200/80 text-emerald-900 px-1.5 py-0.5 rounded font-bold">Recommended</span>
+            </div>
+            <p class="text-[11px] text-emerald-800 mt-0.5">Pre-configured with Project INE's 10 channels, day weights, and automated variance formulas.</p>
+          </div>
+          <button onclick="downloadExcelTemplate()" class="shrink-0 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>Download Excel Template (.csv)</span>
+          </button>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-slate-700 uppercase tracking-wide">Paste Excel Data (Tab or Comma Separated):</label>
+            <span class="text-[11px] text-slate-400 font-medium">Headers are auto-detected</span>
+          </div>
+          <textarea id="excelPasteArea" rows="6" oninput="handleExcelPasteInput(this.value)" placeholder="Click here and press Ctrl+V to paste cells copied from Excel...
+Example columns:
+Day	Shopee Ad	Shopee Live Ad	Shopee GSA Ad	TikTok GMV MAX Ad	TikTok Live GMV MAX Ad	TikTok Awareness Ad	TikTok Follower Ad	Shopee CPAS Ad	Facebook Awareness Ad	Lazada Ad
+1	2500	1200	900	3200	1800	800	500	2400	800	1600" class="w-full text-xs font-mono p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 transition"></textarea>
+        </div>
+
+        <!-- Detection Status & Preview -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide">Import Preview & Channel Mapping</h4>
+            <span id="importParsedSummary" class="text-xs font-bold text-slate-500">0 days detected</span>
+          </div>
+          <div id="importPreviewWrapper" class="border border-slate-200 rounded-xl overflow-x-auto max-h-48 bg-slate-50">
+            <div class="p-6 text-center text-xs text-slate-400 italic" id="importEmptyNotice">
+              Paste your Excel cells above to preview the mapped channels and spending numbers before applying.
+            </div>
+            <table class="w-full text-left border-collapse text-[11px] hidden" id="importPreviewTable">
+              <thead class="bg-slate-100 text-slate-700 font-semibold sticky top-0" id="importPreviewHead"></thead>
+              <tbody id="importPreviewBody" class="divide-y divide-slate-200 text-slate-800"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+        <div class="text-xs text-slate-500 font-medium">
+          Total Imported Spend: <span id="importTotalAmount" class="font-bold text-emerald-700 text-sm ml-1">฿0</span>
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="closeImportExcelModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">Cancel</button>
+          <button id="btnConfirmImport" onclick="applyExcelImport()" disabled class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md shadow-emerald-200 transition">
+            Apply to Daily Tracker
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification element -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-xl flex items-center space-x-2 pointer-events-none">
+    <span id="toastIcon">✓</span>
+    <span id="toastMessage">Success</span>
+  </div>
+
+  <!-- Profile Rename Modal -->
+  <div id="profileRenameModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
+      <h3 class="text-base font-bold text-slate-900 mb-1">Rename Budget Plan</h3>
+      <p class="text-xs text-slate-500 mb-4">Give your budget plan a descriptive title</p>
+      <input type="text" id="inputProfileRename" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800" placeholder="e.g. October 2026 Mega Pacing">
+      <div class="mt-4 flex justify-end space-x-2">
+        <button onclick="closeModal('profileRenameModal')" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+        <button onclick="saveProfileRename()" class="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Profile Modal -->
+  <div id="newProfileModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
+      <h3 class="text-base font-bold text-slate-900 mb-1">Create New Plan Copy</h3>
+      <p class="text-xs text-slate-500 mb-4">Create a new budget scenario starting from current values</p>
+      <input type="text" id="inputNewProfileName" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800" placeholder="e.g. Q4 Aggressive Plan">
+      <div class="mt-4 flex justify-end space-x-2">
+        <button onclick="closeModal('newProfileModal')" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+        <button onclick="confirmCreateNewProfile()" class="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm">Create Plan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit / Rename Channel Modal -->
+  <div id="channelEditModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Edit Channel Details</h3>
+          <p class="text-xs text-slate-500">Update ad channel name or remove from budget</p>
+        </div>
+        <button onclick="closeModal('channelEditModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <input type="hidden" id="editChannelTargetId">
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Channel Name</label>
+          <input type="text" id="editChannelNameInput" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800 text-sm">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Platform</label>
+          <select id="editChannelPlatformSelect" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800 text-xs">
+            <option value="shopee">Shopee</option>
+            <option value="tiktok">TikTok Ad</option>
+            <option value="facebook">Facebook</option>
+            <option value="lazada">Lazada</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Monthly Planned Budget (THB)</label>
+          <input type="number" id="editChannelBudgetInput" min="0" step="1000" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 text-sm">
+        </div>
+      </div>
+      <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
+        <button onclick="requestDeleteChannelFromModal()" class="px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-lg flex items-center space-x-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          <span>Delete Channel</span>
+        </button>
+        <div class="flex space-x-2">
+          <button onclick="closeModal('channelEditModal')" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+          <button onclick="saveChannelModalEdit()" class="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add New Channel Modal -->
+  <div id="channelAddModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Add New Ad Channel</h3>
+          <p class="text-xs text-slate-500">Insert a custom channel under Shopee, TikTok, Facebook or Lazada</p>
+        </div>
+        <button onclick="closeModal('channelAddModal')" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Target Platform</label>
+          <select id="newChannelPlatformSelect" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800 text-xs">
+            <option value="shopee">Shopee</option>
+            <option value="tiktok">TikTok Ad</option>
+            <option value="facebook">Facebook</option>
+            <option value="lazada">Lazada</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Channel Name</label>
+          <input type="text" id="newChannelNameInput" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800 text-sm" placeholder="e.g. TikTok Shop Video Shopping Ad">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Monthly Planned Budget (THB)</label>
+          <input type="number" id="newChannelBudgetInput" min="0" step="5000" value="30000" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 text-sm">
+        </div>
+      </div>
+      <div class="mt-5 pt-3 border-t border-slate-100 flex justify-end space-x-2">
+        <button onclick="closeModal('channelAddModal')" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+        <button onclick="confirmAddNewChannel()" class="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm">Add & Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generic Safe Confirmation Dialog Modal (Replaces alert/confirm) -->
+  <div id="confirmActionModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
+      <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-base mb-3" id="confirmModalIcon">
+        !
+      </div>
+      <h3 class="text-base font-bold text-slate-900 mb-1" id="confirmModalTitle">Are you sure?</h3>
+      <p class="text-xs text-slate-500 mb-4" id="confirmModalMessage">This action cannot be undone.</p>
+      <div class="flex justify-end space-x-2">
+        <button onclick="closeModal('confirmActionModal')" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+        <button id="btnExecuteConfirmAction" class="px-4 py-1.5 text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-sm">Confirm</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const DEFAULT_PLATFORMS = {
+      shopee: {
+        id: 'shopee',
+        name: 'Shopee',
+        color: '#EE4D2D',
+        badgeBg: 'bg-orange-50',
+        textColor: 'text-orange-600',
+        channels: [
+          { id: 'shopee_ad', name: 'Shopee Ad', defaultWeight: 0.16, budget: 80000 },
+          { id: 'shopee_live', name: 'Shopee Live Ad', defaultWeight: 0.08, budget: 40000 },
+          { id: 'shopee_gsa', name: 'Shopee GSA Ad', defaultWeight: 0.06, budget: 30000 }
+        ]
+      },
+      tiktok: {
+        id: 'tiktok',
+        name: 'TikTok Ad',
+        color: '#000000',
+        badgeBg: 'bg-slate-100',
+        textColor: 'text-slate-900',
+        channels: [
+          { id: 'tiktok_gmv_max', name: 'TikTok GMV MAX Ad', defaultWeight: 0.20, budget: 100000 },
+          { id: 'tiktok_live_gmv', name: 'TikTok Live GMV MAX Ad', defaultWeight: 0.12, budget: 60000 },
+          { id: 'tiktok_awareness', name: 'TikTok Awareness Ad', defaultWeight: 0.05, budget: 25000 },
+          { id: 'tiktok_follower', name: 'TikTok Follower Ad', defaultWeight: 0.03, budget: 15000 }
+        ]
+      },
+      facebook: {
+        id: 'facebook',
+        name: 'Facebook',
+        color: '#1877F2',
+        badgeBg: 'bg-blue-50',
+        textColor: 'text-blue-600',
+        channels: [
+          { id: 'fb_shopee_cpas', name: 'Shopee CPAS Ad', defaultWeight: 0.15, budget: 75000 },
+          { id: 'fb_awareness', name: 'Facebook Awareness Ad', defaultWeight: 0.05, budget: 25000 }
+        ]
+      },
+      lazada: {
+        id: 'lazada',
+        name: 'Lazada',
+        color: '#0F146D',
+        badgeBg: 'bg-indigo-50',
+        textColor: 'text-indigo-900',
+        channels: [
+          { id: 'lazada_ad', name: 'Lazada Ad', defaultWeight: 0.10, budget: 50000 }
+        ]
+      }
+    };
+
+    let PLATFORMS = JSON.parse(JSON.stringify(DEFAULT_PLATFORMS));
+    let ALL_CHANNELS = [];
+
+    const STORAGE_KEY_PROFILES = 'INE_BUDGET_PROFILES_V2';
+    const STORAGE_KEY_ACTIVE = 'INE_ACTIVE_PROFILE_ID_V2';
+    const STORAGE_KEY_UI_STATE = 'INE_UI_STATE_V2';
+
+    let activeProfileId = 'default_plan';
+    let profileStore = {};
+    let autoSaveTimer = null;
+
+    const DAYS_IN_MONTH = 31;
+    let masterMonthlyBudget = 500000;
+    let currentTableMode = 'platform';
+    let expandedDays = new Set([1]);
+    let activeChannelTabId = 'shopee_ad';
+
+    let dayTypeWeights = {
+      DDAY: 4.0,
+      MIDMONTH: 2.2,
+      PAYDAY: 2.8,
+      NORMAL: 1.0
+    };
+
+    let dailyData = [];
+
+    function rebuildAllChannelsIndex() {
+      ALL_CHANNELS = [];
+      Object.values(PLATFORMS).forEach(platform => {
+        (platform.channels || []).forEach(ch => {
+          ALL_CHANNELS.push({
+            ...ch,
+            platformId: platform.id,
+            platformName: platform.name,
+            platformColor: platform.color,
+            platformBadgeBg: platform.badgeBg,
+            platformTextColor: platform.textColor
+          });
+        });
+      });
+    }
+
+    function updateAutoSaveUI(state = 'saved', customText = null) {
+      const dot = document.getElementById('autoSaveIndicatorDot');
+      const text = document.getElementById('autoSaveStatusText');
+      if (!dot || !text) return;
+
+      if (state === 'saving') {
+        dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
+        text.innerText = "Saving...";
+      } else if (state === 'error') {
+        dot.className = "w-2 h-2 rounded-full bg-rose-500";
+        text.innerText = "Save error";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+        if (customText) {
+          text.innerText = customText;
+        } else {
+          const now = new Date();
+          const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+          text.innerText = `Auto-saved ${timeStr}`;
+        }
+      }
+    }
+
+    function scheduleAutoSave() {
+      updateAutoSaveUI('saving');
+      clearTimeout(autoSaveTimer);
+      autoSaveTimer = setTimeout(() => {
+        saveCurrentProfile(true);
+      }, 400);
+    }
+
+    function initProfileStore() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_PROFILES);
+        if (raw) {
+          profileStore = JSON.parse(raw);
+        }
+      } catch (e) {
+        console.warn('Could not read profiles from localStorage:', e);
+      }
+
+      if (!profileStore || Object.keys(profileStore).length === 0) {
+        profileStore = {
+          'default_plan': {
+            id: 'default_plan',
+            name: 'Project INE Baseline',
+            platforms: JSON.parse(JSON.stringify(DEFAULT_PLATFORMS)),
+            dayTypeWeights: { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 },
+            dailyData: null
+          }
+        };
+      }
+
+      const savedActive = localStorage.getItem(STORAGE_KEY_ACTIVE);
+      if (savedActive && profileStore[savedActive]) {
+        activeProfileId = savedActive;
+      } else {
+        activeProfileId = Object.keys(profileStore)[0];
+      }
+    }
+
+    function loadProfile(profileId) {
+      if (!profileStore[profileId]) profileId = Object.keys(profileStore)[0];
+      activeProfileId = profileId;
+      localStorage.setItem(STORAGE_KEY_ACTIVE, activeProfileId);
+
+      const profile = profileStore[profileId];
+      PLATFORMS = JSON.parse(JSON.stringify(profile.platforms || DEFAULT_PLATFORMS));
+      dayTypeWeights = JSON.parse(JSON.stringify(profile.dayTypeWeights || { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 }));
+
+      // Restore custom weights into inputs if present
+      const wD = document.getElementById('weightDday');
+      const wM = document.getElementById('weightMidmonth');
+      const wP = document.getElementById('weightPayday');
+      const wN = document.getElementById('weightNormal');
+      if (wD) wD.value = dayTypeWeights.DDAY;
+      if (wM) wM.value = dayTypeWeights.MIDMONTH;
+      if (wP) wP.value = dayTypeWeights.PAYDAY;
+      if (wN) wN.value = dayTypeWeights.NORMAL;
+
+      const titleEl = document.getElementById('headerProfileTitle');
+      if (titleEl) titleEl.innerText = profile.name;
+
+      rebuildAllChannelsIndex();
+      recomputeMasterFromChannels();
+
+      if (profile.dailyData && Array.isArray(profile.dailyData) && profile.dailyData.length === DAYS_IN_MONTH) {
+        dailyData = profile.dailyData;
+        dailyData.forEach(d => {
+          if (!d.spends) d.spends = {};
+          ALL_CHANNELS.forEach(ch => {
+            if (d.spends[ch.id] === undefined) d.spends[ch.id] = 0;
+          });
+        });
+      } else {
+        dailyData = [];
+        for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+          let type = 'NORMAL';
+          if (day === 10) type = 'DDAY';
+          else if (day >= 14 && day <= 16) type = 'MIDMONTH';
+          else if (day >= 25) type = 'PAYDAY';
+
+          const spendMap = {};
+          ALL_CHANNELS.forEach(ch => { spendMap[ch.id] = 0; });
+
+          dailyData.push({
+            day: day,
+            type: type,
+            plannedSpend: 0,
+            spends: spendMap
+          });
+        }
+        seedInitialSpends();
+      }
+
+      // Restore UI View Mode & Active Channel Tab
+      try {
+        const savedUI = localStorage.getItem(STORAGE_KEY_UI_STATE);
+        if (savedUI) {
+          const uiState = JSON.parse(savedUI);
+          if (uiState.currentTableMode) currentTableMode = uiState.currentTableMode;
+          if (uiState.activeChannelTabId && ALL_CHANNELS.some(c => c.id === uiState.activeChannelTabId)) {
+            activeChannelTabId = uiState.activeChannelTabId;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not restore UI state', e);
+      }
+
+      autoDistributePlannedBudget();
+      renderProfileSelectOptions();
+      setDailyTableViewMode(currentTableMode);
+      updateAutoSaveUI('saved');
+    }
+
+    function saveCurrentProfile(silent = false) {
+      if (!profileStore[activeProfileId]) {
+        profileStore[activeProfileId] = { id: activeProfileId, name: 'Project INE Plan' };
+      }
+
+      profileStore[activeProfileId].platforms = PLATFORMS;
+      profileStore[activeProfileId].dayTypeWeights = dayTypeWeights;
+      profileStore[activeProfileId].dailyData = dailyData;
+      profileStore[activeProfileId].lastSavedAt = Date.now();
+
+      try {
+        localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(profileStore));
+        localStorage.setItem(STORAGE_KEY_ACTIVE, activeProfileId);
+        localStorage.setItem(STORAGE_KEY_UI_STATE, JSON.stringify({
+          currentTableMode: currentTableMode,
+          activeChannelTabId: activeChannelTabId
+        }));
+        
+        updateAutoSaveUI('saved');
+        if (!silent) {
+          showToast(`Saved "${profileStore[activeProfileId].name}" successfully!`);
+        }
+      } catch (err) {
+        updateAutoSaveUI('error');
+        showToast('Storage full or error auto-saving data');
+      }
+    }
+
+    function switchPlanProfile(profileId) {
+      saveCurrentProfile(true);
+      loadProfile(profileId);
+      showToast(`Switched to plan: ${profileStore[profileId].name}`);
+    }
+
+    function renderProfileSelectOptions() {
+      const select = document.getElementById('selectProfileList');
+      if (!select) return;
+
+      select.innerHTML = '';
+      Object.values(profileStore).forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.innerText = p.name;
+        if (p.id === activeProfileId) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function openRenameProfileModal() {
+      const input = document.getElementById('inputProfileRename');
+      if (input && profileStore[activeProfileId]) {
+        input.value = profileStore[activeProfileId].name;
+      }
+      openModal('profileRenameModal');
+    }
+
+    function saveProfileRename() {
+      const input = document.getElementById('inputProfileRename');
+      const newName = (input?.value || '').trim();
+      if (!newName) return;
+
+      profileStore[activeProfileId].name = newName;
+      document.getElementById('headerProfileTitle').innerText = newName;
+      closeModal('profileRenameModal');
+      saveCurrentProfile(true);
+      renderProfileSelectOptions();
+      showToast(`Renamed plan to "${newName}"`);
+    }
+
+    function openNewProfileModal() {
+      const input = document.getElementById('inputNewProfileName');
+      if (input) input.value = `${profileStore[activeProfileId]?.name || 'Plan'} (Copy)`;
+      openModal('newProfileModal');
+    }
+
+    function confirmCreateNewProfile() {
+      const input = document.getElementById('inputNewProfileName');
+      const name = (input?.value || '').trim() || 'New Scenario';
+      const newId = 'plan_' + Date.now();
+
+      profileStore[newId] = {
+        id: newId,
+        name: name,
+        platforms: JSON.parse(JSON.stringify(PLATFORMS)),
+        dayTypeWeights: JSON.parse(JSON.stringify(dayTypeWeights)),
+        dailyData: JSON.parse(JSON.stringify(dailyData))
+      };
+
+      closeModal('newProfileModal');
+      loadProfile(newId);
+      saveCurrentProfile(true);
+      showToast(`Created new plan "${name}"`);
+    }
+
+    function requestDeleteProfile() {
+      if (Object.keys(profileStore).length <= 1) {
+        showCustomConfirm({
+          title: "Cannot Delete",
+          message: "You must keep at least one active budget plan.",
+          confirmText: "Understood",
+          onConfirm: () => closeModal('confirmActionModal'),
+          hideCancel: true
+        });
+        return;
+      }
+
+      showCustomConfirm({
+        title: "Delete Budget Plan?",
+        message: `Are you sure you want to permanently delete "${profileStore[activeProfileId].name}"?`,
+        confirmText: "Delete Plan",
+        onConfirm: () => {
+          delete profileStore[activeProfileId];
+          const remainingIds = Object.keys(profileStore);
+          activeProfileId = remainingIds[0];
+          closeModal('confirmActionModal');
+          loadProfile(activeProfileId);
+          saveCurrentProfile(true);
+          showToast("Plan deleted successfully");
+        }
+      });
+    }
+
+    // Modal Helpers
+    function openModal(modalId) {
+      document.getElementById(modalId)?.classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId)?.classList.add('hidden');
+    }
+
+    function showCustomConfirm({ title, message, confirmText = 'Confirm', onConfirm, hideCancel = false }) {
+      const modal = document.getElementById('confirmActionModal');
+      document.getElementById('confirmModalTitle').innerText = title;
+      document.getElementById('confirmModalMessage').innerText = message;
+      const btn = document.getElementById('btnExecuteConfirmAction');
+      btn.innerText = confirmText;
+      btn.onclick = onConfirm;
+      openModal('confirmActionModal');
+    }
+
+    // Channel Edit, Rename, and Delete
+    function openEditChannelModal(channelId) {
+      const ch = getChannelById(channelId);
+      if (!ch) return;
+
+      document.getElementById('editChannelTargetId').value = channelId;
+      document.getElementById('editChannelNameInput').value = ch.name;
+      document.getElementById('editChannelPlatformSelect').value = ch.platformId || 'shopee';
+      document.getElementById('editChannelBudgetInput').value = ch.budget;
+
+      openModal('channelEditModal');
+    }
+
+    function saveChannelModalEdit() {
+      const channelId = document.getElementById('editChannelTargetId').value;
+      const newName = (document.getElementById('editChannelNameInput').value || '').trim();
+      const newPlatform = document.getElementById('editChannelPlatformSelect').value;
+      const newBudget = Math.max(0, parseFloat(document.getElementById('editChannelBudgetInput').value) || 0);
+
+      if (!newName) {
+        showToast('Channel name cannot be empty');
+        return;
+      }
+
+      // Find current channel and platform
+      let currentPlatformKey = null;
+      let targetChannel = null;
+
+      for (const [key, p] of Object.entries(PLATFORMS)) {
+        const found = p.channels.find(c => c.id === channelId);
+        if (found) {
+          currentPlatformKey = key;
+          targetChannel = found;
+          break;
+        }
+      }
+
+      if (!targetChannel) return;
+
+      targetChannel.name = newName;
+      targetChannel.budget = newBudget;
+
+      // Platform shift if user moved channel to a different platform
+      if (currentPlatformKey !== newPlatform && PLATFORMS[newPlatform]) {
+        PLATFORMS[currentPlatformKey].channels = PLATFORMS[currentPlatformKey].channels.filter(c => c.id !== channelId);
+        PLATFORMS[newPlatform].channels.push(targetChannel);
+      }
+
+      closeModal('channelEditModal');
+      rebuildAllChannelsIndex();
+      recomputeMasterFromChannels();
+      autoDistributePlannedBudget();
+      saveCurrentProfile(true);
+      showToast(`Updated "${newName}" channel details!`);
+    }
+
+    function requestDeleteChannelFromModal() {
+      const channelId = document.getElementById('editChannelTargetId').value;
+      const ch = getChannelById(channelId);
+      if (!ch) return;
+
+      if (ALL_CHANNELS.length <= 1) {
+        showToast('Cannot delete the last remaining channel!');
+        return;
+      }
+
+      closeModal('channelEditModal');
+      showCustomConfirm({
+        title: `Delete Channel "${ch.name}"?`,
+        message: `Removing this channel will remove its spend records from all 31 days and recalculate the monthly budget.`,
+        confirmText: "Delete Channel",
+        onConfirm: () => {
+          // Remove from platforms
+          Object.values(PLATFORMS).forEach(p => {
+            p.channels = p.channels.filter(c => c.id !== channelId);
+          });
+
+          // Remove from dailyData spends
+          dailyData.forEach(d => {
+            if (d.spends && d.spends[channelId] !== undefined) {
+              delete d.spends[channelId];
+            }
+          });
+
+          closeModal('confirmActionModal');
+          rebuildAllChannelsIndex();
+          recomputeMasterFromChannels();
+          autoDistributePlannedBudget();
+          saveCurrentProfile(true);
+          showToast(`Deleted channel "${ch.name}"`);
+        }
+      });
+    }
+
+    function openAddChannelModal() {
+      document.getElementById('newChannelNameInput').value = '';
+      document.getElementById('newChannelBudgetInput').value = '30000';
+      openModal('channelAddModal');
+    }
+
+    function confirmAddNewChannel() {
+      const platformKey = document.getElementById('newChannelPlatformSelect').value;
+      const name = (document.getElementById('newChannelNameInput').value || '').trim();
+      const budget = Math.max(0, parseFloat(document.getElementById('newChannelBudgetInput').value) || 0);
+
+      if (!name) {
+        showToast('Please enter an ad channel name');
+        return;
+      }
+
+      const newId = `${platformKey}_${Date.now()}`;
+      const newChannel = {
+        id: newId,
+        name: name,
+        defaultWeight: 0.1,
+        budget: budget
+      };
+
+      if (!PLATFORMS[platformKey]) return;
+      PLATFORMS[platformKey].channels.push(newChannel);
+
+      // Initialize entry in all days
+      dailyData.forEach(d => {
+        if (!d.spends) d.spends = {};
+        d.spends[newId] = 0;
+      });
+
+      closeModal('channelAddModal');
+      rebuildAllChannelsIndex();
+      recomputeMasterFromChannels();
+      autoDistributePlannedBudget();
+      saveCurrentProfile(true);
+      showToast(`Added channel "${name}" to ${PLATFORMS[platformKey].name}!`);
+    }
+
+    function getChannelById(channelId) {
+      return ALL_CHANNELS.find(c => c.id === channelId) || null;
+    }
+
+    function recomputeMasterFromChannels() {
+      let sum = 0;
+      ALL_CHANNELS.forEach(c => {
+        sum += Number(c.budget || 0);
+      });
+      masterMonthlyBudget = sum;
+      const input = document.getElementById('inputMasterBudget');
+      if (input) input.value = masterMonthlyBudget;
+      const status = document.getElementById('budgetSumStatus');
+      if (status) status.innerText = `Auto-Synced (฿${masterMonthlyBudget.toLocaleString()})`;
+    }
+
+    function updateMasterBudget(val) {
+      const newMaster = Math.max(0, parseFloat(val) || 0);
+      if (newMaster === 0 || masterMonthlyBudget === 0) return;
+
+      const scale = newMaster / masterMonthlyBudget;
+      Object.values(PLATFORMS).forEach(p => {
+        p.channels.forEach(ch => {
+          ch.budget = Math.round(ch.budget * scale);
+        });
+      });
+
+      rebuildAllChannelsIndex();
+      recomputeMasterFromChannels();
+      autoDistributePlannedBudget();
+      saveCurrentProfile(true);
+      showToast(`Scaled all channels to match ฿${newMaster.toLocaleString()} total!`);
+    }
+
+    function updateChannelBudget(channelId, val) {
+      const ch = getChannelById(channelId);
+      if (!ch) return;
+
+      ch.budget = Math.max(0, parseFloat(val) || 0);
+      for (const p of Object.values(PLATFORMS)) {
+        const found = p.channels.find(c => c.id === channelId);
+        if (found) {
+          found.budget = ch.budget;
+          break;
+        }
+      }
+
+      recomputeMasterFromChannels();
+      autoDistributePlannedBudget();
+      saveCurrentProfile(true);
+      showToast(`Updated budget for ${ch.name}`);
+    }
+
+    function autoDistributePlannedBudget() {
+      if (dailyData.length === 0) return;
+
+      let totalPoints = 0;
+      dailyData.forEach(d => {
+        const weight = dayTypeWeights[d.type] || 1.0;
+        totalPoints += weight;
+      });
+
+      if (totalPoints <= 0) totalPoints = 1;
+
+      dailyData.forEach(d => {
+        const dayWeight = dayTypeWeights[d.type] || 1.0;
+        const dayRatio = dayWeight / totalPoints;
+
+        d.plannedSpend = Math.round(masterMonthlyBudget * dayRatio);
+        d.channelPlans = {};
+
+        ALL_CHANNELS.forEach(ch => {
+          d.channelPlans[ch.id] = Math.round((ch.budget || 0) * dayRatio);
+        });
+      });
+
+      renderKPIs();
+      renderPlatformCards();
+      renderPacingChart();
+      renderDailyTable();
+      renderCalendarDays();
+    }
+
+    function seedInitialSpends() {
+      // Seed initial mock spend for demonstration up to day 5
+      dailyData.forEach(d => {
+        if (d.day <= 5) {
+          const ratio = (dayTypeWeights[d.type] || 1.0) / 4.0;
+          ALL_CHANNELS.forEach(ch => {
+            const base = (ch.budget / DAYS_IN_MONTH) * (0.85 + (d.day % 4) * 0.08);
+            d.spends[ch.id] = Math.round(base * (1 + ratio * 0.3));
+          });
+        }
+      });
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toastNotification');
+      const msg = document.getElementById('toastMessage');
+      if (!toast || !msg) return;
+
+      msg.innerText = message;
+      toast.classList.remove('opacity-0', 'translate-y-20');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-20');
+      }, 2500);
+    }
+
+    function initializeMonthData() {
+      initProfileStore();
+      loadProfile(activeProfileId);
+    }
+
+    function setDailyTableViewMode(mode) {
+      currentTableMode = mode;
+
+      const btnPlatform = document.getElementById('btnViewPlatform');
+      const btnMatrix = document.getElementById('btnViewMatrix');
+      const btnFocus = document.getElementById('btnViewFocus');
+      const focusSelect = document.getElementById('selectFocusChannel');
+      const tabsBar = document.getElementById('channelTabsBarWrapper');
+      const badge = document.getElementById('activeViewModeBadge');
+
+      [btnPlatform, btnMatrix, btnFocus].forEach(btn => {
+        if (btn) btn.className = "px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition";
+      });
+
+      if (mode === 'platform') {
+        if (btnPlatform) btnPlatform.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs transition font-bold";
+        if (focusSelect) focusSelect.classList.add('hidden');
+        if (tabsBar) tabsBar.classList.add('hidden');
+        if (badge) badge.innerText = "Platform Summary";
+      } else if (mode === 'matrix') {
+        if (btnMatrix) btnMatrix.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs transition font-bold";
+        if (focusSelect) focusSelect.classList.add('hidden');
+        if (tabsBar) tabsBar.classList.add('hidden');
+        if (badge) badge.innerText = "All Channels Matrix";
+      } else if (mode === 'focus') {
+        if (btnFocus) btnFocus.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs transition font-bold";
+        if (focusSelect) focusSelect.classList.remove('hidden');
+        if (tabsBar) tabsBar.classList.remove('hidden');
+        populateFocusSelect();
+        renderChannelTabs();
+        if (badge) badge.innerText = "Channel Tabs Ledger";
+      }
+
+      renderDailyTable();
+      scheduleAutoSave();
+    }
+
+    function renderChannelTabs() {
+      const container = document.getElementById('channelTabPillsContainer');
+      if (!container) return;
+
+      container.innerHTML = '';
+      if (!activeChannelTabId && ALL_CHANNELS.length > 0) {
+        activeChannelTabId = ALL_CHANNELS[0].id;
+      }
+
+      ALL_CHANNELS.forEach(ch => {
+        const isActive = ch.id === activeChannelTabId;
+        const tabBtn = document.createElement('button');
+        tabBtn.onclick = () => selectChannelTab(ch.id);
+
+        if (isActive) {
+          tabBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-sm flex items-center space-x-1.5 shrink-0 transition";
+        } else {
+          tabBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 flex items-center space-x-1.5 shrink-0 transition";
+        }
+
+        tabBtn.innerHTML = `
+          <span class="w-2 h-2 rounded-full" style="background-color: ${ch.platformColor}"></span>
+          <span>${ch.name}</span>
+        `;
+        container.appendChild(tabBtn);
+      });
+
+      const focusSelect = document.getElementById('selectFocusChannel');
+      if (focusSelect) focusSelect.value = activeChannelTabId;
+    }
+
+    function selectChannelTab(channelId) {
+      activeChannelTabId = channelId;
+      renderChannelTabs();
+      renderDailyTable();
+      scheduleAutoSave();
+    }
+
+    function populateFocusSelect() {
+      const select = document.getElementById('selectFocusChannel');
+      if (!select) return;
+      select.innerHTML = '';
+      ALL_CHANNELS.forEach(ch => {
+        const opt = document.createElement('option');
+        opt.value = ch.id;
+        opt.innerText = `${ch.platformName}: ${ch.name}`;
+        if (ch.id === activeChannelTabId) opt.selected = true;
+        select.appendChild(opt);
+      });
+      if (!select.value && ALL_CHANNELS.length > 0) {
+        select.value = ALL_CHANNELS[0].id;
+        activeChannelTabId = ALL_CHANNELS[0].id;
+      }
+    }
+
+    function toggleRowExpand(dayNum) {
+      if (expandedDays.has(dayNum)) {
+        expandedDays.delete(dayNum);
+      } else {
+        expandedDays.add(dayNum);
+      }
+      renderDailyTable();
+    }
+
+    function updateInlineChannelSpend(dayNum, channelId, val) {
+      const dayObj = dailyData.find(d => d.day === dayNum);
+      if (!dayObj) return;
+
+      const numVal = Math.max(0, parseFloat(val) || 0);
+      dayObj.spends[channelId] = numVal;
+
+      scheduleAutoSave();
+      renderKPIs();
+      renderPlatformCards();
+      renderPacingChart();
+      renderDailyTable();
+    }
+
+    function exportSpendToCSV() {
+      let csv = 'Day,Day Type,Planned Total,Actual Total,Variance,' + ALL_CHANNELS.map(c => `"${c.platformName} - ${c.name}"`).join(',') + '\n';
+
+      dailyData.forEach(d => {
+        const actual = calculateDayActualTotal(d);
+        const variance = d.plannedSpend - actual;
+        const row = [
+          `Day ${d.day}`,
+          d.type,
+          d.plannedSpend,
+          actual,
+          variance,
+          ...ALL_CHANNELS.map(c => d.spends[c.id] || 0)
+        ];
+        csv += row.join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `Project_INE_Ad_Budget_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Exported daily spend data to CSV!');
+    }
+
+    function openImportExcelModal() {
+      const modal = document.getElementById('importExcelModal');
+      const textarea = document.getElementById('excelPasteArea');
+      if (textarea) textarea.value = '';
+      resetImportPreview();
+      modal?.classList.remove('hidden');
+    }
+
+    function closeImportExcelModal() {
+      document.getElementById('importExcelModal')?.classList.add('hidden');
+    }
+
+    function resetImportPreview() {
+      const summary = document.getElementById('importParsedSummary');
+      const emptyNotice = document.getElementById('importEmptyNotice');
+      const table = document.getElementById('importPreviewTable');
+      const btn = document.getElementById('btnConfirmImport');
+      const totalAmount = document.getElementById('importTotalAmount');
+
+      if (summary) summary.innerText = '0 days detected';
+      if (emptyNotice) emptyNotice.classList.remove('hidden');
+      if (table) table.classList.add('hidden');
+      if (btn) btn.disabled = true;
+      if (totalAmount) totalAmount.innerText = '฿0';
+      parsedImportRows = [];
+    }
+
+    let parsedImportRows = [];
+
+    function normalizeChannelKey(str) {
+      return (str || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+    }
+
+    function handleExcelPasteInput(rawText) {
+      if (!rawText || !rawText.trim()) {
+        resetImportPreview();
+        return;
+      }
+
+      const lines = rawText.trim().split(/\r?\n/).filter(line => line.trim().length > 0);
+      if (lines.length === 0) {
+        resetImportPreview();
+        return;
+      }
+
+      // Check delimiter (Tab for direct Excel paste, or Comma/Semicolon for CSV)
+      const firstLine = lines[0];
+      let delimiter = '\t';
+      if (!firstLine.includes('\t') && firstLine.includes(',')) delimiter = ',';
+      else if (!firstLine.includes('\t') && firstLine.includes(';')) delimiter = ';';
+
+      let headerCols = null;
+      let startRowIdx = 0;
+
+      // Detect if row 0 is a header line
+      const candidateHeaders = firstLine.split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
+      const hasHeaderKeywords = candidateHeaders.some(h => {
+        const norm = normalizeChannelKey(h);
+        return norm.includes('day') || norm.includes('date') || norm.includes('shopee') || norm.includes('tiktok') || norm.includes('facebook') || norm.includes('lazada') || norm.includes('cpas');
+      });
+
+      let colIndexToChannel = {};
+      let dayColIndex = 0;
+
+      if (hasHeaderKeywords) {
+        headerCols = candidateHeaders;
+        startRowIdx = 1;
+
+        headerCols.forEach((colName, idx) => {
+          const norm = normalizeChannelKey(colName);
+          if (norm === 'day' || norm === 'date' || norm === 'd') {
+            dayColIndex = idx;
+            return;
+          }
+
+          // Match to our channels
+          for (const ch of ALL_CHANNELS) {
+            const chNorm = normalizeChannelKey(ch.name);
+            const chIdNorm = normalizeChannelKey(ch.id);
+            if (norm === chNorm || norm === chIdNorm || norm.includes(chNorm) || chNorm.includes(norm)) {
+              colIndexToChannel[idx] = ch;
+              break;
+            }
+          }
+        });
+      } else {
+        // No header row: assume standard sequence Day, then ALL_CHANNELS in order
+        dayColIndex = 0;
+        ALL_CHANNELS.forEach((ch, idx) => {
+          colIndexToChannel[idx + 1] = ch;
+        });
+      }
+
+      // If no channels matched by name, map linearly
+      if (Object.keys(colIndexToChannel).length === 0) {
+        let channelPtr = 0;
+        const testCols = lines[startRowIdx]?.split(delimiter) || [];
+        for (let c = (dayColIndex === 0 ? 1 : 0); c < testCols.length; c++) {
+          if (c === dayColIndex) continue;
+          if (channelPtr < ALL_CHANNELS.length) {
+            colIndexToChannel[c] = ALL_CHANNELS[channelPtr++];
+          }
+        }
+      }
+
+      parsedImportRows = [];
+      let grandTotal = 0;
+
+      for (let i = startRowIdx; i < lines.length; i++) {
+        const rawCols = lines[i].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
+        if (rawCols.length === 0) continue;
+
+        // Parse day number (e.g., "1", "Day 1", "D1", "2026-10-01")
+        let dayRaw = rawCols[dayColIndex] || `${parsedImportRows.length + 1}`;
+        let dayNum = parseInt(dayRaw.replace(/[^0-9]/g, ''), 10);
+        if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
+          dayNum = parsedImportRows.length + 1;
+        }
+
+        const channelSpends = {};
+        let daySum = 0;
+
+        Object.entries(colIndexToChannel).forEach(([cIdx, ch]) => {
+          const rawVal = (rawCols[cIdx] || '0').replace(/[^0-9.-]/g, '');
+          const val = Math.max(0, parseFloat(rawVal) || 0);
+          channelSpends[ch.id] = val;
+          daySum += val;
+        });
+
+        grandTotal += daySum;
+        parsedImportRows.push({
+          day: dayNum,
+          spends: channelSpends,
+          dayTotal: daySum
+        });
+      }
+
+      renderImportPreview(colIndexToChannel, grandTotal);
+    }
+
+    function renderImportPreview(colIndexToChannel, grandTotal) {
+      const summary = document.getElementById('importParsedSummary');
+      const emptyNotice = document.getElementById('importEmptyNotice');
+      const table = document.getElementById('importPreviewTable');
+      const thead = document.getElementById('importPreviewHead');
+      const tbody = document.getElementById('importPreviewBody');
+      const btn = document.getElementById('btnConfirmImport');
+      const totalAmount = document.getElementById('importTotalAmount');
+
+      if (parsedImportRows.length === 0) {
+        resetImportPreview();
+        return;
+      }
+
+      emptyNotice.classList.add('hidden');
+      table.classList.remove('hidden');
+      summary.innerText = `${parsedImportRows.length} days parsed`;
+      totalAmount.innerText = `฿${grandTotal.toLocaleString()}`;
+      btn.disabled = false;
+
+      const activeMappedChannels = Object.values(colIndexToChannel);
+
+      thead.innerHTML = `
+        <tr>
+          <th class="py-2 px-2.5">Day</th>
+          <th class="py-2 px-2.5 text-right font-bold text-slate-900">Total Spend</th>
+          ${activeMappedChannels.map(ch => `
+            <th class="py-2 px-2 text-right" title="${ch.platformName}: ${ch.name}">
+              <span class="inline-block max-w-[90px] truncate">${ch.name}</span>
+            </th>
+          `).join('')}
+        </tr>
+      `;
+
+      tbody.innerHTML = '';
+      parsedImportRows.slice(0, 15).forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-white";
+        tr.innerHTML = `
+          <td class="py-1.5 px-2.5 font-bold text-slate-700">D${row.day}</td>
+          <td class="py-1.5 px-2.5 text-right font-bold text-emerald-700">฿${row.dayTotal.toLocaleString()}</td>
+          ${activeMappedChannels.map(ch => `
+            <td class="py-1.5 px-2 text-right text-slate-600">
+              ฿${(row.spends[ch.id] || 0).toLocaleString()}
+            </td>
+          `).join('')}
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (parsedImportRows.length > 15) {
+        const trMore = document.createElement('tr');
+        trMore.innerHTML = `
+          <td colspan="${activeMappedChannels.length + 2}" class="p-2 text-center text-slate-400 italic bg-slate-100">
+            ... and ${parsedImportRows.length - 15} more days
+          </td>
+        `;
+        tbody.appendChild(trMore);
+      }
+    }
+
+    function applyExcelImport() {
+      if (!parsedImportRows || parsedImportRows.length === 0) return;
+
+      parsedImportRows.forEach(imported => {
+        const targetDay = dailyData.find(d => d.day === imported.day);
+        if (targetDay) {
+          if (!targetDay.spends) targetDay.spends = {};
+          Object.entries(imported.spends).forEach(([chId, spendVal]) => {
+            targetDay.spends[chId] = spendVal;
+          });
+        }
+      });
+
+      closeImportExcelModal();
+      saveCurrentProfile(true);
+      renderAll();
+      showToast(`Successfully imported ${parsedImportRows.length} days of ad spend!`);
+    }
+
+    function downloadExcelTemplate() {
+      // Build a CSV template with header titles and sample row
+      const headers = ['Day', 'Day Type', ...ALL_CHANNELS.map(c => `${c.name}`)];
+      let csvContent = headers.join(',') + '\n';
+
+      for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+        let type = 'NORMAL';
+        if (day === 10) type = 'DDAY';
+        else if (day >= 14 && day <= 16) type = 'MIDMONTH';
+        else if (day >= 25) type = 'PAYDAY';
+
+        const row = [day, type, ...ALL_CHANNELS.map(() => '')];
+        csvContent += row.join(',') + '\n';
+      }
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `Project_INE_Ad_Spend_Template.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('Downloaded Project INE Excel Template!');
+    }
+
+    let pacingChartInstance = null;
+    function renderPacingChart() {
+      const canvas = document.getElementById('dailyPacingChart');
+      if (!canvas) return;
+
+      const labels = dailyData.map(d => `D${d.day}`);
+      const plannedValues = dailyData.map(d => d.plannedSpend);
+      const actualValues = dailyData.map(d => calculateDayActualTotal(d));
+      const barColors = dailyData.map(d => {
+        if (d.type === 'DDAY') return '#ef4444';
+        if (d.type === 'MIDMONTH') return '#6366f1';
+        if (d.type === 'PAYDAY') return '#f59e0b';
+        return '#10b981';
+      });
+
+      if (pacingChartInstance) {
+        pacingChartInstance.destroy();
+      }
+
+      const ctx = canvas.getContext('2d');
+      pacingChartInstance = new Chart(ctx, {
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'line',
+              label: 'Planned Target',
+              data: plannedValues,
+              borderColor: '#818cf8',
+              backgroundColor: 'rgba(129, 140, 248, 0.15)',
+              borderWidth: 2,
+              pointRadius: 2,
+              tension: 0.3,
+              fill: true
+            },
+            {
+              type: 'bar',
+              label: 'Actual Spend',
+              data: actualValues,
+              backgroundColor: barColors,
+              borderRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: ctx => ` ${ctx.dataset.label}: ฿${(ctx.parsed.y || 0).toLocaleString()}`
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: val => '฿' + (val >= 1000 ? (val / 1000) + 'k' : val)
+              },
+              grid: { color: '#f1f5f9' }
+            },
+            x: {
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    function renderDailyTable() {
+      const thead = document.getElementById('dailyTableHead');
+      const tbody = document.getElementById('dailyTableBody');
+      const tfoot = document.getElementById('dailyTableFoot');
+      if (!thead || !tbody || !tfoot) return;
+
+      const filterType = document.getElementById('filterDayType')?.value || 'ALL';
+      const filtered = filterType === 'ALL' ? dailyData : dailyData.filter(d => d.type === filterType);
+
+      if (currentTableMode === 'matrix') {
+        renderMatrixView(thead, tbody, tfoot, filtered);
+      } else if (currentTableMode === 'focus') {
+        renderFocusView(thead, tbody, tfoot, filtered);
+      } else {
+        renderPlatformSummaryView(thead, tbody, tfoot, filtered);
+      }
+    }
+
+    function renderPlatformSummaryView(thead, tbody, tfoot, filtered) {
+      thead.innerHTML = `
+        <tr>
+          <th class="py-3 px-3 w-8"></th>
+          <th class="py-3 px-3 w-16">Day</th>
+          <th class="py-3 px-3 w-28">Type</th>
+          <th class="py-3 px-3 text-right">Planned (THB)</th>
+          <th class="py-3 px-3 text-right">Actual (THB)</th>
+          <th class="py-3 px-3 text-right">Variance</th>
+          <th class="py-3 px-3 text-right text-orange-600 border-l border-orange-100">Shopee</th>
+          <th class="py-3 px-3 text-right text-slate-800 border-l border-slate-100">TikTok</th>
+          <th class="py-3 px-3 text-right text-blue-600 border-l border-blue-100">Facebook</th>
+          <th class="py-3 px-3 text-right text-indigo-900 border-l border-indigo-100">Lazada</th>
+          <th class="py-3 px-3 text-center w-20">Action</th>
+        </tr>
+      `;
+
+      tbody.innerHTML = '';
+      let totalPlan = 0;
+      let totalActual = 0;
+      let totalShopee = 0;
+      let totalTiktok = 0;
+      let totalFB = 0;
+      let totalLazada = 0;
+
+      filtered.forEach(d => {
+        const actual = calculateDayActualTotal(d);
+        const variance = d.plannedSpend - actual;
+        totalPlan += d.plannedSpend;
+        totalActual += actual;
+
+        let shopeeSpend = 0;
+        let tiktokSpend = 0;
+        let fbSpend = 0;
+        let lazadaSpend = 0;
+
+        (PLATFORMS.shopee?.channels || []).forEach(c => shopeeSpend += Number(d.spends[c.id] || 0));
+        (PLATFORMS.tiktok?.channels || []).forEach(c => tiktokSpend += Number(d.spends[c.id] || 0));
+        (PLATFORMS.facebook?.channels || []).forEach(c => fbSpend += Number(d.spends[c.id] || 0));
+        (PLATFORMS.lazada?.channels || []).forEach(c => lazadaSpend += Number(d.spends[c.id] || 0));
+
+        totalShopee += shopeeSpend;
+        totalTiktok += tiktokSpend;
+        totalFB += fbSpend;
+        totalLazada += lazadaSpend;
+
+        let badgeClass = 'badge-normal';
+        if (d.type === 'DDAY') badgeClass = 'badge-dday';
+        else if (d.type === 'MIDMONTH') badgeClass = 'badge-midmonth';
+        else if (d.type === 'PAYDAY') badgeClass = 'badge-payday';
+
+        const isExpanded = expandedDays.has(d.day);
+
+        const row = document.createElement('tr');
+        row.className = `hover:bg-slate-50 transition-colors border-b border-slate-100 cursor-pointer ${isExpanded ? 'bg-indigo-50/20' : ''}`;
+        row.innerHTML = `
+          <td class="py-2.5 px-3 text-center" onclick="toggleRowExpand(${d.day})">
+            <span class="text-slate-400 text-xs">${isExpanded ? '▼' : '▶'}</span>
+          </td>
+          <td class="py-2.5 px-3 font-bold text-slate-800" onclick="toggleRowExpand(${d.day})">D${d.day}</td>
+          <td class="py-2.5 px-3" onclick="toggleRowExpand(${d.day})">
+            <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded border ${badgeClass}">
+              ${d.type}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-right font-semibold text-slate-700" onclick="toggleRowExpand(${d.day})">฿${d.plannedSpend.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right font-bold ${actual > 0 ? 'text-slate-900' : 'text-slate-300'}" onclick="toggleRowExpand(${d.day})">฿${actual.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right" onclick="toggleRowExpand(${d.day})">
+            ${actual === 0 ? '<span class="text-slate-300">-</span>' : `
+              <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${variance >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">
+                ${variance >= 0 ? '+' : ''}฿${variance.toLocaleString()}
+              </span>
+            `}
+          </td>
+          <td class="py-2.5 px-3 text-right text-orange-600 font-semibold border-l border-orange-50" onclick="toggleRowExpand(${d.day})">฿${shopeeSpend.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right text-slate-800 font-semibold border-l border-slate-100" onclick="toggleRowExpand(${d.day})">฿${tiktokSpend.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right text-blue-600 font-semibold border-l border-blue-50" onclick="toggleRowExpand(${d.day})">฿${fbSpend.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right text-indigo-900 font-semibold border-l border-indigo-50" onclick="toggleRowExpand(${d.day})">฿${lazadaSpend.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-center">
+            <button onclick="event.stopPropagation(); openDailySpendModal(${d.day})" class="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded text-[11px] font-semibold text-slate-600 transition">
+              Log
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+
+        if (isExpanded) {
+          const detailRow = document.createElement('tr');
+          detailRow.className = "bg-slate-50/70 border-b border-slate-200";
+          detailRow.innerHTML = `
+            <td colspan="11" class="p-3">
+              <div class="bg-white p-3 rounded-xl border border-slate-200 space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <span class="text-xs font-bold text-slate-800">Day ${d.day} Sub-Channel Breakdown & Inline Spend</span>
+                  <span class="text-[11px] text-slate-400">Total Actual: ฿${actual.toLocaleString()}</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  ${Object.values(PLATFORMS).map(p => `
+                    <div class="p-2 rounded-lg border border-slate-100 bg-slate-50/50 space-y-1.5">
+                      <div class="text-[11px] font-bold ${p.textColor} flex justify-between">
+                        <span>${p.name}</span>
+                      </div>
+                      ${p.channels.map(c => `
+                        <div class="bg-white p-1.5 rounded border border-slate-200 text-xs flex items-center justify-between">
+                          <span class="text-[11px] font-medium text-slate-700 truncate pr-1" title="${c.name}">${c.name}</span>
+                          <div class="relative w-24 shrink-0">
+                            <span class="absolute inset-y-0 left-0 pl-1.5 flex items-center text-slate-400 text-[10px]">฿</span>
+                            <input type="number" 
+                                   value="${d.spends[c.id] || 0}" 
+                                   min="0"
+                                   step="50"
+                                   onchange="updateInlineChannelSpend(${d.day}, '${c.id}', this.value)"
+                                   class="w-full pl-4 pr-1 py-0.5 text-right font-bold text-slate-800 rounded border border-slate-200 text-xs focus:ring-1 focus:ring-indigo-500">
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(detailRow);
+        }
+      });
+
+      const totalVariance = totalPlan - totalActual;
+      tfoot.innerHTML = `
+        <tr class="bg-slate-100/90 text-xs">
+          <td></td>
+          <td class="py-3 px-3 font-bold" colspan="2">Filtered Total</td>
+          <td class="py-3 px-3 text-right text-indigo-700 font-bold">฿${totalPlan.toLocaleString()}</td>
+          <td class="py-3 px-3 text-right text-slate-900 font-bold">฿${totalActual.toLocaleString()}</td>
+          <td class="py-3 px-3 text-right">
+            <span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${totalVariance >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+              ${totalVariance >= 0 ? '+' : ''}฿${totalVariance.toLocaleString()}
+            </span>
+          </td>
+          <td class="py-3 px-3 text-right text-orange-700 font-bold border-l border-orange-200">฿${totalShopee.toLocaleString()}</td>
+          <td class="py-3 px-3 text-right text-slate-800 font-bold border-l border-slate-200">฿${totalTiktok.toLocaleString()}</td>
+          <td class="py-3 px-3 text-right text-blue-700 font-bold border-l border-blue-200">฿${totalFB.toLocaleString()}</td>
+          <td class="py-3 px-3 text-right text-indigo-800 font-bold border-l border-indigo-200">฿${totalLazada.toLocaleString()}</td>
+          <td></td>
+        </tr>
+      `;
+    }
+
+    function renderMatrixView(thead, tbody, tfoot, filtered) {
+      // Full 10 Channels Matrix
+      thead.innerHTML = `
+        <tr>
+          <th class="py-3 px-2 w-12 text-center">Day</th>
+          <th class="py-3 px-2 w-16">Type</th>
+          <th class="py-3 px-2 text-right">Total Actual</th>
+          <!-- Shopee -->
+          <th class="py-3 px-2 text-right bg-orange-100/40 text-orange-950 border-l border-orange-200" title="Shopee Ad">Shopee Ad</th>
+          <th class="py-3 px-2 text-right bg-orange-100/40 text-orange-950" title="Shopee Live Ad">Shopee Live</th>
+          <th class="py-3 px-2 text-right bg-orange-100/40 text-orange-950" title="Shopee GSA Ad">Shopee GSA</th>
+          <!-- TikTok -->
+          <th class="py-3 px-2 text-right bg-slate-200/50 text-slate-900 border-l border-slate-300" title="TikTok GMV MAX Ad">TT GMV MAX</th>
+          <th class="py-3 px-2 text-right bg-slate-200/50 text-slate-900" title="TikTok Live GMV MAX Ad">TT Live GMV</th>
+          <th class="py-3 px-2 text-right bg-slate-200/50 text-slate-900" title="TikTok Awareness Ad">TT Aware</th>
+          <th class="py-3 px-2 text-right bg-slate-200/50 text-slate-900" title="TikTok Follower Ad">TT Follower</th>
+          <!-- Facebook -->
+          <th class="py-3 px-2 text-right bg-blue-100/40 text-blue-950 border-l border-blue-200" title="Shopee CPAS Ad">FB CPAS</th>
+          <th class="py-3 px-2 text-right bg-blue-100/40 text-blue-950" title="Facebook Awareness Ad">FB Aware</th>
+          <!-- Lazada -->
+          <th class="py-3 px-2 text-right bg-indigo-100/40 text-indigo-950 border-l border-indigo-200" title="Lazada Ad">Lazada Ad</th>
+          <th class="py-3 px-2 text-center w-16">Action</th>
+        </tr>
+      `;
+
+      tbody.innerHTML = '';
+      const channelSums = {};
+      ALL_CHANNELS.forEach(ch => channelSums[ch.id] = 0);
+      let grandTotalActual = 0;
+
+      filtered.forEach(d => {
+        const dayActual = calculateDayActualTotal(d);
+        grandTotalActual += dayActual;
+
+        ALL_CHANNELS.forEach(ch => {
+          channelSums[ch.id] += Number(d.spends[ch.id] || 0);
+        });
+
+        let badgeClass = 'badge-normal';
+        if (d.type === 'DDAY') badgeClass = 'badge-dday';
+        else if (d.type === 'MIDMONTH') badgeClass = 'badge-midmonth';
+        else if (d.type === 'PAYDAY') badgeClass = 'badge-payday';
+
+        const row = document.createElement('tr');
+        row.className = "hover:bg-slate-50/80 transition-colors border-b border-slate-100 text-xs";
+        row.innerHTML = `
+          <td class="py-2.5 px-2 text-center font-bold text-slate-800">D${d.day}</td>
+          <td class="py-2.5 px-2">
+            <span class="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded border ${badgeClass}">
+              ${d.type}
+            </span>
+          </td>
+          <td class="py-2.5 px-2 text-right font-bold text-slate-900">฿${dayActual.toLocaleString()}</td>
+          <!-- Shopee 3 -->
+          <td class="py-2.5 px-2 text-right border-l border-orange-100 font-medium ${d.spends['shopee_ad'] ? 'text-slate-900 font-bold' : 'text-slate-300'}">฿${(d.spends['shopee_ad']||0).toLocaleString()}</td>
+          <td class="py-2.5 px-2 text-right font-medium ${d.spends['shopee_live'] ? 'text-slate-900 font-bold' : 'text-slate-300'}">฿${(d.spends['shopee_live']||0).toLocaleString()}</td>
+          <td class="py-2.5 px-2 text-right font-medium ${d.spends['shopee_gsa'] ? 'text-slate-900 font-bold' : 'text-slate-300'}">฿${(d.spends['shopee_gsa']||0).toLocaleString()}</td>
+          <!-- TikTok 4 -->
+          <td class="py-2.5 px-2 text-right border-l border-slate-200 font-medium ${d.spends['tiktok_gmv_max'] ? 'text-slate-900 font-bold' : 'text-slate-300'}">฿${(d.spends['tiktok_gmv_max']||0).toLocaleString()}</td>
+          <td class="py-2.5 px-2 text-right font-medium ${d.spends['tiktok_live_gmv'] ? 'text-slate-900 font-bold' : 'text-slate-300'}">฿${(d.spends['tiktok_live_gmv']||0).toLocaleString()}</td>
+          <td class="py-2.5 px-2 text-right font-medium ${d.spends['tiktok_awareness'] ? 'text-slate-900 font-bold' : 'text-slate-300'}">฿${(d.spends['tiktok_awareness']||0).toLocaleString()}</td>
+          <td class="py-2.5 px-2 text-right font-medium ${d.spends['tiktok_follower'] ? 'text-slate-900 font-bold' : 'text-slate-300'}">฿${(d.spends['tiktok_follower']||0).toLocaleString()}</td>
+          <!-- Facebook 2 -->
+          <td class="py-2.5 px-2 text-right border-l border-blue-100 font-medium ${d.spends['fb_shopee_cpas'] ? 'text-slate-900 font-bold' : 'text-slate-300'}">฿${(d.spends['fb_shopee_cpas']||0).toLocaleString()}</td>
+          <td class="py-2.5 px-2 text-right font-medium ${d.spends['fb_awareness'] ? 'text-slate-900 font-bold' : 'text-slate-300'}">฿${(d.spends['fb_awareness']||0).toLocaleString()}</td>
+          <!-- Lazada 1 -->
+          <td class="py-2.5 px-2 text-right border-l border-indigo-100 font-medium ${d.spends['lazada_ad'] ? 'text-slate-900 font-bold' : 'text-slate-300'}">฿${(d.spends['lazada_ad']||0).toLocaleString()}</td>
+          <td class="py-2.5 px-2 text-center">
+            <button onclick="openDailySpendModal(${d.day})" class="px-2 py-0.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded text-[10px] font-semibold text-slate-700">
+              Edit
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      tfoot.innerHTML = `
+        <tr class="bg-slate-100/95 text-xs">
+          <td colspan="2" class="py-3 px-2 font-bold text-center">Total</td>
+          <td class="py-3 px-2 text-right text-indigo-700 font-bold">฿${grandTotalActual.toLocaleString()}</td>
+          <td class="py-3 px-2 text-right font-bold border-l border-orange-200">฿${channelSums['shopee_ad'].toLocaleString()}</td>
+          <td class="py-3 px-2 text-right font-bold">฿${channelSums['shopee_live'].toLocaleString()}</td>
+          <td class="py-3 px-2 text-right font-bold">฿${channelSums['shopee_gsa'].toLocaleString()}</td>
+          <td class="py-3 px-2 text-right font-bold border-l border-slate-200">฿${channelSums['tiktok_gmv_max'].toLocaleString()}</td>
+          <td class="py-3 px-2 text-right font-bold">฿${channelSums['tiktok_live_gmv'].toLocaleString()}</td>
+          <td class="py-3 px-2 text-right font-bold">฿${channelSums['tiktok_awareness'].toLocaleString()}</td>
+          <td class="py-3 px-2 text-right font-bold">฿${channelSums['tiktok_follower'].toLocaleString()}</td>
+          <td class="py-3 px-2 text-right font-bold border-l border-blue-200">฿${channelSums['fb_shopee_cpas'].toLocaleString()}</td>
+          <td class="py-3 px-2 text-right font-bold">฿${channelSums['fb_awareness'].toLocaleString()}</td>
+          <td class="py-3 px-2 text-right font-bold border-l border-indigo-200">฿${channelSums['lazada_ad'].toLocaleString()}</td>
+          <td></td>
+        </tr>
+      `;
+    }
+
+    function renderFocusView(thead, tbody, tfoot, filtered) {
+      const selectedChannelId = activeChannelTabId || document.getElementById('selectFocusChannel')?.value || (ALL_CHANNELS[0]?.id || 'shopee_ad');
+      const ch = getChannelById(selectedChannelId);
+      if (!ch) return;
+
+      const channelBudget = Number(ch.budget || 0);
+
+      // Calculate total actual spend and burn rate for this specific channel
+      let channelTotalSpent = 0;
+      dailyData.forEach(d => {
+        channelTotalSpent += Number(d.spends[ch.id] || 0);
+      });
+      const channelRemaining = channelBudget - channelTotalSpent;
+      const channelBurnPct = channelBudget > 0 ? ((channelTotalSpent / channelBudget) * 100).toFixed(1) : '0.0';
+
+      // Update Channel Summary Strip
+      const platformBadge = document.getElementById('activeChannelBadgePlatform');
+      const bEl = document.getElementById('activeTabTotalBudget');
+      const sEl = document.getElementById('activeTabTotalSpent');
+      const rEl = document.getElementById('activeTabRemaining');
+      const pctEl = document.getElementById('activeTabBurnPct');
+
+      if (platformBadge) {
+        platformBadge.innerText = `${ch.platformName} • ${ch.name}`;
+        platformBadge.style.borderColor = ch.platformColor;
+      }
+      if (bEl) bEl.innerText = `฿${channelBudget.toLocaleString()}`;
+      if (sEl) sEl.innerText = `฿${channelTotalSpent.toLocaleString()}`;
+      if (rEl) {
+        rEl.innerText = `฿${channelRemaining.toLocaleString()}`;
+        rEl.className = `text-base font-bold mt-0.5 ${channelRemaining >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+      }
+      if (pctEl) pctEl.innerText = `${channelBurnPct}%`;
+
+      // Define Table Headers according to requirements: Date, % Budget, Budget, Actual Spend, Remaining
+      thead.innerHTML = `
+        <tr>
+          <th class="py-3 px-3 w-14 text-center">Day</th>
+          <th class="py-3 px-3 w-28">Date / Type</th>
+          <th class="py-3 px-3 text-right text-indigo-700 bg-indigo-50/30">% Budget</th>
+          <th class="py-3 px-3 text-right">Budget (Planned)</th>
+          <th class="py-3 px-3 text-right bg-slate-50">Actual Spend</th>
+          <th class="py-3 px-3 text-right font-bold text-slate-800">Remaining</th>
+          <th class="py-3 px-3 text-right">Variance</th>
+          <th class="py-3 px-3 text-center">Status</th>
+          <th class="py-3 px-3 text-center w-20">Action</th>
+        </tr>
+      `;
+
+      tbody.innerHTML = '';
+      let sumPlan = 0;
+      let sumActual = 0;
+      let runningCumulativeSpend = 0;
+
+      filtered.forEach(d => {
+        const plan = (d.channelPlans && d.channelPlans[ch.id]) || 0;
+        const actual = Number(d.spends[ch.id] || 0);
+        const variance = plan - actual;
+        
+        // % Budget planned for this specific day
+        const pctBudget = channelBudget > 0 ? ((plan / channelBudget) * 100).toFixed(2) : '0.00';
+
+        // Cumulative running balance for Remaining calculation
+        runningCumulativeSpend += actual;
+        const runningRemaining = channelBudget - runningCumulativeSpend;
+
+        sumPlan += plan;
+        sumActual += actual;
+
+        const pacingPct = plan > 0 ? Math.round((actual / plan) * 100) : 0;
+
+        let badgeClass = 'badge-normal';
+        if (d.type === 'DDAY') badgeClass = 'badge-dday';
+        else if (d.type === 'MIDMONTH') badgeClass = 'badge-midmonth';
+        else if (d.type === 'PAYDAY') badgeClass = 'badge-payday';
+
+        const row = document.createElement('tr');
+        row.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 text-xs";
+        row.innerHTML = `
+          <td class="py-2.5 px-3 text-center font-bold text-slate-800">D${d.day}</td>
+          <td class="py-2.5 px-3">
+            <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded border ${badgeClass}">
+              ${d.type}
+            </span>
+          </td>
+          <td class="py-2.5 px-3 text-right font-bold text-indigo-600 bg-indigo-50/20">
+            ${pctBudget}%
+          </td>
+          <td class="py-2.5 px-3 text-right font-semibold text-slate-700">
+            ฿${plan.toLocaleString()}
+          </td>
+          <td class="py-2.5 px-3 text-right bg-slate-50/50">
+            <div class="relative w-28 ml-auto">
+              <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-slate-400 text-[10px]">฿</span>
+              <input type="number" 
+                     value="${actual}" 
+                     step="100" 
+                     min="0"
+                     onchange="updateInlineChannelSpend(${d.day}, '${ch.id}', this.value)"
+                     class="w-full pl-5 pr-1.5 py-1 text-right text-xs font-bold text-slate-900 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white shadow-xs">
+            </div>
+          </td>
+          <td class="py-2.5 px-3 text-right font-bold ${runningRemaining >= 0 ? 'text-emerald-700' : 'text-rose-600'}">
+            ฿${runningRemaining.toLocaleString()}
+          </td>
+          <td class="py-2.5 px-3 text-right">
+            ${actual === 0 ? '<span class="text-slate-300">-</span>' : `
+              <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${variance >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">
+                ${variance >= 0 ? '+' : ''}฿${variance.toLocaleString()}
+              </span>
+            `}
+          </td>
+          <td class="py-2.5 px-3 text-center">
+            ${actual === 0 ? '<span class="text-slate-400 text-[10px]">Pending</span>' : `
+              <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${pacingPct > 105 ? 'bg-rose-50 text-rose-700' : (pacingPct < 90 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700')}">
+                ${pacingPct}% Paced
+              </span>
+            `}
+          </td>
+          <td class="py-2.5 px-3 text-center">
+            <button onclick="openDailySpendModal(${d.day})" class="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded text-[11px] font-semibold text-slate-600 transition">
+              Log
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      const totalVar = sumPlan - sumActual;
+      const totalPctPlanned = channelBudget > 0 ? ((sumPlan / channelBudget) * 100).toFixed(1) : '100.0';
+
+      tfoot.innerHTML = `
+        <tr class="bg-slate-100/95 text-xs">
+          <td colspan="2" class="py-3 px-3 font-bold">Total / Balance</td>
+          <td class="py-3 px-3 text-right font-bold text-indigo-700">${totalPctPlanned}%</td>
+          <td class="py-3 px-3 text-right text-indigo-700 font-bold">฿${sumPlan.toLocaleString()}</td>
+          <td class="py-3 px-3 text-right text-slate-900 font-bold">฿${sumActual.toLocaleString()}</td>
+          <td class="py-3 px-3 text-right font-bold ${channelRemaining >= 0 ? 'text-emerald-700' : 'text-rose-700'}">
+            ฿${channelRemaining.toLocaleString()}
+          </td>
+          <td class="py-3 px-3 text-right">
+            <span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${totalVar >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+              ${totalVar >= 0 ? '+' : ''}฿${totalVar.toLocaleString()}
+            </span>
+          </td>
+          <td class="py-3 px-3 text-center font-bold text-slate-700">${sumPlan > 0 ? ((sumActual/sumPlan)*100).toFixed(1) : 0}%</td>
+          <td></td>
+        </tr>
+      `;
+    }
+
+    function calculateDayActualTotal(dayObj) {
+      if (!dayObj || !dayObj.spends) return 0;
+      let total = 0;
+      Object.values(dayObj.spends).forEach(val => {
+        total += Number(val || 0);
+      });
+      return total;
+    }
+
+    function renderKPIs() {
+      const targetEl = document.getElementById('kpiTargetBudget');
+      const avgPlanEl = document.getElementById('kpiAvgDailyPlan');
+      const actualSpentEl = document.getElementById('kpiActualSpent');
+      const spentPercentEl = document.getElementById('kpiSpentPercent');
+      const plannedToDateEl = document.getElementById('kpiPlannedToDate');
+      const varianceEl = document.getElementById('kpiVariance');
+      const varianceTagEl = document.getElementById('kpiVarianceTag');
+      const pacingRateEl = document.getElementById('kpiPacingRate');
+      const remainingEl = document.getElementById('kpiRemaining');
+      const daysLeftEl = document.getElementById('kpiDaysLeft');
+      const recDailySpendEl = document.getElementById('kpiRecDailySpend');
+
+      if (!targetEl) return;
+
+      let totalActualMTD = 0;
+      let plannedToDate = 0;
+      let loggedDaysCount = 0;
+
+      dailyData.forEach(d => {
+        const dayActual = calculateDayActualTotal(d);
+        if (dayActual > 0) {
+          totalActualMTD += dayActual;
+          plannedToDate += d.plannedSpend;
+          loggedDaysCount++;
+        }
+      });
+
+      // If no spends are logged yet, baseline to first day plan
+      if (plannedToDate === 0 && dailyData.length > 0) {
+        plannedToDate = dailyData[0].plannedSpend;
+      }
+
+      const varianceMTD = plannedToDate - totalActualMTD;
+      const spentPct = masterMonthlyBudget > 0 ? Math.min(100, Math.round((totalActualMTD / masterMonthlyBudget) * 100)) : 0;
+      const pacingRate = plannedToDate > 0 ? ((totalActualMTD / plannedToDate) * 100).toFixed(1) : '100.0';
+      const remainingBudget = Math.max(0, masterMonthlyBudget - totalActualMTD);
+      const daysRemaining = Math.max(1, DAYS_IN_MONTH - loggedDaysCount);
+      const recDaily = Math.round(remainingBudget / daysRemaining);
+
+      targetEl.innerText = `฿${masterMonthlyBudget.toLocaleString()}`;
+      avgPlanEl.innerText = `฿${Math.round(masterMonthlyBudget / DAYS_IN_MONTH).toLocaleString()}`;
+      actualSpentEl.innerText = `฿${totalActualMTD.toLocaleString()}`;
+      spentPercentEl.innerText = `${spentPct}% of Budget`;
+      plannedToDateEl.innerText = `฿${plannedToDate.toLocaleString()}`;
+
+      varianceEl.innerText = `${varianceMTD >= 0 ? '+' : ''}฿${varianceMTD.toLocaleString()}`;
+      if (varianceMTD >= 0) {
+        varianceTagEl.innerText = 'Under Budget (Good)';
+        varianceTagEl.className = 'text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700';
+      } else {
+        varianceTagEl.innerText = 'Over Planned Burn';
+        varianceTagEl.className = 'text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700';
+      }
+
+      pacingRateEl.innerText = `${pacingRate}%`;
+      remainingEl.innerText = `฿${remainingBudget.toLocaleString()}`;
+      daysLeftEl.innerText = `${daysRemaining} days remaining`;
+      recDailySpendEl.innerText = `฿${recDaily.toLocaleString()}`;
+    }
+
+    function renderPlatformCards() {
+      const container = document.getElementById('platformCardsContainer');
+      if (!container) return;
+
+      container.innerHTML = '';
+
+      Object.values(PLATFORMS).forEach(plat => {
+        let platBudget = 0;
+        let platSpent = 0;
+
+        plat.channels.forEach(ch => {
+          platBudget += Number(ch.budget || 0);
+        });
+
+        dailyData.forEach(d => {
+          plat.channels.forEach(ch => {
+            platSpent += Number(d.spends[ch.id] || 0);
+          });
+        });
+
+        const burnPct = platBudget > 0 ? Math.min(100, Math.round((platSpent / platBudget) * 100)) : 0;
+
+        const card = document.createElement('div');
+        card.className = "bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between";
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold ${plat.textColor} flex items-center space-x-1.5">
+                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${plat.color}"></span>
+                <span>${plat.name}</span>
+              </span>
+              <span class="text-[10px] font-semibold text-slate-400">${plat.channels.length} Ads</span>
+            </div>
+            <div class="flex items-baseline justify-between mt-1">
+              <span class="text-lg font-bold text-slate-900">฿${platSpent.toLocaleString()}</span>
+              <span class="text-[11px] text-slate-400">/ ฿${platBudget.toLocaleString()}</span>
+            </div>
+          </div>
+          <div class="mt-3">
+            <div class="flex items-center justify-between text-[10px] text-slate-500 font-medium mb-1">
+              <span>Budget Burn</span>
+              <span class="font-bold ${burnPct > 90 ? 'text-amber-600' : 'text-slate-700'}">${burnPct}%</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+              <div class="h-1.5 rounded-full transition-all duration-500" style="width: ${burnPct}%; background-color: ${plat.color}"></div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderChannelControls() {
+      const container = document.getElementById('channelListControl');
+      if (!container) return;
+
+      container.innerHTML = '';
+
+      Object.values(PLATFORMS).forEach(plat => {
+        const group = document.createElement('div');
+        group.className = "p-3 rounded-xl border border-slate-100 bg-slate-50/50 space-y-2";
+        group.innerHTML = `
+          <div class="flex items-center justify-between text-xs font-bold ${plat.textColor}">
+            <span>${plat.name}</span>
+            <span class="text-[10px] text-slate-400">${plat.channels.length} Channels</span>
+          </div>
+          <div class="space-y-1.5">
+            ${plat.channels.length === 0 ? '<div class="text-[11px] text-slate-400 py-1 italic">No active channels. Click + Add Channel to create one.</div>' : ''}
+            ${plat.channels.map(ch => `
+              <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200/80 text-xs hover:border-slate-300 transition">
+                <div class="flex items-center space-x-1.5 min-w-0 pr-2">
+                  <button onclick="openEditChannelModal('${ch.id}')" class="p-1 text-slate-400 hover:text-indigo-600 rounded transition" title="Rename or delete channel">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                  </button>
+                  <span class="font-medium text-slate-800 truncate cursor-pointer" onclick="openEditChannelModal('${ch.id}')" title="Click to rename">${ch.name}</span>
+                </div>
+                <div class="relative w-28 shrink-0">
+                  <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-slate-400 text-xs font-bold">฿</span>
+                  <input type="number" 
+                         value="${ch.budget}" 
+                         step="1000" 
+                         min="0"
+                         onchange="updateChannelBudget('${ch.id}', this.value)"
+                         class="w-full pl-6 pr-1.5 py-1 text-right text-xs font-bold text-slate-800 rounded-md border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50 hover:bg-white transition">
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(group);
+      });
+    }
+
+    let shareChartInstance = null;
+    function renderChannelShareChart() {
+      const canvas = document.getElementById('channelSharePieChart');
+      const summaryList = document.getElementById('channelShareSummaryList');
+      if (!canvas || !summaryList) return;
+
+      const labels = [];
+      const data = [];
+      const colors = [
+        '#EE4D2D', '#F97316', '#FB923C',
+        '#000000', '#334155', '#64748B', '#94A3B8',
+        '#1877F2', '#60A5FA',
+        '#0F146D'
+      ];
+
+      summaryList.innerHTML = '';
+
+      ALL_CHANNELS.forEach((ch, idx) => {
+        labels.push(ch.name);
+        data.push(ch.budget || 0);
+
+        const pct = masterMonthlyBudget > 0 ? (((ch.budget || 0) / masterMonthlyBudget) * 100).toFixed(1) : 0;
+        const item = document.createElement('div');
+        item.className = "flex items-center justify-between text-xs py-1 border-b border-slate-50";
+        item.innerHTML = `
+          <div class="flex items-center space-x-2 truncate pr-2">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${colors[idx % colors.length]}"></span>
+            <span class="font-medium text-slate-700 truncate">${ch.name}</span>
+          </div>
+          <div class="flex items-center space-x-3 shrink-0">
+            <span class="font-bold text-slate-900">฿${(ch.budget || 0).toLocaleString()}</span>
+            <span class="text-[11px] text-slate-400 w-10 text-right font-semibold">${pct}%</span>
+          </div>
+        `;
+        summaryList.appendChild(item);
+      });
+
+      if (shareChartInstance) {
+        shareChartInstance.destroy();
+      }
+
+      const ctx = canvas.getContext('2d');
+      shareChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors,
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '68%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const val = ctx.parsed || 0;
+                  const pct = masterMonthlyBudget > 0 ? ((val / masterMonthlyBudget) * 100).toFixed(1) : 0;
+                  return ` ${ctx.label}: ฿${val.toLocaleString()} (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderCalendarDays() {
+      const container = document.getElementById('calendarDayTypeSelector');
+      if (!container) return;
+
+      container.innerHTML = '';
+
+      dailyData.forEach(d => {
+        let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
+        if (d.type === 'DDAY') badgeColor = 'bg-red-100 text-red-700 border-red-300 font-bold';
+        else if (d.type === 'MIDMONTH') badgeColor = 'bg-indigo-100 text-indigo-700 border-indigo-300 font-bold';
+        else if (d.type === 'PAYDAY') badgeColor = 'bg-amber-100 text-amber-800 border-amber-300 font-bold';
+
+        const btn = document.createElement('button');
+        btn.onclick = () => cycleDayType(d.day);
+        btn.className = `p-2 rounded-xl border text-center transition hover:shadow-xs flex flex-col items-center justify-center ${badgeColor}`;
+        btn.innerHTML = `
+          <span class="text-xs font-extrabold">D${d.day}</span>
+          <span class="text-[9px] mt-0.5 tracking-tight uppercase">${d.type}</span>
+          <span class="text-[9px] text-slate-500 mt-1 font-semibold">฿${Math.round(d.plannedSpend/1000)}k</span>
+        `;
+        container.appendChild(btn);
+      });
+    }
+
+    function cycleDayType(dayNum) {
+      const dayObj = dailyData.find(d => d.day === dayNum);
+      if (!dayObj) return;
+
+      const cycle = ['NORMAL', 'DDAY', 'MIDMONTH', 'PAYDAY'];
+      const nextIdx = (cycle.indexOf(dayObj.type) + 1) % cycle.length;
+      dayObj.type = cycle[nextIdx];
+
+      autoDistributePlannedBudget();
+      scheduleAutoSave();
+      showToast(`Day ${dayNum} set to ${dayObj.type}`);
+    }
+
+    function updateWeights() {
+      dayTypeWeights.DDAY = Math.max(0.5, parseFloat(document.getElementById('weightDday')?.value) || 4.0);
+      dayTypeWeights.MIDMONTH = Math.max(0.5, parseFloat(document.getElementById('weightMidmonth')?.value) || 2.2);
+      dayTypeWeights.PAYDAY = Math.max(0.5, parseFloat(document.getElementById('weightPayday')?.value) || 2.8);
+      dayTypeWeights.NORMAL = Math.max(0.2, parseFloat(document.getElementById('weightNormal')?.value) || 1.0);
+
+      autoDistributePlannedBudget();
+      scheduleAutoSave();
+    }
+
+    function switchView(viewName) {
+      const vDaily = document.getElementById('viewDailyTracker');
+      const vChannels = document.getElementById('viewChannelAllocation');
+      const vWeights = document.getElementById('viewDayTypePlanner');
+
+      const tDaily = document.getElementById('viewTabDaily');
+      const tChannels = document.getElementById('viewTabChannels');
+      const tWeights = document.getElementById('viewTabWeights');
+
+      [vDaily, vChannels, vWeights].forEach(el => el.classList.add('hidden'));
+      [tDaily, tChannels, tWeights].forEach(btn => {
+        btn.className = "px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition";
+      });
+
+      if (viewName === 'daily') {
+        vDaily.classList.remove('hidden');
+        tDaily.className = "px-3 py-1.5 rounded-md bg-white text-indigo-600 shadow-sm font-semibold transition";
+        if (pacingChartInstance) pacingChartInstance.resize();
+      } else if (viewName === 'channels') {
+        vChannels.classList.remove('hidden');
+        tChannels.className = "px-3 py-1.5 rounded-md bg-white text-indigo-600 shadow-sm font-semibold transition";
+        renderChannelControls();
+        renderChannelShareChart();
+      } else if (viewName === 'weights') {
+        vWeights.classList.remove('hidden');
+        tWeights.className = "px-3 py-1.5 rounded-md bg-white text-indigo-600 shadow-sm font-semibold transition";
+        renderCalendarDays();
+      }
+    }
+
+    let activeModalDay = 1;
+
+    function openDailySpendModal(dayNum = 1) {
+      activeModalDay = dayNum;
+      const modal = document.getElementById('spendModal');
+      const title = document.getElementById('modalTitle');
+      const subtitle = document.getElementById('modalSubtitle');
+      const dayTypeSelect = document.getElementById('modalDayTypeSelect');
+      const dailyPlanInput = document.getElementById('modalDailyPlanInput');
+      const inputGroups = document.getElementById('modalChannelInputGroups');
+
+      const dayObj = dailyData.find(d => d.day === dayNum) || dailyData[0];
+
+      title.innerText = `Log Daily Spend • Day ${dayObj.day}`;
+      subtitle.innerText = `Record verified ad channel spend for Day ${dayObj.day}`;
+      dayTypeSelect.value = dayObj.type;
+      dailyPlanInput.value = dayObj.plannedSpend;
+
+      inputGroups.innerHTML = '';
+      Object.values(PLATFORMS).forEach(plat => {
+        const platBox = document.createElement('div');
+        platBox.className = "p-3 rounded-xl border border-slate-100 bg-slate-50/50 space-y-2";
+        platBox.innerHTML = `
+          <div class="flex items-center justify-between text-xs font-bold ${plat.textColor}">
+            <span>${plat.name}</span>
+            <span class="text-[10px] text-slate-400">Actual Spend (THB)</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            ${plat.channels.map(ch => `
+              <div class="bg-white p-2 rounded-lg border border-slate-200">
+                <label class="block text-[11px] font-medium text-slate-600 truncate">${ch.name}</label>
+                <div class="relative mt-1">
+                  <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-slate-400 text-xs">฿</span>
+                  <input type="number" 
+                         id="modal_spend_${ch.id}" 
+                         value="${dayObj.spends[ch.id] || 0}" 
+                         step="50" 
+                         min="0"
+                         oninput="recalculateModalTotal()"
+                         class="w-full pl-6 pr-2 py-1 text-right text-xs font-bold text-slate-800 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        inputGroups.appendChild(platBox);
+      });
+
+      recalculateModalTotal();
+      modal.classList.remove('hidden');
+    }
+
+    function closeDailySpendModal() {
+      document.getElementById('spendModal')?.classList.add('hidden');
+    }
+
+    function recalculateModalTotal() {
+      let sum = 0;
+      ALL_CHANNELS.forEach(ch => {
+        const input = document.getElementById(`modal_spend_${ch.id}`);
+        if (input) {
+          sum += Math.max(0, parseFloat(input.value) || 0);
+        }
+      });
+      const totalEl = document.getElementById('modalTotalLogged');
+      if (totalEl) totalEl.innerText = `฿${sum.toLocaleString()}`;
+    }
+
+    function saveModalSpend() {
+      const dayObj = dailyData.find(d => d.day === activeModalDay);
+      if (!dayObj) return;
+
+      const dayTypeSelect = document.getElementById('modalDayTypeSelect');
+      const dailyPlanInput = document.getElementById('modalDailyPlanInput');
+
+      if (dayTypeSelect) dayObj.type = dayTypeSelect.value;
+      if (dailyPlanInput) dayObj.plannedSpend = Math.max(0, parseFloat(dailyPlanInput.value) || 0);
+
+      ALL_CHANNELS.forEach(ch => {
+        const input = document.getElementById(`modal_spend_${ch.id}`);
+        if (input) {
+          dayObj.spends[ch.id] = Math.max(0, parseFloat(input.value) || 0);
+        }
+      });
+
+      closeDailySpendModal();
+      saveCurrentProfile(true);
+      renderAll();
+      showToast(`Saved spend log for Day ${activeModalDay}!`);
+    }
+
+    function resetDefaultChannels() {
+      PLATFORMS = JSON.parse(JSON.stringify(DEFAULT_PLATFORMS));
+      rebuildAllChannelsIndex();
+      recomputeMasterFromChannels();
+      autoDistributePlannedBudget();
+      saveCurrentProfile(true);
+      showToast("Reset all channels to default Project INE allocations!");
+    }
+
+    function renderAll() {
+      renderKPIs();
+      renderPlatformCards();
+      renderPacingChart();
+      renderDailyTable();
+      renderChannelControls();
+      renderChannelShareChart();
+      renderCalendarDays();
+
+      // Update weight summaries on Day Type Planner
+      const weightDdayVal = dayTypeWeights.DDAY || 4.0;
+      const weightMidVal = dayTypeWeights.MIDMONTH || 2.2;
+      const weightPayVal = dayTypeWeights.PAYDAY || 2.8;
+      const weightNormVal = dayTypeWeights.NORMAL || 1.0;
+
+      let totalPoints = 0;
+      dailyData.forEach(d => totalPoints += (dayTypeWeights[d.type] || 1.0));
+      const rate = masterMonthlyBudget / (totalPoints || 1);
+
+      const dEl = document.getElementById('summaryDdayAlloc');
+      const mEl = document.getElementById('summaryMidmonthAlloc');
+      const pEl = document.getElementById('summaryPaydayAlloc');
+      const nEl = document.getElementById('summaryNormalAlloc');
+
+      if (dEl) dEl.innerText = `Planned/Day: ~฿${Math.round(rate * weightDdayVal).toLocaleString()}`;
+      if (mEl) mEl.innerText = `Planned/Day: ~฿${Math.round(rate * weightMidVal).toLocaleString()}`;
+      if (pEl) pEl.innerText = `Planned/Day: ~฿${Math.round(rate * weightPayVal).toLocaleString()}`;
+      if (nEl) nEl.innerText = `Planned/Day: ~฿${Math.round(rate * weightNormVal).toLocaleString()}`;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initializeMonthData();
+      renderAll();
+    });
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      initializeMonthData();
+      renderAll();
+    }
+
+    // Auto-save on page refresh, navigation, or tab hiding
+    window.addEventListener('beforeunload', () => {
+      saveCurrentProfile(true);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        saveCurrentProfile(true);
+      }
+    });
+  </script>
+</body>
+</html>
