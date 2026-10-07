@@ -31,6 +31,19 @@
     .badge-payday { background-color: #fef3c7; color: #d97706; border-color: #fcd34d; }
     .badge-midmonth { background-color: #e0e7ff; color: #4f46e5; border-color: #a5b4fc; }
     .badge-normal { background-color: #f1f5f9; color: #64748b; border-color: #cbd5e1; }
+    .tab-dragging {
+      opacity: 0.45;
+      transform: scale(0.96);
+    }
+    .tab-drag-over {
+      outline: 2px dashed #6366f1;
+      outline-offset: -2px;
+      background-color: #e0e7ff !important;
+    }
+    .tab-item {
+      user-select: none;
+      -webkit-user-select: none;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col font-sans">
@@ -91,24 +104,56 @@
   <!-- Main View Container -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-6">
 
-    <!-- Top View Switcher Tabs -->
-    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-      <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-600 overflow-x-auto">
-        <button id="viewTabDaily" onclick="switchMainView('daily')" class="px-3.5 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition whitespace-nowrap">Daily Tracker</button>
-        <button id="viewTabSalesPerf" onclick="switchMainView('salesperf')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5 whitespace-nowrap">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Sales & ROAS Performance</span>
+    <!-- Top View Switcher Tabs (With Free Drag & Drop Reordering) -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 gap-2">
+      <div class="flex items-center space-x-1.5">
+        <div id="mainViewTabsContainer" class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-600 overflow-x-auto">
+          <!-- Tab 1: Daily Tracker -->
+          <div id="viewTabDaily" data-view-id="daily" draggable="true" onclick="handleTabClick('daily')" class="tab-item group px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap cursor-grab active:cursor-grabbing">
+            <span class="text-slate-400 group-hover:text-indigo-400 cursor-grab text-[11px] font-mono tracking-tighter" title="คลิกค้างแล้วลากเพื่อสลับตำแหน่ง">⋮⋮</span>
+            <span>Daily Tracker</span>
+          </div>
+
+          <!-- Tab 2: Sales & ROAS Performance -->
+          <div id="viewTabSalesPerf" data-view-id="salesperf" draggable="true" onclick="handleTabClick('salesperf')" class="tab-item group px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5 whitespace-nowrap cursor-grab active:cursor-grabbing">
+            <span class="text-slate-400 group-hover:text-indigo-400 cursor-grab text-[11px] font-mono tracking-tighter" title="คลิกค้างแล้วลากเพื่อสลับตำแหน่ง">⋮⋮</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Sales & ROAS Performance</span>
+          </div>
+
+          <!-- Tab 3: Ad Simulation -->
+          <div id="viewTabSimulation" data-view-id="simulation" draggable="true" onclick="handleTabClick('simulation')" class="tab-item group px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5 whitespace-nowrap cursor-grab active:cursor-grabbing">
+            <span class="text-slate-400 group-hover:text-indigo-400 cursor-grab text-[11px] font-mono tracking-tighter" title="คลิกค้างแล้วลากเพื่อสลับตำแหน่ง">⋮⋮</span>
+            <span class="text-indigo-600 font-bold">🎯</span>
+            <span>Ad Simulation</span>
+          </div>
+
+          <!-- Tab 4: Set Channel Budgets -->
+          <div id="viewTabChannels" data-view-id="channels" draggable="true" onclick="handleTabClick('channels')" class="tab-item group px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5 whitespace-nowrap cursor-grab active:cursor-grabbing">
+            <span class="text-slate-400 group-hover:text-indigo-400 cursor-grab text-[11px] font-mono tracking-tighter" title="คลิกค้างแล้วลากเพื่อสลับตำแหน่ง">⋮⋮</span>
+            <span>Set Channel Budgets</span>
+          </div>
+
+          <!-- Tab 5: Campaign Day Weights -->
+          <div id="viewTabDayTypes" data-view-id="daytypes" draggable="true" onclick="handleTabClick('daytypes')" class="tab-item group px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5 whitespace-nowrap cursor-grab active:cursor-grabbing">
+            <span class="text-slate-400 group-hover:text-indigo-400 cursor-grab text-[11px] font-mono tracking-tighter" title="คลิกค้างแล้วลากเพื่อสลับตำแหน่ง">⋮⋮</span>
+            <span>Campaign Day Weights</span>
+          </div>
+        </div>
+
+        <!-- Reset Tab Order Button -->
+        <button onclick="resetTabOrder()" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-200/60 rounded-lg transition text-xs shrink-0" title="รีเซ็ตลำดับแท็บกลับเป็นค่าเริ่มต้น">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
         </button>
-        <button id="viewTabChannels" onclick="switchMainView('channels')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold whitespace-nowrap">Set Channel Budgets</button>
-        <button id="viewTabDayTypes" onclick="switchMainView('daytypes')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold whitespace-nowrap">Campaign Day Weights</button>
       </div>
+
       <div class="text-xs text-slate-500 font-medium hidden sm:flex items-center space-x-2">
         <span>Active Project ID:</span>
         <span id="labelCurrentProjectId" class="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-bold">Project INE</span>
       </div>
     </div>
 
-    <!-- 4 Primary KPI Cards (Exact layout from screenshot) -->
+    <!-- 4 Primary KPI Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <!-- 1. Monthly Master Budget -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
@@ -180,9 +225,9 @@
       </div>
     </div>
 
-    <!-- 4 Platform Cards (Exact row shown in screenshot: Shopee, TikTok Ad, Facebook, Lazada) -->
+    <!-- 4 Platform Cards (Shopee, Tiktok, Facebook, Lazada) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="platformCardsContainer">
-      <!-- Injected dynamically via JS: Shopee, TikTok Ad, Facebook, Lazada -->
+      <!-- Injected dynamically via JS: Shopee, Tiktok, Facebook, Lazada -->
     </div>
 
     <!-- SECTION: Daily Tracker -->
@@ -227,10 +272,9 @@
 
           <!-- Controls row -->
           <div class="flex flex-wrap items-center gap-2">
-            <!-- View Mode Switcher -->
+            <!-- View Mode Switcher (All Channels removed as requested) -->
             <div class="inline-flex p-1 bg-slate-100 rounded-lg text-xs font-semibold text-slate-600">
               <button id="btnViewPlatform" onclick="setDailyTableViewMode('platform')" class="px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs font-bold transition">Platforms</button>
-              <button id="btnViewMatrix" onclick="setDailyTableViewMode('matrix')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition font-bold">All Channels</button>
               <button id="btnViewFocus" onclick="setDailyTableViewMode('focus')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition font-bold">Channel Ledger</button>
             </div>
 
@@ -345,7 +389,7 @@
               </div>
               <div class="mt-3">
                 <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target GMV (฿)</label>
-                <input type="number" id="inputTargetGmv" value="1200000" min="0" step="50000" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-emerald-500 mt-0.5">
+                <input type="text" inputmode="decimal" id="inputTargetGmv" value="1,200,000" oninput="formatCommaNumberInput(this, true);" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-emerald-500 mt-0.5">
               </div>
             </div>
             <div class="mt-3 pt-2.5 border-t border-emerald-100/80">
@@ -368,7 +412,7 @@
               </div>
               <div class="mt-3">
                 <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target Orders</label>
-                <input type="number" id="inputTargetOrders" value="3000" min="0" step="50" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-indigo-500 mt-0.5">
+                <input type="text" inputmode="numeric" id="inputTargetOrders" value="3,000" oninput="formatCommaNumberInput(this, false);" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-indigo-500 mt-0.5">
               </div>
             </div>
             <div class="mt-3 pt-2.5 border-t border-indigo-100/80">
@@ -574,6 +618,174 @@
       </div>
     </div>
 
+    <!-- SECTION: Ad Simulation -->
+    <div id="sectionAdSimulation" class="hidden space-y-6">
+      <!-- 1. Top Target KPI Setting & Simulated vs Target Comparative Cards -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
+              <h2 class="text-base font-bold text-slate-900">Campaign Scenario Planning & Ad Simulation</h2>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Interactive Model</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Set high-level targets, input expected CPA & AOV per sub-channel, and calculate projected Orders, GMV, and ROAS</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="syncSimulationBudgetsFromPlan()" class="inline-flex items-center px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition shadow-2xs" title="Import current planned channel budgets into simulator">
+              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>Sync from Plan</span>
+            </button>
+            <button onclick="applySimulationBudgetsToPlan()" class="inline-flex items-center px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-xl text-xs font-bold transition shadow-2xs" title="Apply these simulated budgets to project master plan">
+              <span>⚡ Apply to Plan</span>
+            </button>
+            <button onclick="saveSimulationTargets()" class="inline-flex items-center px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs">
+              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Save Targets</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Comparative Cards: Simulation Goal vs Simulated Output -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          <!-- 1. Orders Target vs Simulated -->
+          <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-indigo-950 uppercase">Target Orders</span>
+                <span id="simOrdersAchievePct" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-700">0% of Goal</span>
+              </div>
+              <div class="mt-3">
+                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target Orders (User-Set)</label>
+                <input type="text" inputmode="numeric" id="inputSimTargetOrders" value="3,000" oninput="formatCommaNumberInput(this, false); computeSimulation();" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-indigo-500 mt-0.5">
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-indigo-100/80">
+              <div class="flex justify-between items-baseline text-xs">
+                <span class="text-slate-500">Simulated Orders:</span>
+                <span id="simActualOrdersLabel" class="text-base font-black text-indigo-700">0</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div id="barSimOrders" class="bg-indigo-600 h-1.5 rounded-full" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. GMV Target vs Simulated -->
+          <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-950 uppercase">Target GMV (฿)</span>
+                <span id="simGmvAchievePct" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">0% of Goal</span>
+              </div>
+              <div class="mt-3">
+                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target GMV (User-Set)</label>
+                <input type="text" inputmode="decimal" id="inputSimTargetGmv" value="1,500,000" oninput="formatCommaNumberInput(this, true); computeSimulation();" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-emerald-500 mt-0.5">
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-emerald-100/80">
+              <div class="flex justify-between items-baseline text-xs">
+                <span class="text-slate-500">Simulated GMV:</span>
+                <span id="simActualGmvLabel" class="text-base font-black text-emerald-700">฿0</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div id="barSimGmv" class="bg-emerald-600 h-1.5 rounded-full" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. ROAS Target vs Simulated -->
+          <div class="p-4 rounded-xl border border-violet-200 bg-violet-50/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-violet-950 uppercase">Target ROAS (x)</span>
+                <span id="simRoasStatusBadge" class="text-[10px] px-2 py-0.5 rounded font-bold bg-slate-100 text-slate-600">Tracking</span>
+              </div>
+              <div class="mt-3">
+                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target ROAS (User-Set)</label>
+                <input type="number" id="inputSimTargetRoas" value="4.0" step="0.1" min="0.1" oninput="computeSimulation();" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-violet-500 mt-0.5">
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-violet-100/80">
+              <div class="flex justify-between items-baseline text-xs">
+                <span class="text-slate-500">Simulated ROAS:</span>
+                <span id="simActualRoasLabel" class="text-base font-black text-violet-700">0.00x</span>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-1 flex justify-between">
+                <span>Variance:</span>
+                <span id="simRoasVariance" class="font-bold text-slate-700">0.00x</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. AOV Target vs Simulated -->
+          <div class="p-4 rounded-xl border border-amber-200 bg-amber-50/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-950 uppercase">Target AOV (฿)</span>
+                <span id="simAovStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800">Target</span>
+              </div>
+              <div class="mt-3">
+                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target AOV (User-Set)</label>
+                <input type="text" inputmode="decimal" id="inputSimTargetAov" value="500" oninput="formatCommaNumberInput(this, true); computeSimulation();" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-amber-500 mt-0.5">
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-amber-100/80">
+              <div class="flex justify-between items-baseline text-xs">
+                <span class="text-slate-500">Simulated AOV:</span>
+                <span id="simActualAovLabel" class="text-base font-black text-amber-800">฿0</span>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-1 flex justify-between">
+                <span>Blended CPA:</span>
+                <span id="simActualCpaLabel" class="font-bold text-slate-700">฿0 / Order</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Interactive Sub-Channel Simulation Ledger Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h3 class="text-base font-bold text-slate-900">Sub-Channel Simulation Ledger</h3>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Auto-Calculated</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Input <strong>Budget</strong>, <strong>CPA</strong>, and <strong>AOV</strong> — <strong>Orders</strong>, <strong>GMV</strong>, and <strong>ROAS</strong> are calculated automatically</p>
+          </div>
+          <div class="flex items-center space-x-2 text-xs text-slate-500 font-semibold">
+            <span class="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-700">Orders = Budget ÷ CPA</span>
+            <span class="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-700">GMV = Orders × AOV</span>
+            <span class="inline-flex items-center px-2 py-1 rounded bg-slate-100 text-slate-700">ROAS = GMV ÷ Budget</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-[550px]">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 sticky top-0 z-10 border-b border-slate-200 text-slate-600 font-bold">
+              <tr>
+                <th class="py-3 px-3.5">Sub Channel</th>
+                <th class="py-3 px-2.5">Platform</th>
+                <th class="py-3 px-3 text-right bg-amber-50/50 text-amber-950 font-bold border-l border-amber-200/50">Budget (฿) *</th>
+                <th class="py-3 px-3 text-right bg-amber-50/50 text-amber-950 font-bold">Expected CPA (฿) *</th>
+                <th class="py-3 px-3 text-right bg-amber-50/50 text-amber-950 font-bold border-r border-amber-200/50">Expected AOV (฿) *</th>
+                <th class="py-3 px-3 text-right font-bold text-indigo-700 bg-indigo-50/30">Projected Orders</th>
+                <th class="py-3 px-3 text-right font-bold text-emerald-700 bg-emerald-50/30">Projected GMV (฿)</th>
+                <th class="py-3 px-3 text-right font-black text-violet-800 bg-violet-50/30">Projected ROAS</th>
+              </tr>
+            </thead>
+            <tbody id="tableSimulationBody" class="divide-y divide-slate-100 font-medium"></tbody>
+            <tfoot id="tableSimulationFoot" class="bg-slate-100/90 font-bold text-slate-900 sticky bottom-0 border-t-2 border-slate-300"></tfoot>
+          </table>
+        </div>
+        <div class="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+          <span>* Columns marked in yellow are manual user inputs. Values automatically update live projections.</span>
+          <span id="simTotalBudgetRollup" class="font-bold text-slate-800">Total Simulation Budget: ฿0</span>
+        </div>
+      </div>
+    </div>
+
     <!-- SECTION: Set Channel Budgets -->
     <div id="sectionChannelAllocation" class="hidden space-y-5">
       <!-- 1. Top Executive Master Budget Ribbon -->
@@ -626,14 +838,15 @@
               </div>
             </div>
 
-            <!-- Doughnut Chart Container -->
-            <div class="h-56 relative flex items-center justify-center my-2">
-              <canvas id="channelSharePieChart"></canvas>
-              <!-- Centered Doughnut Metric Summary -->
-              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none text-center">
-                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Master Budget</span>
-                <span id="doughnutCenterTotal" class="text-sm sm:text-base font-black text-slate-900">฿0</span>
-                <span id="doughnutCenterChannels" class="text-[10px] font-semibold text-indigo-600">4 Platforms</span>
+            <!-- Horizontal One-Bar Chart Container -->
+            <div class="my-3 space-y-1.5">
+              <div id="horizontalShareBarContainer" class="w-full h-8 bg-slate-100 rounded-xl overflow-hidden flex shadow-inner border border-slate-200">
+                <!-- Segments injected dynamically via JS -->
+              </div>
+              <div class="flex justify-between text-[10px] text-slate-400 font-semibold px-0.5">
+                <span>0%</span>
+                <span id="barCenterBudgetSummary" class="text-indigo-600 font-bold">100% of Master Budget</span>
+                <span>100%</span>
               </div>
             </div>
 
@@ -751,7 +964,7 @@
     </div>
   </main>
 
-  <!-- MODAL: Spend Modal (Supports Spend, Orders, GMV) -->
+  <!-- MODAL: Spend Modal (Supports Spend, Orders, GMV with Comma & Decimals) -->
   <div id="spendModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -774,8 +987,8 @@
             </select>
           </div>
           <div class="text-right">
-            <span class="block text-[11px] font-bold text-slate-500 uppercase">Target Day Plan</span>
-            <input type="number" id="modalDailyPlanInput" class="w-28 text-right font-bold text-sm bg-white border border-slate-200 rounded-lg px-2 py-1 focus:ring-1 focus:ring-indigo-500">
+            <span class="block text-[11px] font-bold text-slate-500 uppercase">Target Day Plan (฿)</span>
+            <input type="text" inputmode="decimal" id="modalDailyPlanInput" oninput="formatCommaNumberInput(this, true);" class="w-32 text-right font-bold text-sm bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-indigo-500">
           </div>
         </div>
 
@@ -873,7 +1086,7 @@
           </button>
           <div id="pasteFallbackWrapper" class="hidden p-3 bg-white border-t border-slate-200">
             <textarea id="excelPasteArea" rows="4" oninput="handleExcelPasteInput(this.value)" placeholder="Day	Shopee Ad Spend	Shopee Ad Orders	Shopee Ad GMV...
-1	2500	15	12000..." class="w-full text-xs font-mono p-2.5 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"></textarea>
+1	2,500	15	12,000..." class="w-full text-xs font-mono p-2.5 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"></textarea>
           </div>
         </div>
 
@@ -918,7 +1131,7 @@
           <label class="block font-semibold text-slate-700 mb-1">Platform Group</label>
           <select id="newChannelPlatformSelect" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 text-xs">
             <option value="shopee">Shopee</option>
-            <option value="tiktok">TikTok Ad</option>
+            <option value="tiktok">Tiktok</option>
             <option value="facebook">Facebook</option>
             <option value="lazada">Lazada</option>
           </select>
@@ -929,7 +1142,7 @@
         </div>
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Monthly Planned Budget (THB)</label>
-          <input type="number" id="newChannelBudgetInput" min="0" step="5000" value="30000" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 text-sm">
+          <input type="text" inputmode="decimal" id="newChannelBudgetInput" value="30,000" oninput="formatCommaNumberInput(this, true);" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 text-sm">
         </div>
       </div>
       <div class="mt-5 pt-3 border-t border-slate-100 flex justify-end space-x-2">
@@ -959,14 +1172,14 @@
           <label class="block font-semibold text-slate-700 mb-1">Platform Group</label>
           <select id="editChannelPlatformSelect" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 text-xs">
             <option value="shopee">Shopee</option>
-            <option value="tiktok">TikTok Ad</option>
+            <option value="tiktok">Tiktok</option>
             <option value="facebook">Facebook</option>
             <option value="lazada">Lazada</option>
           </select>
         </div>
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Monthly Planned Budget (THB)</label>
-          <input type="number" id="editChannelBudgetInput" min="0" step="1000" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 text-sm">
+          <input type="text" inputmode="decimal" id="editChannelBudgetInput" oninput="formatCommaNumberInput(this, true);" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 text-sm">
         </div>
       </div>
       <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
@@ -1043,8 +1256,9 @@
   <!-- JAVASCRIPT CORE APPLICATION LOGIC -->
   <script>
     const DAYS_IN_MONTH = 31;
-    const STORAGE_KEY_PROJECTS = 'MULTI_PROJECT_BUDGET_STORE_V5';
-    const STORAGE_KEY_ACTIVE_PROJECT = 'MULTI_PROJECT_ACTIVE_ID_V5';
+    const STORAGE_KEY_PROJECTS = 'MULTI_PROJECT_BUDGET_STORE_V6';
+    const STORAGE_KEY_ACTIVE_PROJECT = 'MULTI_PROJECT_ACTIVE_ID_V6';
+    const STORAGE_KEY_TAB_ORDER = 'MULTI_PROJECT_TAB_ORDER_V1';
 
     // Helper functions for comma formatting & parsing (supporting decimals)
     function parseNum(val) {
@@ -1055,9 +1269,12 @@
 
     function formatCurrency(num, maxDec = 2) {
       const n = Number(num) || 0;
+      const safeMax = Math.max(0, Math.min(20, Number(maxDec) !== undefined && !isNaN(maxDec) ? Number(maxDec) : 2));
+      const hasDecimals = (n % 1 !== 0);
+      const minDec = Math.min(safeMax, hasDecimals ? 2 : 0);
       return n.toLocaleString('en-US', {
-        minimumFractionDigits: (n % 1 !== 0) ? 2 : 0,
-        maximumFractionDigits: maxDec
+        minimumFractionDigits: minDec,
+        maximumFractionDigits: safeMax
       });
     }
 
@@ -1070,15 +1287,11 @@
 
       let formatted = '';
       if (allowDecimals) {
-        // Strip out non-numeric and extra dots
         raw = raw.replace(/[^0-9.]/g, '');
         const parts = raw.split('.');
-
-        // Format integer part
         let intPart = parts[0] ? parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') : (parts.length > 1 ? '0' : '');
 
         if (parts.length > 1) {
-          // Keep up to 2 decimal digits while preserving trailing dot during typing
           const decPart = parts.slice(1).join('').slice(0, 2);
           formatted = intPart + '.' + decPart;
         } else {
@@ -1156,10 +1369,11 @@
     let activeChannelTabId = '';
     let autoSaveTimer = null;
     let pacingChartInstance = null;
-    let shareChartInstance = null;
     let parsedImportRows = [];
     let isPacingChartExpanded = true;
     let activeModalDay = 1;
+    let isDraggingTab = false;
+    let currentActiveView = 'daily';
 
     // Share Chart Grouping Mode: 'platform' (default) vs 'channels'
     let shareChartGroupingMode = 'platform';
@@ -1168,25 +1382,18 @@
     let platformSortKey = 'roas';
     let platformSortAsc = false;
 
-    function renderAll() {
-      try {
-        renderKPIs();
-        renderPlatformCards();
-        renderPacingChart();
-        renderDailyTable();
-        renderSalesPerformance();
-        renderChannelControls();
-        renderChannelShareChart();
-        renderCalendarDays();
-      } catch (e) {
-        console.error("Error executing renderAll:", e);
-      }
+    // View Navigation Switcher
+    function handleTabClick(viewName) {
+      if (isDraggingTab) return;
+      switchMainView(viewName);
     }
 
     function switchMainView(viewName) {
+      currentActiveView = viewName;
       const views = {
         daily: { btn: 'viewTabDaily', section: 'sectionDailyTracker' },
         salesperf: { btn: 'viewTabSalesPerf', section: 'sectionSalesPerformance' },
+        simulation: { btn: 'viewTabSimulation', section: 'sectionAdSimulation' },
         channels: { btn: 'viewTabChannels', section: 'sectionChannelAllocation' },
         daytypes: { btn: 'viewTabDayTypes', section: 'sectionDayTypePlanner' }
       };
@@ -1199,17 +1406,129 @@
         if (sec) sec.classList.toggle('hidden', !isActive);
         if (btn) {
           if (isActive) {
-            btn.className = "px-3.5 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap";
+            btn.className = "tab-item group px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap cursor-grab active:cursor-grabbing";
           } else {
-            btn.className = "px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5 whitespace-nowrap";
+            btn.className = "tab-item group px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5 whitespace-nowrap cursor-grab active:cursor-grabbing";
           }
         }
       });
 
       if (viewName === 'salesperf') renderSalesPerformance();
+      else if (viewName === 'simulation') renderAdSimulation();
       else if (viewName === 'channels') { renderChannelControls(); renderChannelShareChart(); }
       else if (viewName === 'daytypes') renderCalendarDays();
       else if (viewName === 'daily') { renderDailyTable(); renderPacingChart(); }
+    }
+
+    function initDraggableTabs() {
+      const container = document.getElementById('mainViewTabsContainer');
+      if (!container) return;
+
+      // Restore saved tab order if available
+      try {
+        const savedOrder = JSON.parse(localStorage.getItem(STORAGE_KEY_TAB_ORDER));
+        if (Array.isArray(savedOrder) && savedOrder.length > 0) {
+          const tabElements = {};
+          container.querySelectorAll('.tab-item').forEach(el => {
+            const viewId = el.getAttribute('data-view-id');
+            if (viewId) tabElements[viewId] = el;
+          });
+
+          savedOrder.forEach(viewId => {
+            if (tabElements[viewId]) {
+              container.appendChild(tabElements[viewId]);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to load tab order from localStorage', e);
+      }
+
+      let draggedElement = null;
+
+      container.querySelectorAll('.tab-item').forEach(tab => {
+        tab.addEventListener('dragstart', (e) => {
+          isDraggingTab = true;
+          draggedElement = tab;
+          tab.classList.add('tab-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', tab.getAttribute('data-view-id'));
+        });
+
+        tab.addEventListener('dragend', () => {
+          tab.classList.remove('tab-dragging');
+          container.querySelectorAll('.tab-item').forEach(el => el.classList.remove('tab-drag-over'));
+          draggedElement = null;
+          setTimeout(() => { isDraggingTab = false; }, 80);
+          saveCurrentTabOrder();
+        });
+
+        tab.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          if (draggedElement && draggedElement !== tab) {
+            tab.classList.add('tab-drag-over');
+          }
+        });
+
+        tab.addEventListener('dragleave', () => {
+          tab.classList.remove('tab-drag-over');
+        });
+
+        tab.addEventListener('drop', (e) => {
+          e.preventDefault();
+          tab.classList.remove('tab-drag-over');
+          if (!draggedElement || draggedElement === tab) return;
+
+          const allTabs = Array.from(container.querySelectorAll('.tab-item'));
+          const draggedIdx = allTabs.indexOf(draggedElement);
+          const targetIdx = allTabs.indexOf(tab);
+
+          if (draggedIdx < targetIdx) {
+            tab.after(draggedElement);
+          } else {
+            tab.before(draggedElement);
+          }
+
+          saveCurrentTabOrder();
+          showToast('Updated tab order!');
+        });
+      });
+    }
+
+    function saveCurrentTabOrder() {
+      const container = document.getElementById('mainViewTabsContainer');
+      if (!container) return;
+      const order = Array.from(container.querySelectorAll('.tab-item')).map(el => el.getAttribute('data-view-id')).filter(Boolean);
+      try {
+        localStorage.setItem(STORAGE_KEY_TAB_ORDER, JSON.stringify(order));
+      } catch (e) {
+        console.warn('Failed to save tab order', e);
+      }
+    }
+
+    function resetTabOrder() {
+      const defaultOrder = ['daily', 'salesperf', 'simulation', 'channels', 'daytypes'];
+      const container = document.getElementById('mainViewTabsContainer');
+      if (!container) return;
+
+      const tabElements = {};
+      container.querySelectorAll('.tab-item').forEach(el => {
+        const viewId = el.getAttribute('data-view-id');
+        if (viewId) tabElements[viewId] = el;
+      });
+
+      defaultOrder.forEach(viewId => {
+        if (tabElements[viewId]) {
+          container.appendChild(tabElements[viewId]);
+        }
+      });
+
+      try {
+        localStorage.removeItem(STORAGE_KEY_TAB_ORDER);
+      } catch (e) {}
+
+      showToast('Reset tab order to default!');
     }
 
     function openModal(modalId) {
@@ -1257,12 +1576,13 @@
       }
     };
 
+    // Project Storage & Initialization
     function initProjectStore() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY_PROJECTS);
         if (raw) {
           projectStore = JSON.parse(raw);
-          // Migrate any existing 'TikTok Ad' to 'Tiktok'
+          // Migrate any legacy 'TikTok Ad' naming to 'Tiktok'
           Object.values(projectStore).forEach(p => {
             if (p.platforms && p.platforms.tiktok && p.platforms.tiktok.name === 'TikTok Ad') {
               p.platforms.tiktok.name = 'Tiktok';
@@ -1281,7 +1601,11 @@
             platforms: JSON.parse(JSON.stringify(DEFAULT_INE_PLATFORMS)),
             dayTypeWeights: { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 },
             targets: { targetOrders: 3000, targetRoas: 4.0, targetGmv: 1200000 },
-            dailyData: createInitialDailyData(DEFAULT_INE_PLATFORMS)
+            dailyData: createInitialDailyData(DEFAULT_INE_PLATFORMS),
+            simulation: {
+              targets: { orders: 3000, gmv: 1500000, roas: 4.0, aov: 500 },
+              channels: {}
+            }
           }
         };
       }
@@ -1290,7 +1614,7 @@
       if (savedActive && projectStore[savedActive]) {
         activeProjectId = savedActive;
       } else {
-        activeProjectId = Object.keys(projectStore)[0];
+        activeProjectId = Object.keys(projectStore)[0] || 'project_ine';
       }
     }
 
@@ -1330,165 +1654,147 @@
       return days;
     }
 
-    function loadProject(projId) {
-      if (!projectStore[projId]) projId = Object.keys(projectStore)[0];
-      activeProjectId = projId;
-      localStorage.setItem(STORAGE_KEY_ACTIVE_PROJECT, activeProjectId);
+    function loadProject(projectId) {
+      if (!projectStore[projectId]) {
+        activeProjectId = Object.keys(projectStore)[0] || 'project_ine';
+      } else {
+        activeProjectId = projectId;
+      }
 
       currentProject = projectStore[activeProjectId];
+      localStorage.setItem(STORAGE_KEY_ACTIVE_PROJECT, activeProjectId);
 
-      if (!currentProject.targets) {
-        currentProject.targets = { targetOrders: 3000, targetRoas: 4.0, targetGmv: 1200000 };
-      }
-
-      const titleEl = document.getElementById('headerProjectTitle');
-      const avatarEl = document.getElementById('projectAvatarBadge');
-      const boxTitle = document.getElementById('boxTitleProjectBudget');
-      const chartTitle = document.getElementById('chartProjectTitle');
-      const labelId = document.getElementById('labelCurrentProjectId');
-
-      if (titleEl) titleEl.innerText = currentProject.name;
-      if (avatarEl) {
-        const initials = currentProject.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 3).toUpperCase() || 'PRO';
-        avatarEl.innerText = initials;
-      }
-      if (boxTitle) boxTitle.innerText = `${currentProject.name} Total Budget`;
-      if (chartTitle) chartTitle.innerText = currentProject.name;
-      if (labelId) labelId.innerText = currentProject.name;
-
-      const tOrders = document.getElementById('inputTargetOrders');
-      const tRoas = document.getElementById('inputTargetRoas');
-      const tGmv = document.getElementById('inputTargetGmv');
-      if (tOrders) tOrders.value = Number(currentProject.targets.targetOrders || 3000).toLocaleString();
-      if (tRoas) tRoas.value = currentProject.targets.targetRoas || 4.0;
-      if (tGmv) tGmv.value = formatCurrency(currentProject.targets.targetGmv || 1200000);
-
-      const weights = currentProject.dayTypeWeights || { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 };
-      const wD = document.getElementById('weightDday');
-      const wM = document.getElementById('weightMidmonth');
-      const wP = document.getElementById('weightPayday');
-      const wN = document.getElementById('weightNormal');
-      if (wD) wD.value = weights.DDAY;
-      if (wM) wM.value = weights.MIDMONTH;
-      if (wP) wP.value = weights.PAYDAY;
-      if (wN) wN.value = weights.NORMAL;
-
-      rebuildAllChannelsIndex();
       ensureDailyDataIntegrity();
-      autoDistributePlannedBudget();
-      renderProjectSelectOptions();
+      rebuildAllChannelsIndex();
+      updateProjectUIHeader();
+      populateProjectDropdown();
 
-      if (ALL_CHANNELS.length > 0 && !ALL_CHANNELS.some(c => c.id === activeChannelTabId)) {
-        activeChannelTabId = ALL_CHANNELS[0].id;
+      // Ensure baseline plans exist
+      if (!currentProject.dailyData[0]?.plannedSpend || currentProject.dailyData[0].plannedSpend === 0) {
+        autoDistributePlannedBudget();
       }
 
       renderAll();
-      showToast(`Loaded ${currentProject.name}`);
+    }
+
+    function switchProject(projectId) {
+      saveCurrentProject(true);
+      loadProject(projectId);
+      showToast(`Switched to ${currentProject.name}`);
     }
 
     function rebuildAllChannelsIndex() {
       ALL_CHANNELS = [];
       if (!currentProject || !currentProject.platforms) return;
 
-      Object.entries(currentProject.platforms).forEach(([platformKey, platformObj]) => {
-        (platformObj.channels || []).forEach(ch => {
+      Object.entries(currentProject.platforms).forEach(([platformKey, pObj]) => {
+        (pObj.channels || []).forEach(ch => {
           ALL_CHANNELS.push({
             id: ch.id,
             name: ch.name,
             budget: Number(ch.budget || 0),
             platformId: platformKey,
-            platformName: platformObj.name,
-            platformColor: platformObj.color || '#6366f1',
-            platformBadgeBg: platformObj.badgeBg || 'bg-slate-100',
-            platformTextColor: platformObj.textColor || 'text-slate-800'
+            platformName: pObj.name,
+            platformColor: pObj.color,
+            platformBadgeBg: pObj.badgeBg,
+            platformTextColor: pObj.textColor
           });
         });
       });
 
-      const subLabel = document.getElementById('labelActiveChannelsCountSubtitle');
-      if (subLabel) subLabel.innerText = `${ALL_CHANNELS.length} Configured Channels`;
+      if (!activeChannelTabId && ALL_CHANNELS.length > 0) {
+        activeChannelTabId = ALL_CHANNELS[0].id;
+      }
     }
 
     function ensureDailyDataIntegrity() {
+      if (!currentProject) return;
       if (!currentProject.dailyData || currentProject.dailyData.length !== DAYS_IN_MONTH) {
         currentProject.dailyData = createInitialDailyData(currentProject.platforms);
       }
+
       currentProject.dailyData.forEach(d => {
         if (!d.spends) d.spends = {};
         if (!d.orders) d.orders = {};
         if (!d.gmv) d.gmv = {};
         if (!d.channelPlans) d.channelPlans = {};
-        if (d.isRePaced === undefined) d.isRePaced = false;
 
-        ALL_CHANNELS.forEach(ch => {
-          if (d.spends[ch.id] === undefined) d.spends[ch.id] = 0;
-          if (d.orders[ch.id] === undefined) d.orders[ch.id] = 0;
-          if (d.gmv[ch.id] === undefined) d.gmv[ch.id] = 0;
-          if (d.channelPlans[ch.id] === undefined) d.channelPlans[ch.id] = 0;
+        Object.values(currentProject.platforms).forEach(p => {
+          (p.channels || []).forEach(ch => {
+            if (d.spends[ch.id] === undefined) d.spends[ch.id] = 0;
+            if (d.orders[ch.id] === undefined) d.orders[ch.id] = 0;
+            if (d.gmv[ch.id] === undefined) d.gmv[ch.id] = 0;
+            if (d.channelPlans[ch.id] === undefined) d.channelPlans[ch.id] = 0;
+          });
         });
       });
     }
 
     function getProjectMasterBudget() {
-      let sum = 0;
-      ALL_CHANNELS.forEach(ch => {
-        sum += Number(ch.budget || 0);
+      let total = 0;
+      if (!currentProject || !currentProject.platforms) return 0;
+      Object.values(currentProject.platforms).forEach(p => {
+        (p.channels || []).forEach(ch => {
+          total += Number(ch.budget || 0);
+        });
       });
-      return sum;
-    }
-
-    function saveCurrentProject(silent = false) {
-      if (!currentProject) return;
-
-      currentProject.lastSavedAt = Date.now();
-      try {
-        localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(projectStore));
-        localStorage.setItem(STORAGE_KEY_ACTIVE_PROJECT, activeProjectId);
-        updateSaveIndicator(true);
-        if (!silent) showToast(`Saved "${currentProject.name}" successfully!`);
-      } catch (e) {
-        console.error('Storage error', e);
-        updateSaveIndicator(false);
-        showToast('Storage error or quota exceeded');
-      }
+      return total;
     }
 
     function scheduleAutoSave() {
-      clearTimeout(autoSaveTimer);
       const dot = document.getElementById('autoSaveIndicatorDot');
       const text = document.getElementById('autoSaveStatusText');
-      if (dot) dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
-      if (text) text.innerText = "Saving plan...";
+      if (dot) dot.className = "w-2 h-2 rounded-full bg-amber-500 animate-pulse";
+      if (text) text.innerText = "Saving changes...";
 
+      clearTimeout(autoSaveTimer);
       autoSaveTimer = setTimeout(() => {
         saveCurrentProject(true);
-      }, 350);
+      }, 400);
     }
 
-    function updateSaveIndicator(success = true) {
-      const dot = document.getElementById('autoSaveIndicatorDot');
-      const text = document.getElementById('autoSaveStatusText');
-      if (!dot || !text) return;
-
-      if (success) {
-        dot.className = "w-2 h-2 rounded-full bg-emerald-500";
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        text.innerText = `Saved (${time})`;
-      } else {
-        dot.className = "w-2 h-2 rounded-full bg-rose-500";
-        text.innerText = "Save failed";
+    function saveCurrentProject(isAuto = false) {
+      if (!currentProject) return;
+      projectStore[activeProjectId] = currentProject;
+      try {
+        localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(projectStore));
+        const dot = document.getElementById('autoSaveIndicatorDot');
+        const text = document.getElementById('autoSaveStatusText');
+        if (dot) dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+        if (text) text.innerText = "Saved to Plan";
+        if (!isAuto) showToast(`Saved "${currentProject.name}" plan!`);
+      } catch (e) {
+        console.error("Failed to save project data", e);
+        showToast("Storage quota exceeded or save error");
       }
     }
 
-    function switchProject(projId) {
-      saveCurrentProject(true);
-      loadProject(projId);
+    function updateProjectUIHeader() {
+      if (!currentProject) return;
+      const titleEl = document.getElementById('headerProjectTitle');
+      const labelIdEl = document.getElementById('labelCurrentProjectId');
+      const chartTitleEl = document.getElementById('chartProjectTitle');
+      const avatarEl = document.getElementById('projectAvatarBadge');
+      const boxTitleEl = document.getElementById('boxTitleProjectBudget');
+
+      if (titleEl) titleEl.innerText = currentProject.name;
+      if (labelIdEl) labelIdEl.innerText = currentProject.name;
+      if (chartTitleEl) chartTitleEl.innerText = currentProject.name;
+      if (boxTitleEl) boxTitleEl.innerText = `${currentProject.name} Total Budget`;
+
+      if (avatarEl) {
+        const words = currentProject.name.trim().split(/\s+/);
+        let initials = words[0].substring(0, 3).toUpperCase();
+        if (words.length > 1) {
+          initials = (words[0][0] + words[1][0]).toUpperCase();
+        }
+        avatarEl.innerText = initials;
+      }
     }
 
-    function renderProjectSelectOptions() {
+    function populateProjectDropdown() {
       const select = document.getElementById('selectProjectList');
       if (!select) return;
-
       select.innerHTML = '';
       Object.values(projectStore).forEach(p => {
         const opt = document.createElement('option');
@@ -1497,48 +1803,6 @@
         if (p.id === activeProjectId) opt.selected = true;
         select.appendChild(opt);
       });
-    }
-
-    function openNewProjectModal() {
-      const input = document.getElementById('inputNewProjectName');
-      if (input) input.value = '';
-      openModal('newProjectModal');
-    }
-
-    function confirmCreateNewProject() {
-      const nameInput = document.getElementById('inputNewProjectName');
-      const templateSelect = document.getElementById('selectNewProjectTemplate');
-      const name = (nameInput?.value || '').trim() || 'Untitled Project';
-      const template = templateSelect?.value || 'copy_current';
-
-      const newId = 'project_' + Date.now();
-      let newPlatforms = null;
-
-      if (template === 'copy_current' && currentProject) {
-        newPlatforms = JSON.parse(JSON.stringify(currentProject.platforms));
-      } else if (template === 'clean_slate') {
-        newPlatforms = {
-          shopee: { id: 'shopee', name: 'Shopee', color: '#EE4D2D', badgeBg: 'bg-orange-50', textColor: 'text-orange-600', channels: [] },
-          tiktok: { id: 'tiktok', name: 'Tiktok', color: '#000000', badgeBg: 'bg-slate-100', textColor: 'text-slate-900', channels: [] },
-          facebook: { id: 'facebook', name: 'Facebook', color: '#1877F2', badgeBg: 'bg-blue-50', textColor: 'text-blue-600', channels: [] },
-          lazada: { id: 'lazada', name: 'Lazada', color: '#0F146D', badgeBg: 'bg-indigo-50', textColor: 'text-indigo-900', channels: [] }
-        };
-      } else {
-        newPlatforms = JSON.parse(JSON.stringify(DEFAULT_INE_PLATFORMS));
-      }
-
-      projectStore[newId] = {
-        id: newId,
-        name: name,
-        platforms: newPlatforms,
-        dayTypeWeights: { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 },
-        targets: { targetOrders: 3000, targetRoas: 4.0, targetGmv: 1200000 },
-        dailyData: createInitialDailyData(newPlatforms)
-      };
-
-      closeModal('newProjectModal');
-      saveCurrentProject(true);
-      loadProject(newId);
     }
 
     function openRenameProjectModal() {
@@ -1550,30 +1814,75 @@
     function saveProjectRename() {
       const input = document.getElementById('inputProjectRename');
       const newName = (input?.value || '').trim();
-      if (!newName || !currentProject) return;
-
+      if (!newName) {
+        showToast('Project name cannot be empty');
+        return;
+      }
       currentProject.name = newName;
+      updateProjectUIHeader();
+      populateProjectDropdown();
       closeModal('projectRenameModal');
-      renderProjectSelectOptions();
-      loadProject(activeProjectId);
       saveCurrentProject(false);
+      showToast(`Renamed project to "${newName}"`);
+    }
+
+    function openNewProjectModal() {
+      const input = document.getElementById('inputNewProjectName');
+      if (input) input.value = '';
+      openModal('newProjectModal');
+    }
+
+    function confirmCreateNewProject() {
+      const input = document.getElementById('inputNewProjectName');
+      const tmplSelect = document.getElementById('selectNewProjectTemplate');
+      const name = (input?.value || '').trim();
+
+      if (!name) {
+        showToast('Please enter a project name');
+        return;
+      }
+
+      const newId = 'proj_' + Date.now();
+      let newPlatforms = JSON.parse(JSON.stringify(DEFAULT_INE_PLATFORMS));
+
+      if (tmplSelect && tmplSelect.value === 'copy_current' && currentProject) {
+        newPlatforms = JSON.parse(JSON.stringify(currentProject.platforms));
+      } else if (tmplSelect && tmplSelect.value === 'clean_slate') {
+        Object.keys(newPlatforms).forEach(pk => {
+          newPlatforms[pk].channels = [];
+        });
+      }
+
+      const newProj = {
+        id: newId,
+        name: name,
+        platforms: newPlatforms,
+        dayTypeWeights: { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 },
+        targets: { targetOrders: 3000, targetRoas: 4.0, targetGmv: 1200000 },
+        dailyData: createInitialDailyData(newPlatforms),
+        simulation: {
+          targets: { orders: 3000, gmv: 1500000, roas: 4.0, aov: 500 },
+          channels: {}
+        }
+      };
+
+      projectStore[newId] = newProj;
+      closeModal('newProjectModal');
+      loadProject(newId);
+      saveCurrentProject(false);
+      showToast(`Created new plan: "${name}"`);
     }
 
     function deleteCurrentProject() {
       if (Object.keys(projectStore).length <= 1) {
-        showCustomConfirm({
-          title: "Cannot Delete Project",
-          message: "You must have at least one project plan active in the tracker.",
-          confirmText: "Got it",
-          onConfirm: () => closeModal('confirmActionModal')
-        });
+        showToast('Cannot delete the only existing project plan');
         return;
       }
 
       showCustomConfirm({
         title: `Delete "${currentProject.name}"?`,
-        message: "This will permanently remove all channels, budgets, and logged ad spends for this project.",
-        confirmText: "Delete Project",
+        message: 'This will permanently delete this project plan, its ad channels, and all logged daily performance records.',
+        confirmText: 'Delete Project',
         onConfirm: () => {
           delete projectStore[activeProjectId];
           const remainingIds = Object.keys(projectStore);
@@ -1581,10 +1890,302 @@
           closeModal('confirmActionModal');
           loadProject(activeProjectId);
           saveCurrentProject(true);
+          showToast('Project deleted successfully');
         }
       });
     }
 
+    // Render Master Orchestrator
+    function renderAll() {
+      try {
+        renderKPIs();
+        renderPlatformCards();
+        renderPacingChart();
+        renderDailyTable();
+        renderSalesPerformance();
+        renderChannelControls();
+        renderChannelShareChart();
+        renderCalendarDays();
+        renderAdSimulation();
+      } catch (e) {
+        console.error("Error executing renderAll:", e);
+      }
+    }
+
+    // Ad Simulation Engine
+    function getSimulationStore() {
+      if (!currentProject) return { targets: {}, channels: {} };
+      if (!currentProject.simulation) {
+        currentProject.simulation = {
+          targets: {
+            orders: currentProject.targets?.targetOrders || 3000,
+            gmv: currentProject.targets?.targetGmv || 1500000,
+            roas: currentProject.targets?.targetRoas || 4.0,
+            aov: 500
+          },
+          channels: {}
+        };
+      }
+      if (!currentProject.simulation.targets) {
+        currentProject.simulation.targets = { orders: 3000, gmv: 1500000, roas: 4.0, aov: 500 };
+      }
+      if (!currentProject.simulation.channels) {
+        currentProject.simulation.channels = {};
+      }
+      return currentProject.simulation;
+    }
+
+    function renderAdSimulation() {
+      const sim = getSimulationStore();
+      const tOrdersInput = document.getElementById('inputSimTargetOrders');
+      const tGmvInput = document.getElementById('inputSimTargetGmv');
+      const tRoasInput = document.getElementById('inputSimTargetRoas');
+      const tAovInput = document.getElementById('inputSimTargetAov');
+
+      if (tOrdersInput && !tOrdersInput.matches(':focus')) tOrdersInput.value = formatCurrency(sim.targets.orders || 3000, 0);
+      if (tGmvInput && !tGmvInput.matches(':focus')) tGmvInput.value = formatCurrency(sim.targets.gmv || 1500000);
+      if (tRoasInput && !tRoasInput.matches(':focus')) tRoasInput.value = (sim.targets.roas || 4.0).toFixed(1);
+      if (tAovInput && !tAovInput.matches(':focus')) tAovInput.value = formatCurrency(sim.targets.aov || 500);
+
+      const tbody = document.getElementById('tableSimulationBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      ALL_CHANNELS.forEach(ch => {
+        if (!sim.channels[ch.id]) {
+          sim.channels[ch.id] = {
+            budget: ch.budget || 30000,
+            cpa: 120,
+            aov: 500
+          };
+        }
+
+        const chSim = sim.channels[ch.id];
+        const budget = Number(chSim.budget || 0);
+        const cpa = Number(chSim.cpa || 0);
+        const aov = Number(chSim.aov || 0);
+
+        const orders = cpa > 0 ? (budget / cpa) : 0;
+        const gmv = orders * aov;
+        const roas = budget > 0 ? (gmv / budget) : 0;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3.5 font-bold text-slate-800">${ch.name}</td>
+          <td class="py-2.5 px-2.5">
+            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${ch.platformTextColor} ${ch.platformBadgeBg}">
+              ${ch.platformName}
+            </span>
+          </td>
+          <!-- User Input: Budget -->
+          <td class="py-2 px-2 text-right bg-amber-50/20 border-l border-amber-100">
+            <input type="text" inputmode="decimal"
+                   value="${formatCurrency(budget)}"
+                   oninput="formatCommaNumberInput(this, true); updateSimChannel('${ch.id}', 'budget', this.value);"
+                   class="w-24 px-2 py-1 text-right text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-2xs">
+          </td>
+          <!-- User Input: Expected CPA -->
+          <td class="py-2 px-2 text-right bg-amber-50/20">
+            <input type="text" inputmode="decimal"
+                   value="${formatCurrency(cpa)}"
+                   oninput="formatCommaNumberInput(this, true); updateSimChannel('${ch.id}', 'cpa', this.value);"
+                   class="w-20 px-2 py-1 text-right text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-2xs">
+          </td>
+          <!-- User Input: Expected AOV -->
+          <td class="py-2 px-2 text-right bg-amber-50/20 border-r border-amber-100">
+            <input type="text" inputmode="decimal"
+                   value="${formatCurrency(aov)}"
+                   oninput="formatCommaNumberInput(this, true); updateSimChannel('${ch.id}', 'aov', this.value);"
+                   class="w-20 px-2 py-1 text-right text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-amber-500 shadow-2xs">
+          </td>
+          <!-- Auto-Calculated: Orders = Budget / CPA -->
+          <td id="sim_row_orders_${ch.id}" class="py-2.5 px-3 text-right font-bold text-indigo-700 bg-indigo-50/10">
+            ${Math.round(orders).toLocaleString()}
+          </td>
+          <!-- Auto-Calculated: GMV = Orders * AOV -->
+          <td id="sim_row_gmv_${ch.id}" class="py-2.5 px-3 text-right font-bold text-emerald-700 bg-emerald-50/10">
+            ฿${formatCurrency(gmv, 0)}
+          </td>
+          <!-- Auto-Calculated: ROAS = GMV / Budget -->
+          <td id="sim_row_roas_${ch.id}" class="py-2.5 px-3 text-right font-black ${roas >= (sim.targets.roas || 4) ? 'text-emerald-700' : 'text-slate-800'} bg-violet-50/10">
+            ${roas.toFixed(2)}x
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      computeSimulation();
+    }
+
+    function updateSimChannel(chId, field, val) {
+      const sim = getSimulationStore();
+      if (!sim.channels[chId]) sim.channels[chId] = { budget: 0, cpa: 120, aov: 500 };
+      sim.channels[chId][field] = parseNum(val);
+      computeSimulation();
+      scheduleAutoSave();
+    }
+
+    function computeSimulation() {
+      const sim = getSimulationStore();
+
+      const targetOrders = parseNum(document.getElementById('inputSimTargetOrders')?.value || sim.targets?.orders || 3000);
+      const targetGmv = parseNum(document.getElementById('inputSimTargetGmv')?.value || sim.targets?.gmv || 1500000);
+      const targetRoas = parseFloat(document.getElementById('inputSimTargetRoas')?.value) || sim.targets?.roas || 4.0;
+      const targetAov = parseNum(document.getElementById('inputSimTargetAov')?.value || sim.targets?.aov || 500);
+
+      sim.targets = { orders: targetOrders, gmv: targetGmv, roas: targetRoas, aov: targetAov };
+
+      let totalSimBudget = 0;
+      let totalSimOrders = 0;
+      let totalSimGmv = 0;
+
+      ALL_CHANNELS.forEach(ch => {
+        const c = sim.channels[ch.id] || { budget: ch.budget || 0, cpa: 120, aov: 500 };
+        const b = Number(c.budget || 0);
+        const cpa = Number(c.cpa || 0);
+        const aov = Number(c.aov || 0);
+        const ord = cpa > 0 ? (b / cpa) : 0;
+        const g = ord * aov;
+        const r = b > 0 ? (g / b) : 0;
+
+        totalSimBudget += b;
+        totalSimOrders += ord;
+        totalSimGmv += g;
+
+        // Update row elements live in the table
+        const elRowOrd = document.getElementById(`sim_row_orders_${ch.id}`);
+        const elRowGmv = document.getElementById(`sim_row_gmv_${ch.id}`);
+        const elRowRoas = document.getElementById(`sim_row_roas_${ch.id}`);
+
+        if (elRowOrd) elRowOrd.innerText = Math.round(ord).toLocaleString();
+        if (elRowGmv) elRowGmv.innerText = `฿${formatCurrency(g, 0)}`;
+        if (elRowRoas) {
+          elRowRoas.innerText = `${r.toFixed(2)}x`;
+          elRowRoas.className = `py-2.5 px-3 text-right font-black ${r >= (targetRoas || 4.0) ? 'text-emerald-700' : 'text-slate-800'} bg-violet-50/10`;
+        }
+      });
+
+      const blendedRoas = totalSimBudget > 0 ? (totalSimGmv / totalSimBudget) : 0;
+      const blendedAov = totalSimOrders > 0 ? (totalSimGmv / totalSimOrders) : 0;
+      const blendedCpa = totalSimOrders > 0 ? (totalSimBudget / totalSimOrders) : 0;
+
+      const ordersPct = targetOrders > 0 ? ((totalSimOrders / targetOrders) * 100).toFixed(1) : 0;
+      const gmvPct = targetGmv > 0 ? ((totalSimGmv / targetGmv) * 100).toFixed(1) : 0;
+
+      const actOrdersEl = document.getElementById('simActualOrdersLabel');
+      const actGmvEl = document.getElementById('simActualGmvLabel');
+      const actRoasEl = document.getElementById('simActualRoasLabel');
+      const actAovEl = document.getElementById('simActualAovLabel');
+      const actCpaEl = document.getElementById('simActualCpaLabel');
+
+      const ordersPctEl = document.getElementById('simOrdersAchievePct');
+      const gmvPctEl = document.getElementById('simGmvAchievePct');
+      const roasVarEl = document.getElementById('simRoasVariance');
+      const roasBadge = document.getElementById('simRoasStatusBadge');
+      const aovBadge = document.getElementById('simAovStatusBadge');
+
+      const barOrders = document.getElementById('barSimOrders');
+      const barGmv = document.getElementById('barSimGmv');
+      const rollupBudget = document.getElementById('simTotalBudgetRollup');
+
+      if (actOrdersEl) actOrdersEl.innerText = Math.round(totalSimOrders).toLocaleString();
+      if (actGmvEl) actGmvEl.innerText = `฿${formatCurrency(totalSimGmv, 0)}`;
+      if (actRoasEl) actRoasEl.innerText = `${blendedRoas.toFixed(2)}x`;
+      if (actAovEl) actAovEl.innerText = `฿${formatCurrency(blendedAov, 0)}`;
+      if (actCpaEl) actCpaEl.innerText = `฿${formatCurrency(blendedCpa, 1)} / Order`;
+
+      if (ordersPctEl) ordersPctEl.innerText = `${ordersPct}% of Goal`;
+      if (gmvPctEl) gmvPctEl.innerText = `${gmvPct}% of Goal`;
+      if (barOrders) barOrders.style.width = `${Math.min(100, ordersPct)}%`;
+      if (barGmv) barGmv.style.width = `${Math.min(100, gmvPct)}%`;
+      if (rollupBudget) rollupBudget.innerText = `Total Simulation Budget: ฿${formatCurrency(totalSimBudget)}`;
+
+      if (roasVarEl && roasBadge) {
+        const roasDiff = blendedRoas - targetRoas;
+        roasVarEl.innerText = `${roasDiff >= 0 ? '+' : ''}${roasDiff.toFixed(2)}x vs Target`;
+        if (roasDiff >= 0) {
+          roasBadge.innerText = 'Beats Target';
+          roasBadge.className = 'text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-100 text-emerald-800';
+        } else {
+          roasBadge.innerText = 'Below Target';
+          roasBadge.className = 'text-[10px] px-2 py-0.5 rounded font-bold bg-rose-100 text-rose-800';
+        }
+      }
+
+      if (aovBadge) {
+        if (blendedAov >= targetAov) {
+          aovBadge.innerText = 'Meets Target';
+          aovBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800';
+        } else {
+          aovBadge.innerText = 'Below Target';
+          aovBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800';
+        }
+      }
+
+      const tfoot = document.getElementById('tableSimulationFoot');
+      if (tfoot) {
+        tfoot.innerHTML = `
+          <tr>
+            <td colspan="2" class="py-3 px-3.5 font-black">Simulation Summary</td>
+            <td class="py-3 px-2 text-right text-slate-900 font-black border-l border-amber-200">฿${formatCurrency(totalSimBudget)}</td>
+            <td class="py-3 px-2 text-right text-slate-700">Avg ฿${formatCurrency(blendedCpa, 1)}</td>
+            <td class="py-3 px-2 text-right text-slate-700 border-r border-amber-200">Avg ฿${formatCurrency(blendedAov, 0)}</td>
+            <td class="py-3 px-3 text-right text-indigo-900 font-black">${Math.round(totalSimOrders).toLocaleString()}</td>
+            <td class="py-3 px-3 text-right text-emerald-800 font-black">฿${formatCurrency(totalSimGmv, 0)}</td>
+            <td class="py-3 px-3 text-right text-violet-800 font-black">${blendedRoas.toFixed(2)}x</td>
+          </tr>
+        `;
+      }
+    }
+
+    function saveSimulationTargets() {
+      computeSimulation();
+      scheduleAutoSave();
+      showToast('Saved Ad Simulation Targets & Parameters!');
+    }
+
+    function syncSimulationBudgetsFromPlan() {
+      const sim = getSimulationStore();
+      ALL_CHANNELS.forEach(ch => {
+        if (!sim.channels[ch.id]) sim.channels[ch.id] = { cpa: 120, aov: 500 };
+        sim.channels[ch.id].budget = ch.budget;
+      });
+      renderAdSimulation();
+      scheduleAutoSave();
+      showToast('Synced channel budgets from master plan!');
+    }
+
+    function applySimulationBudgetsToPlan() {
+      const sim = getSimulationStore();
+      showCustomConfirm({
+        title: "Apply Simulated Budgets to Tracker Plan?",
+        message: "This will update all channel budgets in your master plan using your simulation values and recalculate daily pacing.",
+        confirmText: "Apply Budgets",
+        onConfirm: () => {
+          ALL_CHANNELS.forEach(ch => {
+            if (sim.channels[ch.id] && sim.channels[ch.id].budget !== undefined) {
+              const newBudget = Number(sim.channels[ch.id].budget || 0);
+              for (const p of Object.values(currentProject.platforms)) {
+                const found = p.channels.find(c => c.id === ch.id);
+                if (found) {
+                  found.budget = newBudget;
+                  break;
+                }
+              }
+            }
+          });
+          closeModal('confirmActionModal');
+          rebuildAllChannelsIndex();
+          autoDistributePlannedBudget();
+          scheduleAutoSave();
+          renderAll();
+          showToast('Applied simulated budgets to project master plan!');
+        }
+      });
+    }
+
+    // Channel Control & Budget Allocation
     function getChannelById(channelId) {
       return ALL_CHANNELS.find(c => c.id === channelId) || null;
     }
@@ -1752,7 +2353,6 @@
       });
       if (totalPoints <= 0) totalPoints = 1;
 
-      // Apportion each channel's exact budget without exceeding by even 1 Baht
       ALL_CHANNELS.forEach(ch => {
         const chBudget = Number(ch.budget || 0);
         let allocated = 0;
@@ -1760,7 +2360,6 @@
         currentProject.dailyData.forEach((d, idx) => {
           const isLastDay = (idx === currentProject.dailyData.length - 1);
           if (isLastDay) {
-            // Final day takes the exact remaining balance so total == chBudget exactly
             d.channelPlans[ch.id] = Math.max(0, chBudget - allocated);
           } else {
             const dayWeight = weights[d.type] || 1.0;
@@ -1768,12 +2367,10 @@
             d.channelPlans[ch.id] = dayAlloc;
             allocated += dayAlloc;
           }
-          // Preserve baseline plan for reference
           d.baseChannelPlans[ch.id] = d.channelPlans[ch.id];
         });
       });
 
-      // Sum each day's planned spend directly from its channel plans
       currentProject.dailyData.forEach(d => {
         let daySum = 0;
         ALL_CHANNELS.forEach(ch => {
@@ -1789,13 +2386,13 @@
       renderAll();
     }
 
+    // Dynamic Re-Pace Engine with Strict Hard Budget Ceilings
     function dynamicRePaceRemainingBudget() {
       if (!currentProject || !currentProject.dailyData) return;
 
       const weights = currentProject.dayTypeWeights || { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 };
       let lastLoggedDay = 0;
 
-      // Find the last day that actually has logged spend > 0
       currentProject.dailyData.forEach(d => {
         let hasSpend = false;
         ALL_CHANNELS.forEach(ch => {
@@ -1804,8 +2401,6 @@
         if (hasSpend) lastLoggedDay = Math.max(lastLoggedDay, d.day);
       });
 
-      // Cutoff is the last day with logged spend.
-      // If you logged Day 1–6, cutoff is Day 6, so re-pacing starts on Day 7!
       const cutoffDay = lastLoggedDay;
 
       if (cutoffDay >= DAYS_IN_MONTH) {
@@ -1813,8 +2408,7 @@
         return;
       }
 
-      // Reconcile past days (Day 1 to cutoffDay):
-      // Set past channelPlans to equal actual spend so past underspend is not double-counted
+      // Reconcile past days (Day 1 to cutoffDay) so past underspend is not double-counted
       currentProject.dailyData.forEach(d => {
         if (d.day <= cutoffDay) {
           ALL_CHANNELS.forEach(ch => {
@@ -1846,7 +2440,6 @@
         }
       });
 
-      // Sum weight points for remaining future days (Day cutoffDay + 1 to 31)
       const remainingDays = currentProject.dailyData.filter(d => d.day > cutoffDay);
       let remainingPoints = 0;
       remainingDays.forEach(d => {
@@ -1864,14 +2457,12 @@
           if (!d.channelPlans) d.channelPlans = {};
 
           if (remainingBudget === 0) {
-            // Channel is already exhausted; lock future target at ฿0
             d.channelPlans[ch.id] = 0;
             return;
           }
 
           const isLastRemainingDay = (idx === remainingDays.length - 1);
           if (isLastRemainingDay) {
-            // Last day absorbs the exact leftover balance so total NEVER exceeds remainingBudget
             const finalAlloc = Math.max(0, remainingBudget - allocatedSoFar);
             d.channelPlans[ch.id] = finalAlloc;
             allocatedSoFar += finalAlloc;
@@ -1880,7 +2471,6 @@
             const ratio = dayWeight / remainingPoints;
             let dayAlloc = Math.floor(remainingBudget * ratio);
 
-            // Safety clamp: ensure allocatedSoFar + dayAlloc <= remainingBudget
             if (allocatedSoFar + dayAlloc > remainingBudget) {
               dayAlloc = Math.max(0, remainingBudget - allocatedSoFar);
             }
@@ -1891,7 +2481,6 @@
         });
       });
 
-      let totalRePacedMaster = 0;
       currentProject.dailyData.forEach(d => {
         if (d.day > cutoffDay) {
           let daySum = 0;
@@ -1900,7 +2489,6 @@
           });
           d.plannedSpend = daySum;
           d.isRePaced = true;
-          totalRePacedMaster += daySum;
         }
       });
 
@@ -1920,27 +2508,58 @@
       showToast(`Re-Paced from Day ${cutoffDay + 1} to 31! All channels strictly locked to budget.`);
     }
 
+    // Sales & ROAS Targets and Tables
     function saveMonthlySalesTargets() {
       if (!currentProject) return;
       const targetOrders = Math.max(0, parseInt(String(document.getElementById('inputTargetOrders')?.value || 0).replace(/,/g, ''), 10) || 0);
       const targetRoas = Math.max(0.1, parseFloat(document.getElementById('inputTargetRoas')?.value) || 0);
       const targetGmv = parseNum(document.getElementById('inputTargetGmv')?.value);
+      const targetAov = parseNum(document.getElementById('inputTargetAov')?.value || (targetOrders > 0 ? targetGmv / targetOrders : 500));
 
+      if (!currentProject.targets) currentProject.targets = {};
       currentProject.targets = {
         targetOrders: targetOrders,
         targetRoas: targetRoas,
-        targetGmv: targetGmv
+        targetGmv: targetGmv,
+        targetAov: targetAov
       };
+
+      // Synchronize with Ad Simulation targets
+      const sim = getSimulationStore();
+      if (sim && sim.targets) {
+        sim.targets.orders = targetOrders;
+        sim.targets.gmv = targetGmv;
+        sim.targets.roas = targetRoas;
+        sim.targets.aov = targetAov;
+      }
 
       scheduleAutoSave();
       renderSalesPerformance();
-      showToast('Saved Monthly Sales & ROAS Targets!');
+      if (document.getElementById('sectionAdSimulation') && !document.getElementById('sectionAdSimulation').classList.contains('hidden')) {
+        renderAdSimulation();
+      }
+      showToast('Saved Targets (Orders, GMV, ROAS, AOV)!');
     }
 
     function renderSalesPerformance() {
       if (!currentProject) return;
 
-      const targets = currentProject.targets || { targetOrders: 3000, targetRoas: 4.0, targetGmv: 1200000 };
+      const targets = currentProject.targets || { targetOrders: 3000, targetRoas: 4.0, targetGmv: 1200000, targetAov: 500 };
+      if (targets.targetAov === undefined) {
+        targets.targetAov = targets.targetOrders > 0 ? Math.round(targets.targetGmv / targets.targetOrders) : 500;
+      }
+
+      // Populate input values if not currently focused
+      const inOrd = document.getElementById('inputTargetOrders');
+      const inGmv = document.getElementById('inputTargetGmv');
+      const inRoas = document.getElementById('inputTargetRoas');
+      const inAov = document.getElementById('inputTargetAov');
+
+      if (inOrd && !inOrd.matches(':focus')) inOrd.value = formatCurrency(targets.targetOrders, 0);
+      if (inGmv && !inGmv.matches(':focus')) inGmv.value = formatCurrency(targets.targetGmv);
+      if (inRoas && !inRoas.matches(':focus')) inRoas.value = targets.targetRoas.toFixed(1);
+      if (inAov && !inAov.matches(':focus')) inAov.value = formatCurrency(targets.targetAov);
+
       const masterBudget = getProjectMasterBudget();
 
       let grandSpend = 0;
@@ -1987,34 +2606,46 @@
 
       const ordersPacePct = targets.targetOrders > 0 ? ((grandOrders / targets.targetOrders) * 100).toFixed(1) : 0;
       const gmvPacePct = targets.targetGmv > 0 ? ((grandGmv / targets.targetGmv) * 100).toFixed(1) : 0;
-      const spendBurnPct = masterBudget > 0 ? ((grandSpend / masterBudget) * 100).toFixed(1) : 0;
+      const aovPacePct = targets.targetAov > 0 ? ((overallAov / targets.targetAov) * 100).toFixed(1) : 0;
 
-      // Update 4 Target vs Actual Comparison Cards
+      // Update 4 Target vs Actual Comparison Cards (Orders, GMV, ROAS, AOV)
       const actOrdersEl = document.getElementById('salesActualOrdersLabel');
-      const actRoasEl = document.getElementById('salesActualRoasLabel');
       const actGmvEl = document.getElementById('salesActualGmvLabel');
+      const actRoasEl = document.getElementById('salesActualRoasLabel');
+      const actAovEl = document.getElementById('salesActualAovLabel');
+
       const ordersPaceEl = document.getElementById('salesOrdersPacePct');
       const gmvPaceEl = document.getElementById('salesGmvPacePct');
+      const aovBadge = document.getElementById('salesAovStatusBadge');
       const roasDiffTag = document.getElementById('salesRoasDiffTag');
       const roasDiffAmount = document.getElementById('salesRoasDiffAmount');
-      const barGmv = document.getElementById('barGmvAchieved');
+      const actCpoSub = document.getElementById('salesActualCpoSub');
+
       const barOrders = document.getElementById('barOrdersAchieved');
-      const barSpend = document.getElementById('barSpendBurned');
-      const elCompMaster = document.getElementById('salesCompareMasterBudget');
-      const elCompActual = document.getElementById('salesCompareActualSpent');
-      const elSpendBurnBadge = document.getElementById('salesSpendBurnBadge');
+      const barGmv = document.getElementById('barGmvAchieved');
+      const barAov = document.getElementById('barAovAchieved');
 
       if (actOrdersEl) actOrdersEl.innerText = grandOrders.toLocaleString();
-      if (actRoasEl) actRoasEl.innerText = `${blendedRoas.toFixed(2)}x`;
       if (actGmvEl) actGmvEl.innerText = `฿${grandGmv.toLocaleString()}`;
+      if (actRoasEl) actRoasEl.innerText = `${blendedRoas.toFixed(2)}x`;
+      if (actAovEl) actAovEl.innerText = `฿${overallAov.toLocaleString()}`;
+
       if (ordersPaceEl) ordersPaceEl.innerText = `${ordersPacePct}% Achieved`;
       if (gmvPaceEl) gmvPaceEl.innerText = `${gmvPacePct}% Achieved`;
-      if (barGmv) barGmv.style.width = `${Math.min(100, gmvPacePct)}%`;
       if (barOrders) barOrders.style.width = `${Math.min(100, ordersPacePct)}%`;
-      if (barSpend) barSpend.style.width = `${Math.min(100, spendBurnPct)}%`;
-      if (elCompMaster) elCompMaster.innerText = `฿${masterBudget.toLocaleString()}`;
-      if (elCompActual) elCompActual.innerText = `฿${grandSpend.toLocaleString()}`;
-      if (elSpendBurnBadge) elSpendBurnBadge.innerText = `${spendBurnPct}% Spent`;
+      if (barGmv) barGmv.style.width = `${Math.min(100, gmvPacePct)}%`;
+      if (barAov) barAov.style.width = `${Math.min(100, aovPacePct)}%`;
+      if (actCpoSub) actCpoSub.innerText = `฿${overallCpo.toLocaleString()} / Order`;
+
+      if (aovBadge) {
+        if (overallAov >= targets.targetAov) {
+          aovBadge.innerText = `${aovPacePct}% (Met Goal)`;
+          aovBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800';
+        } else {
+          aovBadge.innerText = `${aovPacePct}% of Goal`;
+          aovBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800';
+        }
+      }
 
       if (roasDiffTag && roasDiffAmount) {
         const roasDiff = blendedRoas - targets.targetRoas;
@@ -2224,6 +2855,7 @@
       }
     }
 
+    // Modal Operations
     function openDailySpendModal(dayNum = 1) {
       activeModalDay = dayNum;
       const modal = document.getElementById('spendModal');
@@ -2367,21 +2999,19 @@
       showToast(`Saved Spend, Orders & GMV for Day ${activeModalDay}!`);
     }
 
+    // Excel and File Parsing Subsystem
     function getMetricTypeFromHeader(rawHeader, matchedChannel) {
       if (!rawHeader) return 'spend';
       const h = String(rawHeader).toLowerCase().trim();
 
-      // Check Spend keywords first
       if (h.includes('spend') || h.includes('cost') || h.includes('ค่าแอด') || h.includes('จ่ายจริง') || h.includes('จ่าย') || h.includes('actual') || h.includes('งบ')) {
         return 'spend';
       }
 
-      // Check Orders
       if (h.includes('order') || h.includes('ออเดอร์') || h.includes('orders') || h.includes('txn')) {
         return 'orders';
       }
 
-      // Check GMV
       let stripped = h;
       if (matchedChannel && matchedChannel.name) {
         stripped = h.replace(matchedChannel.name.toLowerCase(), '');
@@ -2856,6 +3486,7 @@
       openModal('confirmActionModal');
     }
 
+    // High Level KPIs
     function renderKPIs() {
       if (!currentProject) return;
 
@@ -2918,6 +3549,7 @@
       }
     }
 
+    // Platform Cards
     function renderPlatformCards() {
       const container = document.getElementById('platformCardsContainer');
       if (!container || !currentProject) return;
@@ -2963,6 +3595,7 @@
       });
     }
 
+    // Chart.js Pacing Chart
     function renderPacingChart() {
       const canvas = document.getElementById('dailyPacingChart');
       if (!canvas || !currentProject || typeof Chart === 'undefined') return;
@@ -2982,7 +3615,6 @@
         });
         actualData.push(dayActual);
 
-        // Tier colors for actual spend bars
         if (d.type === 'DDAY') barColors.push('#ef4444');
         else if (d.type === 'MIDMONTH') barColors.push('#6366f1');
         else if (d.type === 'PAYDAY') barColors.push('#f59e0b');
@@ -3055,6 +3687,7 @@
       });
     }
 
+    // Horizontal One-Bar Channel Share View
     function setChannelShareGrouping(mode) {
       shareChartGroupingMode = mode;
       const btnPlat = document.getElementById('btnShareGroupPlatform');
@@ -3062,11 +3695,11 @@
 
       if (btnPlat && btnChan) {
         if (mode === 'platform') {
-          btnPlat.className = "px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs transition font-bold";
-          btnChan.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold";
+          btnPlat.className = "px-2.5 py-1 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition text-[11px]";
+          btnChan.className = "px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold text-[11px]";
         } else {
-          btnPlat.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold";
-          btnChan.className = "px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs transition font-bold";
+          btnPlat.className = "px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold text-[11px]";
+          btnChan.className = "px-2.5 py-1 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition text-[11px]";
         }
       }
 
@@ -3074,26 +3707,24 @@
     }
 
     function renderChannelShareChart() {
-      const canvas = document.getElementById('channelSharePieChart');
+      const barContainer = document.getElementById('horizontalShareBarContainer');
       const summaryList = document.getElementById('channelShareSummaryList');
       const footerNote = document.getElementById('channelCountFooterNote');
-      const centerTotal = document.getElementById('doughnutCenterTotal');
-      const centerChannels = document.getElementById('doughnutCenterChannels');
+      const barCenterText = document.getElementById('barCenterBudgetSummary');
 
-      if (!canvas || !currentProject || typeof Chart === 'undefined') return;
+      if (!barContainer || !currentProject) return;
 
       const masterTotal = getProjectMasterBudget();
       if (footerNote) {
         footerNote.innerText = `${ALL_CHANNELS.length} channels configured across ${Object.keys(currentProject.platforms).length} platforms`;
       }
-      if (centerTotal) centerTotal.innerText = `฿${masterTotal >= 1000 ? (masterTotal / 1000).toLocaleString() + 'k' : masterTotal.toLocaleString()}`;
+      if (barCenterText) {
+        barCenterText.innerText = `Total ฿${masterTotal.toLocaleString()}`;
+      }
 
-      let labels = [];
-      let dataValues = [];
-      let bgColors = [];
+      barContainer.innerHTML = '';
 
       if (shareChartGroupingMode === 'platform') {
-        // --- 1. PLATFORM SUMMARY MODE (รวมช่องทางหลัก เช่น Shopee, Tiktok, Facebook, Lazada) ---
         const platformSummaries = Object.entries(currentProject.platforms).map(([pKey, pObj]) => {
           let pBudget = 0;
           const subChannels = (pObj.channels || []).map(ch => {
@@ -3113,15 +3744,21 @@
           };
         });
 
-        // Sort descending by budget
         platformSummaries.sort((a, b) => b.budget - a.budget);
 
-        if (centerChannels) centerChannels.innerText = `${platformSummaries.length} Platforms`;
-
         platformSummaries.forEach(p => {
-          labels.push(p.name);
-          dataValues.push(p.budget);
-          bgColors.push(p.color);
+          const pct = masterTotal > 0 ? ((p.budget / masterTotal) * 100) : 0;
+          if (pct <= 0) return;
+
+          const seg = document.createElement('div');
+          seg.style.width = `${pct}%`;
+          seg.style.backgroundColor = p.color;
+          seg.className = "h-full transition-all relative group flex items-center justify-center text-white text-[10px] font-black overflow-hidden px-1";
+          seg.title = `${p.name}: ฿${p.budget.toLocaleString()} (${pct.toFixed(1)}%)`;
+          if (pct >= 8) {
+            seg.innerText = `${pct.toFixed(0)}%`;
+          }
+          barContainer.appendChild(seg);
         });
 
         if (summaryList) {
@@ -3130,7 +3767,6 @@
             const pctNum = masterTotal > 0 ? ((p.budget / masterTotal) * 100) : 0;
             const pct = pctNum.toFixed(1);
 
-            // Sub-channels mini tags
             const subListText = p.channels.length > 0 
               ? p.channels.map(c => `<span class="inline-block bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[10px] text-slate-600">${c.name}: ฿${c.budget.toLocaleString()}</span>`).join(' ')
               : '<span class="text-[10px] text-slate-400 italic">No sub-channels</span>';
@@ -3151,13 +3787,9 @@
                   <span class="font-extrabold text-slate-900 text-xs">฿${p.budget.toLocaleString()}</span>
                 </div>
               </div>
-
-              <!-- Visual progress bar -->
               <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
                 <div class="h-1.5 rounded-full transition-all duration-300" style="width: ${pctNum}%; background-color: ${p.color}"></div>
               </div>
-
-              <!-- Granular sub-channel breakdown inline list -->
               <div class="flex flex-wrap gap-1 pt-0.5">
                 ${subListText}
               </div>
@@ -3165,9 +3797,7 @@
             summaryList.appendChild(card);
           });
         }
-
       } else {
-        // --- 2. GRANULAR SUB-CHANNEL MODE (แยกรายช่องทางย่อยเดิม) ---
         const channelColorPalette = [
           '#EE4D2D', '#ff6b4a', '#ff9076',
           '#0f172a', '#334155', '#475569', '#64748b',
@@ -3177,21 +3807,28 @@
 
         const sortedChannels = [...ALL_CHANNELS].sort((a, b) => (b.budget || 0) - (a.budget || 0));
 
-        if (centerChannels) centerChannels.innerText = `${ALL_CHANNELS.length} Channels`;
+        sortedChannels.forEach((ch, idx) => {
+          const pct = masterTotal > 0 ? ((ch.budget / masterTotal) * 100) : 0;
+          if (pct <= 0) return;
 
-        ALL_CHANNELS.forEach((ch, idx) => {
-          labels.push(ch.name);
-          dataValues.push(ch.budget);
-          bgColors.push(channelColorPalette[idx % channelColorPalette.length]);
+          const sliceColor = channelColorPalette[idx % channelColorPalette.length];
+          const seg = document.createElement('div');
+          seg.style.width = `${pct}%`;
+          seg.style.backgroundColor = sliceColor;
+          seg.className = "h-full transition-all relative group flex items-center justify-center text-white text-[10px] font-black overflow-hidden px-1";
+          seg.title = `${ch.name}: ฿${ch.budget.toLocaleString()} (${pct.toFixed(1)}%)`;
+          if (pct >= 8) {
+            seg.innerText = `${pct.toFixed(0)}%`;
+          }
+          barContainer.appendChild(seg);
         });
 
         if (summaryList) {
           summaryList.innerHTML = '';
-          sortedChannels.forEach(ch => {
+          sortedChannels.forEach((ch, idx) => {
             const pctNum = masterTotal > 0 ? ((ch.budget / masterTotal) * 100) : 0;
             const pct = pctNum.toFixed(1);
-            const origIdx = ALL_CHANNELS.findIndex(c => c.id === ch.id);
-            const sliceColor = bgColors[origIdx >= 0 ? origIdx : 0] || ch.platformColor;
+            const sliceColor = channelColorPalette[idx % channelColorPalette.length];
 
             const row = document.createElement('div');
             row.className = "p-2 rounded-xl bg-slate-50 hover:bg-slate-100/70 border border-slate-200/80 transition flex flex-col gap-1.5";
@@ -3217,53 +3854,17 @@
           });
         }
       }
-
-      if (shareChartInstance) {
-        shareChartInstance.destroy();
-      }
-
-      const ctx = canvas.getContext('2d');
-      shareChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: dataValues.length > 0 ? dataValues : [1],
-            backgroundColor: bgColors.length > 0 ? bgColors : ['#cbd5e1'],
-            borderWidth: 2,
-            borderColor: '#ffffff',
-            hoverOffset: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(ctx) {
-                  const val = Number(ctx.raw || 0);
-                  const sharePct = masterTotal > 0 ? ((val / masterTotal) * 100).toFixed(1) : 0;
-                  return ` ${ctx.label}: ฿${val.toLocaleString()} (${sharePct}% of Total Budget)`;
-                }
-              }
-            }
-          },
-          cutout: '72%'
-        }
-      });
     }
 
+    // Daily Table Views (Platform & Channel Ledger)
     function setDailyTableViewMode(mode) {
       currentTableMode = mode;
       const bPlatform = document.getElementById('btnViewPlatform');
-      const bMatrix = document.getElementById('btnViewMatrix');
       const bFocus = document.getElementById('btnViewFocus');
       const dropdownWrapper = document.getElementById('channelDropdownBarWrapper');
       const badge = document.getElementById('activeViewModeBadge');
 
-      [bPlatform, bMatrix, bFocus].forEach(b => {
+      [bPlatform, bFocus].forEach(b => {
         if (b) b.className = "px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition font-bold";
       });
 
@@ -3271,10 +3872,6 @@
         bPlatform.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs font-bold transition";
         if (dropdownWrapper) dropdownWrapper.classList.add('hidden');
         if (badge) badge.innerText = "Platforms";
-      } else if (mode === 'matrix' && bMatrix) {
-        bMatrix.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs font-bold transition";
-        if (dropdownWrapper) dropdownWrapper.classList.add('hidden');
-        if (badge) badge.innerText = "All Channels";
       } else if (mode === 'focus' && bFocus) {
         bFocus.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs font-bold transition";
         if (dropdownWrapper) dropdownWrapper.classList.remove('hidden');
@@ -3369,7 +3966,7 @@
         return d.type === activeFilter;
       });
 
-      // 1. Channel Ledger (Focus View)
+      // 1. Channel Ledger (Remaining & Status removed as requested)
       if (currentTableMode === 'focus') {
         const activeCh = getChannelById(activeChannelTabId) || ALL_CHANNELS[0];
         if (!activeCh) return;
@@ -3379,8 +3976,6 @@
             <th class="py-3 px-3">Day / Tier</th>
             <th class="py-3 px-3 text-right">Planned (฿)</th>
             <th class="py-3 px-3 text-right">Actual Spend (฿)</th>
-            <th class="py-3 px-3 text-right">Remaining (฿)</th>
-            <th class="py-3 px-3 text-center">Status</th>
             <th class="py-3 px-2 text-center w-12">Edit</th>
           </tr>
         `;
@@ -3388,12 +3983,10 @@
         tbody.innerHTML = '';
         let sumPlanned = 0;
         let sumActual = 0;
-        let runningRemaining = activeCh.budget;
 
         daysList.forEach(d => {
           const planned = Number(d.channelPlans?.[activeCh.id] || 0);
           const actual = Number(d.spends?.[activeCh.id] || 0);
-          runningRemaining -= actual;
           sumPlanned += planned;
           sumActual += actual;
 
@@ -3410,20 +4003,7 @@
               <input type="text" inputmode="decimal" value="${formatCurrency(actual)}"
                      oninput="formatCommaNumberInput(this, true)"
                      onchange="updateInlineChannelSpend(${d.day}, '${activeCh.id}', this.value)"
-                     class="w-24 px-2 py-1 text-right font-bold text-indigo-700 bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
-            </td>
-            <td class="py-2.5 px-3 text-right font-bold ${runningRemaining < 0 ? 'text-rose-600' : 'text-slate-800'}">
-              ฿${formatCurrency(runningRemaining)}
-            </td>
-            <td class="py-2.5 px-3 text-right font-bold ${runningRemaining < 0 ? 'text-rose-600' : 'text-slate-800'}">
-              ฿${runningRemaining.toLocaleString()}
-            </td>
-            <td class="py-2.5 px-3 text-center">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
-                actual > planned ? 'bg-rose-50 text-rose-700' : (actual === 0 ? 'bg-slate-100 text-slate-400' : 'bg-emerald-50 text-emerald-700')
-              }">
-                ${actual > planned ? 'Over Plan' : (actual === 0 ? 'No Spend' : 'Within Plan')}
-              </span>
+                     class="w-28 px-2 py-1 text-right font-bold text-indigo-700 bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
             </td>
             <td class="py-2.5 px-2 text-center">
               <button onclick="openDailySpendModal(${d.day})" class="text-slate-400 hover:text-indigo-600 p-1 rounded" title="Open full day modal">
@@ -3439,92 +4019,13 @@
             <td class="py-3 px-3">Total (${daysList.length} Days)</td>
             <td class="py-3 px-3 text-right">฿${sumPlanned.toLocaleString()}</td>
             <td class="py-3 px-3 text-right text-indigo-700">฿${sumActual.toLocaleString()}</td>
-            <td class="py-3 px-3 text-right">฿${Math.max(0, activeCh.budget - sumActual).toLocaleString()}</td>
-            <td colspan="2"></td>
-          </tr>
-        `;
-        return;
-      }
-
-      // 2. All Channels Matrix View
-      if (currentTableMode === 'matrix') {
-        let thChannels = '';
-        ALL_CHANNELS.forEach(ch => {
-          thChannels += `<th class="py-2.5 px-2 text-right truncate min-w-[110px]" title="${ch.name}">${ch.name}</th>`;
-        });
-
-        thead.innerHTML = `
-          <tr>
-            <th class="py-3 px-3 sticky left-0 bg-slate-50 z-10">Day / Tier</th>
-            <th class="py-3 px-3 text-right">Planned (฿)</th>
-            <th class="py-3 px-3 text-right font-bold text-slate-900">Total Spend</th>
-            ${thChannels}
-            <th class="py-3 px-2 text-center">Action</th>
-          </tr>
-        `;
-
-        tbody.innerHTML = '';
-        const channelTotals = {};
-        ALL_CHANNELS.forEach(ch => channelTotals[ch.id] = 0);
-        let grandPlanned = 0;
-        let grandActual = 0;
-
-        daysList.forEach(d => {
-          grandPlanned += Number(d.plannedSpend || 0);
-          let dayTotal = 0;
-          let tdChannels = '';
-
-          ALL_CHANNELS.forEach(ch => {
-            const sp = Number(d.spends?.[ch.id] || 0);
-            channelTotals[ch.id] += sp;
-            dayTotal += sp;
-            tdChannels += `
-              <td class="py-1.5 px-1.5 text-right">
-                <input type="text" inputmode="decimal" value="${formatCurrency(sp)}"
-                       oninput="formatCommaNumberInput(this, true)"
-                       onchange="updateInlineChannelSpend(${d.day}, '${ch.id}', this.value)"
-                       class="w-20 px-1.5 py-0.5 text-right text-[11px] font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
-              </td>
-            `;
-          });
-          grandActual += dayTotal;
-
-          const tr = document.createElement('tr');
-          tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
-          tr.innerHTML = `
-            <td class="py-2 px-3 font-bold sticky left-0 bg-white z-10">
-              <span class="font-mono text-slate-400">D${d.day}</span>
-              <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${getDayBadgeClass(d.type)}">${d.type}</span>
-              ${d.isRePaced ? '<span class="ml-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-violet-100 text-violet-700">Re-Paced</span>' : ''}
-            </td>
-            <td class="py-2 px-3 text-right text-slate-600 font-medium">฿${Number(d.plannedSpend || 0).toLocaleString()}</td>
-            <td class="py-2 px-3 text-right font-bold text-slate-900">฿${dayTotal.toLocaleString()}</td>
-            ${tdChannels}
-            <td class="py-2 px-2 text-center">
-              <button onclick="openDailySpendModal(${d.day})" class="text-slate-400 hover:text-indigo-600 p-1" title="Edit day breakdown">✎</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-        let tfChannels = '';
-        ALL_CHANNELS.forEach(ch => {
-          tfChannels += `<td class="py-3 px-2 text-right">฿${(channelTotals[ch.id] || 0).toLocaleString()}</td>`;
-        });
-
-        tfoot.innerHTML = `
-          <tr>
-            <td class="py-3 px-3 sticky left-0 bg-slate-100 z-10">Total</td>
-            <td class="py-3 px-3 text-right">฿${grandPlanned.toLocaleString()}</td>
-            <td class="py-3 px-3 text-right text-indigo-900">฿${grandActual.toLocaleString()}</td>
-            ${tfChannels}
             <td></td>
           </tr>
         `;
         return;
       }
 
-      // 3. Platform Summary View (Default)
+      // 2. Platform Summary View (Default)
       const platformKeys = Object.keys(currentProject.platforms);
       let thPlatforms = '';
       platformKeys.forEach(pk => {
@@ -3629,6 +4130,7 @@
       return 'badge-normal border';
     }
 
+    // Set Channel Controls Panel
     function renderChannelControls() {
       const container = document.getElementById('channelListControl');
       const displayTotal = document.getElementById('displayMasterBudget');
@@ -3684,6 +4186,7 @@
       });
     }
 
+    // Calendar Days & Weighting
     function renderCalendarDays() {
       const container = document.getElementById('calendarDayTypeSelector');
       if (!container || !currentProject) return;
@@ -3764,16 +4267,19 @@
       document.body.removeChild(link);
     }
 
+    // App Initialization on Load
     window.addEventListener('DOMContentLoaded', () => {
       initProjectStore();
       loadProject(activeProjectId);
       setDailyTableViewMode(currentTableMode);
+      initDraggableTabs();
     });
 
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
       initProjectStore();
       loadProject(activeProjectId);
       setDailyTableViewMode(currentTableMode);
+      initDraggableTabs();
     }
 
     window.addEventListener('beforeunload', () => saveCurrentProject(true));
