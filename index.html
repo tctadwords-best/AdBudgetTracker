@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Multi-Project Media Budget Tracker</title>
+  <title>Project Multi-Plan Budget Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS for direct Excel (.xlsx, .xls, .csv) file reading and writing -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -37,8 +39,8 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
       <!-- Project Switcher & Title -->
       <div class="flex items-center space-x-3 min-w-0">
-        <div id="projectAvatarBadge" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-extrabold text-base shadow-sm shrink-0">
-          INE
+        <div id="projectAvatarBadge" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-extrabold text-sm shadow-sm shrink-0">
+          PRO
         </div>
         <div class="min-w-0">
           <div class="flex items-center space-x-2">
@@ -79,7 +81,7 @@
         </button>
         <button onclick="openTodaySpendModal()" class="inline-flex items-center px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs sm:text-sm font-semibold shadow-sm shadow-indigo-300 transition">
           <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          <span>Log Spend</span>
+          <span>+ Log Spend</span>
         </button>
       </div>
     </div>
@@ -91,110 +93,120 @@
     <div class="flex items-center justify-between border-b border-slate-200 pb-3">
       <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-600">
         <button id="viewTabDaily" onclick="switchMainView('daily')" class="px-3.5 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition">Daily Tracker</button>
-        <button id="viewTabChannels" onclick="switchMainView('channels')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Set Channel Budgets</button>
-        <button id="viewTabDayTypes" onclick="switchMainView('daytypes')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Campaign Day Weights</button>
+        <button id="viewTabSalesPerf" onclick="switchMainView('salesperf')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Sales & ROAS Performance</span>
+        </button>
+        <button id="viewTabChannels" onclick="switchMainView('channels')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold">Set Channel Budgets</button>
+        <button id="viewTabDayTypes" onclick="switchMainView('daytypes')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold">Campaign Day Weights</button>
       </div>
       <div class="text-xs text-slate-500 font-medium hidden sm:flex items-center space-x-2">
         <span>Active Project ID:</span>
-        <span id="labelCurrentProjectId" class="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-bold">INE</span>
+        <span id="labelCurrentProjectId" class="font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-700 font-bold">Project INE</span>
       </div>
     </div>
 
+    <!-- 4 Primary KPI Cards (Exact layout from screenshot) -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- Total Master Budget -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          <span id="kpiPlanTitleLabel">Monthly Master Budget</span>
-          <span class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 font-bold text-xs">฿</span>
+      <!-- 1. Monthly Master Budget -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <span id="kpiPlanTitleLabel">MONTHLY MASTER BUDGET</span>
+            <span class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">฿</span>
+          </div>
+          <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiTargetBudget">฿500,000</div>
         </div>
-        <div class="mt-2 flex items-baseline justify-between">
-          <span id="kpiTargetBudget" class="text-2xl font-extrabold text-slate-900">฿0</span>
-          <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Auto-Calculated</span>
-        </div>
-        <div class="mt-2 text-xs text-slate-500 flex justify-between">
+        <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
           <span>Active Ad Channels:</span>
-          <span id="kpiTotalChannelsCount" class="font-bold text-slate-800">0 channels</span>
+          <div class="flex items-center space-x-1.5">
+            <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Auto-Calculated</span>
+            <span id="kpiTotalChannelsCount" class="font-bold text-slate-800">10 channels</span>
+          </div>
         </div>
       </div>
 
-      <!-- Actual Spent MTD -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          <span>Actual Spent MTD</span>
-          <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-          </span>
+      <!-- 2. Actual Spent MTD -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <span>ACTUAL SPENT MTD</span>
+            <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </span>
+          </div>
+          <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiActualSpent">฿0</div>
         </div>
-        <div class="mt-2 flex items-baseline justify-between">
-          <span id="kpiActualSpent" class="text-2xl font-extrabold text-slate-900">฿0</span>
-          <span id="kpiSpentPercent" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">0%</span>
-        </div>
-        <div class="mt-2 text-xs text-slate-500 flex justify-between">
-          <span>Planned to Date:</span>
-          <span id="kpiPlannedToDate" class="font-semibold text-slate-700">฿0</span>
-        </div>
-      </div>
-
-      <!-- Variance -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          <span>Budget Variance MTD</span>
-          <span class="p-1.5 rounded-lg bg-slate-50 text-slate-600">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          </span>
-        </div>
-        <div class="mt-2 flex items-baseline justify-between">
-          <span id="kpiVariance" class="text-2xl font-extrabold text-slate-900">฿0</span>
-          <span id="kpiVarianceTag" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">On Track</span>
-        </div>
-        <div class="mt-2 text-xs text-slate-500 flex justify-between">
-          <span>Burn Pacing:</span>
-          <span id="kpiPacingRate" class="font-bold text-slate-700">100.0%</span>
+        <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+          <span>Planned to Date: <strong id="kpiPlannedToDate" class="text-slate-700 font-bold ml-1">฿0</strong></span>
+          <span id="kpiSpentPercent" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">0.0%</span>
         </div>
       </div>
 
-      <!-- Remaining -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-          <span>Remaining Budget</span>
-          <span class="p-1.5 rounded-lg bg-amber-50 text-amber-600">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          </span>
+      <!-- 3. Budget Variance MTD -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <span>BUDGET VARIANCE MTD</span>
+            <span class="w-6 h-6 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </span>
+          </div>
+          <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiVariance">฿0</div>
         </div>
-        <div class="mt-2 flex items-baseline justify-between">
-          <span id="kpiRemaining" class="text-2xl font-extrabold text-slate-900">฿0</span>
+        <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+          <span>Burn Pacing: <strong id="kpiPacingRate" class="text-slate-700 font-bold ml-1">0.0%</strong></span>
+          <span id="kpiVarianceTag" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Under Budget</span>
+        </div>
+      </div>
+
+      <!-- 4. Remaining Budget -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <span>REMAINING BUDGET</span>
+            <span class="w-6 h-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </span>
+          </div>
+          <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiRemaining">฿0</div>
+        </div>
+        <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+          <span>Recommended Daily: <strong id="kpiRecDailySpend" class="text-amber-800 font-bold ml-1">฿0</strong></span>
           <span id="kpiDaysLeft" class="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-bold">-- days left</span>
         </div>
-        <div class="mt-2 text-xs text-slate-500 flex justify-between">
-          <span>Recommended Daily:</span>
-          <span id="kpiRecDailySpend" class="font-bold text-amber-800">฿0</span>
-        </div>
       </div>
     </div>
 
-    <!-- Platform Cards Container -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="platformCardsContainer">
-      <!-- Generated dynamically per project -->
+    <!-- 4 Platform Cards (Exact row shown in screenshot: Shopee, TikTok Ad, Facebook, Lazada) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="platformCardsContainer">
+      <!-- Injected dynamically via JS: Shopee, TikTok Ad, Facebook, Lazada -->
     </div>
 
     <div id="sectionDailyTracker" class="space-y-5">
-      <!-- Pacing Chart Container -->
+      <!-- Pacing Chart Container with Collapse Toggle -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
           <div>
             <h2 class="text-base font-bold text-slate-900"><span id="chartProjectTitle">Project INE</span> • Daily Pacing Burn (Planned vs Actual)</h2>
             <p class="text-xs text-slate-500">Visual pacing curve with colored tier bars for DDAY, Mid-Month, Payday, and Normal days</p>
           </div>
-          <div class="flex items-center space-x-3 text-xs font-semibold text-slate-600">
-            <span class="inline-flex items-center">
-              <span class="w-3 h-1 bg-indigo-500 rounded-full mr-1.5"></span> Planned Curve
-            </span>
-            <span class="inline-flex items-center">
-              <span class="w-2.5 h-2.5 bg-emerald-500 rounded-xs mr-1.5"></span> Actual Spend
-            </span>
+          <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-3 text-xs font-semibold text-slate-600 hidden sm:flex">
+              <span class="inline-flex items-center">
+                <span class="w-3 h-1 bg-indigo-500 rounded-full mr-1.5"></span> Planned Curve
+              </span>
+              <span class="inline-flex items-center">
+                <span class="w-2.5 h-2.5 bg-emerald-500 rounded-xs mr-1.5"></span> Actual Spend
+              </span>
+            </div>
+            <button onclick="togglePacingChartVisibility()" id="btnToggleChart" class="text-xs font-bold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition flex items-center space-x-1">
+              <span id="toggleChartIcon">▲</span>
+              <span id="toggleChartText">ซ่อนกราฟ</span>
+            </button>
           </div>
         </div>
-        <div class="h-60 w-full">
+        <div id="pacingChartWrapper" class="h-60 w-full transition-all duration-300">
           <canvas id="dailyPacingChart"></canvas>
         </div>
       </div>
@@ -216,7 +228,7 @@
             <div class="inline-flex p-1 bg-slate-100 rounded-lg text-xs font-semibold text-slate-600">
               <button id="btnViewPlatform" onclick="setDailyTableViewMode('platform')" class="px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs font-bold transition">Platforms</button>
               <button id="btnViewMatrix" onclick="setDailyTableViewMode('matrix')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition font-bold">All Channels</button>
-              <button id="btnViewFocus" onclick="setDailyTableViewMode('focus')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition font-bold">Channel Tabs</button>
+              <button id="btnViewFocus" onclick="setDailyTableViewMode('focus')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition font-bold">Channel Ledger</button>
             </div>
 
             <!-- Day Type Filter -->
@@ -241,18 +253,20 @@
           </div>
         </div>
 
-        <!-- Channel Navigation Tab Bar (Shown in Channel Tabs View) -->
-        <div id="channelTabsBarWrapper" class="hidden bg-slate-50/90 px-5 py-3 border-b border-slate-200 space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Select Project Ad Channel:</span>
-            <span id="activeChannelBadgePlatform" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-700">Channel</span>
-          </div>
-          <div id="channelTabPillsContainer" class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-            <!-- Channel tabs rendered here -->
+        <!-- Channel Dropdown Selector (Active in Channel Ledger View) -->
+        <div id="channelDropdownBarWrapper" class="hidden bg-slate-50/95 px-5 py-3.5 border-b border-slate-200 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center space-x-2">
+              <label for="selectActiveChannelLedger" class="text-xs font-bold text-slate-600 uppercase tracking-wide">Select Project Ad Channel:</label>
+              <select id="selectActiveChannelLedger" onchange="selectChannelDropdown(this.value)" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs min-w-[240px]">
+                <!-- Options populated dynamically -->
+              </select>
+            </div>
+            <span id="activeChannelBadgePlatform" class="text-xs font-bold px-2.5 py-1 rounded-full bg-white border border-slate-200 text-slate-700">Platform • Channel</span>
           </div>
 
           <!-- Channel Metric Summary Strip -->
-          <div id="channelSummaryStrip" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+          <div id="channelSummaryStrip" class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
             <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
               <span class="text-[10px] font-bold text-slate-400 uppercase">Channel Budget</span>
               <div id="activeTabTotalBudget" class="text-base font-bold text-slate-900 mt-0.5">฿0</div>
@@ -283,6 +297,263 @@
       </div>
     </div>
 
+    <div id="sectionSalesPerformance" class="hidden space-y-6">
+      <!-- Target Setting & Direct Target vs Actual Comparison -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <h2 class="text-base font-bold text-slate-900">Monthly Sales & ROAS Targets: KPI vs Actual Result</h2>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Active Project Target</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Compare your monthly goals directly against real-time actual sales performance</p>
+          </div>
+          <button onclick="saveMonthlySalesTargets()" class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-xs">
+            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            Save Targets
+          </button>
+        </div>
+
+        <!-- 4 Comparative Cards: Target vs Actual Comparison -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          <!-- 1. GMV Target vs Actual -->
+          <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-950 uppercase">Total Revenue (GMV)</span>
+                <span id="salesGmvPacePct" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">0% Achieved</span>
+              </div>
+              <div class="mt-3">
+                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target GMV (฿)</label>
+                <input type="number" id="inputTargetGmv" value="1200000" min="0" step="50000" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-emerald-500 mt-0.5">
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-emerald-100/80">
+              <div class="flex justify-between items-baseline text-xs">
+                <span class="text-slate-500">Actual GMV:</span>
+                <span id="salesActualGmvLabel" class="text-base font-black text-emerald-700">฿0</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div id="barGmvAchieved" class="bg-emerald-600 h-1.5 rounded-full" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Orders Target vs Actual -->
+          <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-indigo-950 uppercase">Target Orders</span>
+                <span id="salesOrdersPacePct" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-700">0% Achieved</span>
+              </div>
+              <div class="mt-3">
+                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target Orders</label>
+                <input type="number" id="inputTargetOrders" value="3000" min="0" step="50" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-indigo-500 mt-0.5">
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-indigo-100/80">
+              <div class="flex justify-between items-baseline text-xs">
+                <span class="text-slate-500">Actual Orders:</span>
+                <span id="salesActualOrdersLabel" class="text-base font-black text-indigo-700">0</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div id="barOrdersAchieved" class="bg-indigo-600 h-1.5 rounded-full" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. ROAS Target vs Actual -->
+          <div class="p-4 rounded-xl border border-violet-200 bg-violet-50/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-violet-950 uppercase">Blended ROAS</span>
+                <span id="salesRoasDiffTag" class="text-[10px] px-2 py-0.5 rounded font-bold bg-slate-100 text-slate-600">Tracking</span>
+              </div>
+              <div class="mt-3">
+                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target ROAS (x)</label>
+                <input type="number" id="inputTargetRoas" value="4.0" min="0.1" step="0.1" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-violet-500 mt-0.5">
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-violet-100/80">
+              <div class="flex justify-between items-baseline text-xs">
+                <span class="text-slate-500">Actual ROAS:</span>
+                <span id="salesActualRoasLabel" class="text-base font-black text-violet-700">0.00x</span>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-1 flex justify-between">
+                <span>Variance:</span>
+                <span id="salesRoasDiffAmount" class="font-bold text-slate-700">0.00x</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Budget vs Spent -->
+          <div class="p-4 rounded-xl border border-amber-200 bg-amber-50/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-amber-950 uppercase">Budget vs Spent</span>
+                <span id="salesSpendBurnBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800">0% Spent</span>
+              </div>
+              <div class="mt-3">
+                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Master Budget (฿)</label>
+                <div id="salesCompareMasterBudget" class="w-full text-base font-black text-slate-800 bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1 mt-0.5">฿0</div>
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-amber-100/80">
+              <div class="flex justify-between items-baseline text-xs">
+                <span class="text-slate-500">Actual Spend:</span>
+                <span id="salesCompareActualSpent" class="text-base font-black text-amber-900">฿0</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div id="barSpendBurned" class="bg-amber-600 h-1.5 rounded-full" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Executive Sales Performance Ribbon -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- Total GMV -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <span>Total GMV</span>
+            <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 font-bold">฿</span>
+          </div>
+          <div class="mt-2 text-2xl font-extrabold text-slate-900" id="perfKpiTotalGmv">฿0</div>
+          <div class="mt-1 text-[11px] text-slate-500 font-medium" id="perfKpiGmvPace">0.0% of Target</div>
+        </div>
+
+        <!-- Total Orders -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <span>Total Orders</span>
+            <span class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            </span>
+          </div>
+          <div class="mt-2 text-2xl font-extrabold text-indigo-600" id="perfKpiTotalOrders">0</div>
+          <div class="mt-1 text-[11px] text-slate-500 flex justify-between">
+            <span>Goal:</span>
+            <span id="perfKpiTargetOrdersSub" class="font-bold text-slate-700">3,000</span>
+          </div>
+        </div>
+
+        <!-- Blended ROAS -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <span>Blended ROAS</span>
+            <span id="perfKpiRoasStatusBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">--</span>
+          </div>
+          <div class="mt-2 text-2xl font-black text-violet-700" id="perfKpiBlendedRoas">0.00x</div>
+          <div class="mt-1 text-[11px] text-slate-500 flex justify-between">
+            <span>Target ROAS:</span>
+            <span id="perfKpiTargetRoasSub" class="font-bold text-slate-700">4.00x</span>
+          </div>
+        </div>
+
+        <!-- AOV -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <span>AOV (Avg Order)</span>
+            <span class="p-1.5 rounded-lg bg-slate-50 text-slate-600 font-bold text-xs">AOV</span>
+          </div>
+          <div class="mt-2 text-2xl font-extrabold text-slate-800" id="perfKpiAov">฿0</div>
+          <div class="mt-1 text-[11px] text-slate-500">GMV ÷ Total Orders</div>
+        </div>
+
+        <!-- CPO -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <span>CPO (Cost/Order)</span>
+            <span class="p-1.5 rounded-lg bg-amber-50 text-amber-700 font-bold text-xs">CPO</span>
+          </div>
+          <div class="mt-2 text-2xl font-extrabold text-amber-800" id="perfKpiCpo">฿0</div>
+          <div class="mt-1 text-[11px] text-slate-500 flex justify-between">
+            <span>Total Ad Spend:</span>
+            <span id="perfKpiSpendSub" class="font-bold text-slate-700">฿0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Platform Performance Summary</h3>
+            <p class="text-xs text-slate-500">Click any column header to sort from high-to-low or low-to-high</p>
+          </div>
+          <button onclick="openImportExcelModal()" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 transition shrink-0">
+            Import Spend, Orders & GMV
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold select-none">
+              <tr>
+                <th onclick="toggleSortPlatformTable('name')" class="py-3 px-3.5 cursor-pointer hover:bg-slate-100 transition">
+                  <div class="flex items-center space-x-1"><span>Platform</span><span id="sort_icon_name" class="text-slate-400">⇅</span></div>
+                </th>
+                <th onclick="toggleSortPlatformTable('spend')" class="py-3 px-3 text-right cursor-pointer hover:bg-slate-100 transition">
+                  <div class="flex items-center justify-end space-x-1"><span>Spend (฿)</span><span id="sort_icon_spend" class="text-slate-400">⇅</span></div>
+                </th>
+                <th onclick="toggleSortPlatformTable('orders')" class="py-3 px-3 text-right cursor-pointer hover:bg-slate-100 transition">
+                  <div class="flex items-center justify-end space-x-1"><span>Orders</span><span id="sort_icon_orders" class="text-slate-400">⇅</span></div>
+                </th>
+                <th onclick="toggleSortPlatformTable('gmv')" class="py-3 px-3 text-right cursor-pointer hover:bg-slate-100 transition">
+                  <div class="flex items-center justify-end space-x-1"><span>GMV (฿)</span><span id="sort_icon_gmv" class="text-slate-400">⇅</span></div>
+                </th>
+                <th onclick="toggleSortPlatformTable('aov')" class="py-3 px-3 text-right cursor-pointer hover:bg-slate-100 transition">
+                  <div class="flex items-center justify-end space-x-1"><span>AOV (฿)</span><span id="sort_icon_aov" class="text-slate-400">⇅</span></div>
+                </th>
+                <th onclick="toggleSortPlatformTable('cpo')" class="py-3 px-3 text-right cursor-pointer hover:bg-slate-100 transition">
+                  <div class="flex items-center justify-end space-x-1"><span>CPO (฿)</span><span id="sort_icon_cpo" class="text-slate-400">⇅</span></div>
+                </th>
+                <th onclick="toggleSortPlatformTable('roas')" class="py-3 px-3 text-right cursor-pointer hover:bg-slate-100 transition font-black text-slate-900">
+                  <div class="flex items-center justify-end space-x-1"><span>ROAS</span><span id="sort_icon_roas" class="text-indigo-600">▼</span></div>
+                </th>
+                <th onclick="toggleSortPlatformTable('share')" class="py-3 px-3 text-right cursor-pointer hover:bg-slate-100 transition">
+                  <div class="flex items-center justify-end space-x-1"><span>GMV Share</span><span id="sort_icon_share" class="text-slate-400">⇅</span></div>
+                </th>
+                <th class="py-3 px-3.5 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody id="tablePlatformPerfBody" class="divide-y divide-slate-100 font-medium"></tbody>
+            <tfoot id="tablePlatformPerfFoot" class="bg-slate-100/90 font-bold text-slate-900 border-t-2 border-slate-200"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Granular Channel Performance Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Channel Performance Breakdown</h3>
+            <p class="text-xs text-slate-500">Granular return on ad spend across all active channels</p>
+          </div>
+          <span class="text-xs text-slate-400 font-semibold" id="labelActiveChannelsCountSubtitle">10 Configured Channels</span>
+        </div>
+        <div class="overflow-x-auto max-h-[500px]">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 sticky top-0 z-10 border-b border-slate-200 text-slate-600 font-bold">
+              <tr>
+                <th class="py-3 px-3.5">Ad Channel</th>
+                <th class="py-3 px-2.5">Platform</th>
+                <th class="py-3 px-3 text-right">Spend (฿)</th>
+                <th class="py-3 px-3 text-right">Orders</th>
+                <th class="py-3 px-3 text-right">GMV (฿)</th>
+                <th class="py-3 px-3 text-right">AOV (฿)</th>
+                <th class="py-3 px-3 text-right">CPO (฿)</th>
+                <th class="py-3 px-3 text-right font-black text-slate-900">ROAS</th>
+                <th class="py-3 px-3.5 text-center">Performance</th>
+              </tr>
+            </thead>
+            <tbody id="tableChannelPerfBody" class="divide-y divide-slate-100 font-medium"></tbody>
+            <tfoot id="tableChannelPerfFoot" class="bg-slate-100/90 font-bold text-slate-900 sticky bottom-0 border-t-2 border-slate-200"></tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div id="sectionChannelAllocation" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Monthly Budget Setup Column -->
@@ -295,7 +566,7 @@
             <span class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-extrabold text-sm">฿</span>
           </div>
 
-          <!-- Dynamic Master Budget Display (Calculated directly from Channel Budgets) -->
+          <!-- Master Budget Display -->
           <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4">
             <div class="flex items-center justify-between mb-1">
               <label class="block text-xs font-bold text-indigo-900 uppercase">Monthly Master Budget (THB)</label>
@@ -309,7 +580,7 @@
             </p>
           </div>
 
-          <!-- Set Channel Budgets Header -->
+          <!-- Channel List Controls -->
           <div class="pt-2">
             <div class="flex items-center justify-between mb-3">
               <div>
@@ -321,9 +592,8 @@
               </button>
             </div>
 
-            <!-- List of platform groups with edit controls -->
             <div class="space-y-3.5" id="channelListControl">
-              <!-- Rendered via JS -->
+              <!-- Injected via JS -->
             </div>
           </div>
         </div>
@@ -365,6 +635,7 @@
       </div>
     </div>
 
+    <!-- Section: Campaign Day Weights & Multipliers -->
     <div id="sectionDayTypePlanner" class="hidden space-y-6">
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
@@ -447,13 +718,13 @@
     </div>
   </main>
 
-  <!-- Spend Modal -->
+  <!-- Spend Modal (Supports Spend, Orders, GMV) -->
   <div id="spendModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100">
         <div>
           <h3 class="text-lg font-bold text-slate-900" id="modalTitle">Log Spend • Day 1</h3>
-          <p class="text-xs text-slate-500" id="modalSubtitle">Update ad expenditure for active project channels</p>
+          <p class="text-xs text-slate-500" id="modalSubtitle">Update ad expenditure, orders, and GMV revenue</p>
         </div>
         <button onclick="closeDailySpendModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">✕</button>
       </div>
@@ -481,13 +752,119 @@
         </div>
       </div>
 
-      <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+      <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
         <div class="text-xs font-medium text-slate-500">
-          Total Logged for Day: <span id="modalTotalLogged" class="font-bold text-slate-900 text-sm ml-1">฿0</span>
+          Total Logged: <span id="modalTotalLogged" class="font-bold text-slate-900 text-sm ml-1">฿0</span>
+        </div>
+        <div class="flex items-center space-x-2 text-[11px] font-semibold text-slate-600 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
+          <span>Spend: <strong id="modalDaySpendSummary" class="text-slate-900">฿0</strong></span>
+          <span>•</span>
+          <span>Orders: <strong id="modalDayOrdersSummary" class="text-indigo-600">0</strong></span>
+          <span>•</span>
+          <span>GMV: <strong id="modalDayGmvSummary" class="text-emerald-700">฿0</strong></span>
+          <span>•</span>
+          <span>ROAS: <strong id="modalDayRoasSummary" class="text-violet-700">0.00x</strong></span>
         </div>
         <div class="flex space-x-2">
           <button onclick="closeDailySpendModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">Cancel</button>
           <button onclick="saveModalSpend()" class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition">Save Spend</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Excel Import Modal -->
+  <div id="importExcelModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-black">XLS</span>
+            Import Spend & Sales from Excel (.xlsx / .csv)
+          </h3>
+          <p class="text-xs text-slate-500">Upload your completed Excel or CSV file directly to sync spend, orders, and GMV</p>
+        </div>
+        <button onclick="closeImportExcelModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">✕</button>
+      </div>
+
+      <div class="py-4 overflow-y-auto space-y-4 flex-1">
+        <!-- Download Template Strip -->
+        <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="text-xs font-bold text-emerald-950">Excel Template for Active Channels</div>
+            <p class="text-[11px] text-emerald-800 mt-0.5">Includes all channels with Spend, Orders, and GMV columns for 31 days.</p>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <button onclick="downloadExcelTemplate('xlsx')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Download .xlsx
+            </button>
+            <button onclick="downloadExcelTemplate('csv')" class="px-2.5 py-2 bg-white hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-lg text-xs font-semibold transition">
+              .csv
+            </button>
+          </div>
+        </div>
+
+        <!-- Drag & Drop Zone -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Upload Excel / CSV File:</label>
+          <div id="excelDropZone" 
+               onclick="document.getElementById('excelFileInput').click()"
+               class="border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/30 hover:bg-emerald-50/60 rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2 group">
+            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" onchange="handleExcelFileInput(event)" class="hidden">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-110 transition shadow-xs">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            </div>
+            <div class="text-xs font-bold text-slate-800">
+              <span class="text-emerald-700 underline font-extrabold">Click to browse file</span> or drag & drop here
+            </div>
+            <p class="text-[11px] text-slate-400">Supports Microsoft Excel (.xlsx, .xls) and Comma-Separated Values (.csv)</p>
+            <div id="uploadedFileInfo" class="hidden mt-2 text-xs font-bold text-emerald-800 bg-white border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center gap-2 shadow-2xs">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span id="uploadedFileName">filename.xlsx</span>
+              <span id="uploadedFileSize" class="text-slate-400 text-[10px]"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mapped Columns Preview Badges -->
+        <div id="importMappingBadges" class="hidden flex flex-wrap gap-1.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl"></div>
+
+        <!-- Fallback Paste Text Area -->
+        <div class="border border-slate-200 rounded-xl overflow-hidden">
+          <button type="button" onclick="togglePasteFallback()" class="w-full px-3.5 py-2 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-xs font-bold text-slate-600 transition">
+            <span class="flex items-center gap-1.5">
+              <span>📋</span> Or paste text / cells directly from clipboard
+            </span>
+            <span id="togglePasteIcon" class="text-slate-400">▼</span>
+          </button>
+          <div id="pasteFallbackWrapper" class="hidden p-3 bg-white border-t border-slate-200">
+            <textarea id="excelPasteArea" rows="4" oninput="handleExcelPasteInput(this.value)" placeholder="Day	Shopee Ad Spend	Shopee Ad Orders	Shopee Ad GMV...
+1	2500	15	12000..." class="w-full text-xs font-mono p-2.5 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"></textarea>
+          </div>
+        </div>
+
+        <!-- Live Preview Matrix -->
+        <div id="importPreviewWrapper" class="border border-slate-200 rounded-xl overflow-x-auto max-h-48 bg-slate-50">
+          <div class="p-6 text-center text-xs text-slate-400 italic" id="importEmptyNotice">
+            Select or drag an Excel file above to preview parsed days, spend, orders, and GMV.
+          </div>
+          <table class="w-full text-left border-collapse text-[11px] hidden" id="importPreviewTable">
+            <thead class="bg-slate-100 text-slate-700 font-semibold sticky top-0" id="importPreviewHead"></thead>
+            <tbody id="importPreviewBody" class="divide-y divide-slate-200 text-slate-800"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+        <div class="text-xs text-slate-500 font-medium">
+          Parsed Metrics: <span id="importSummaryMetrics" class="font-bold text-emerald-700 text-xs ml-1">฿0 Spend | 0 Orders | ฿0 GMV</span>
+        </div>
+        <div class="flex space-x-2">
+          <button onclick="closeImportExcelModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">Cancel</button>
+          <button id="btnConfirmImport" onclick="applyExcelImport()" disabled class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition shadow-xs">
+            Apply to Project
+          </button>
         </div>
       </div>
     </div>
@@ -515,7 +892,7 @@
         </div>
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Ad Channel Name</label>
-          <input type="text" id="newChannelNameInput" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 text-sm" placeholder="e.g. TikTok Shop Video Shopping Ad">
+          <input type="text" id="newChannelNameInput" class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 text-sm" placeholder="e.g. TikTok Video Shopping Ad">
         </div>
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Monthly Planned Budget (THB)</label>
@@ -529,7 +906,7 @@
     </div>
   </div>
 
-  <!-- Channel Edit / Rename / Delete Modal -->
+  <!-- Channel Edit Modal -->
   <div id="channelEditModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
@@ -567,62 +944,6 @@
         <div class="flex space-x-2">
           <button onclick="closeModal('channelEditModal')" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
           <button onclick="saveChannelModalEdit()" class="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-xs">Save Changes</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Excel Import Modal -->
-  <div id="importExcelModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col">
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-        <div>
-          <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm font-black">XLS</span>
-            Import Spend from Excel / Google Sheets
-          </h3>
-          <p class="text-xs text-slate-500">Paste cells copied from Excel to import into this project's daily logs</p>
-        </div>
-        <button onclick="closeImportExcelModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">✕</button>
-      </div>
-
-      <div class="py-4 overflow-y-auto space-y-4 flex-1">
-        <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div class="text-xs font-bold text-emerald-950">Excel Template for Active Channels</div>
-            <p class="text-[11px] text-emerald-800 mt-0.5">Custom template tailored to this project's channels.</p>
-          </div>
-          <button onclick="downloadExcelTemplate()" class="shrink-0 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition">
-            Download CSV Template
-          </button>
-        </div>
-
-        <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Paste Excel Data (Tab or Comma Separated):</label>
-          <textarea id="excelPasteArea" rows="6" oninput="handleExcelPasteInput(this.value)" placeholder="Day	Shopee Ad	TikTok GMV MAX...
-1	2500	3200..." class="w-full text-xs font-mono p-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800"></textarea>
-        </div>
-
-        <div id="importPreviewWrapper" class="border border-slate-200 rounded-xl overflow-x-auto max-h-48 bg-slate-50">
-          <div class="p-6 text-center text-xs text-slate-400 italic" id="importEmptyNotice">
-            Paste your cells above to preview mapped channel numbers before applying.
-          </div>
-          <table class="w-full text-left border-collapse text-[11px] hidden" id="importPreviewTable">
-            <thead class="bg-slate-100 text-slate-700 font-semibold sticky top-0" id="importPreviewHead"></thead>
-            <tbody id="importPreviewBody" class="divide-y divide-slate-200 text-slate-800"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-        <div class="text-xs text-slate-500 font-medium">
-          Parsed Total Spend: <span id="importTotalAmount" class="font-bold text-emerald-700 text-sm ml-1">฿0</span>
-        </div>
-        <div class="flex space-x-2">
-          <button onclick="closeImportExcelModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">Cancel</button>
-          <button id="btnConfirmImport" onclick="applyExcelImport()" disabled class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition">
-            Apply to Project
-          </button>
         </div>
       </div>
     </div>
@@ -667,7 +988,7 @@
     </div>
   </div>
 
-  <!-- Custom Confirm Modal (Safe, replaces alert/confirm) -->
+  <!-- Custom Confirm Modal -->
   <div id="confirmActionModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
       <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-base mb-3">!</div>
@@ -688,8 +1009,8 @@
 
   <script>
     const DAYS_IN_MONTH = 31;
-    const STORAGE_KEY_PROJECTS = 'MULTI_PROJECT_BUDGET_STORE_V3';
-    const STORAGE_KEY_ACTIVE_PROJECT = 'MULTI_PROJECT_ACTIVE_ID_V3';
+    const STORAGE_KEY_PROJECTS = 'MULTI_PROJECT_BUDGET_STORE_V4';
+    const STORAGE_KEY_ACTIVE_PROJECT = 'MULTI_PROJECT_ACTIVE_ID_V4';
 
     // Baseline Default INE Template
     const DEFAULT_INE_PLATFORMS = {
@@ -741,41 +1062,109 @@
       }
     };
 
-    // Project Data Store: Every project is completely isolated
+    // Project Data Store
     let projectStore = {};
     let activeProjectId = 'project_ine';
-
-    // Active project state references
     let currentProject = null;
     let ALL_CHANNELS = [];
     let currentTableMode = 'platform';
-    let expandedDays = new Set([1]);
     let activeChannelTabId = '';
     let autoSaveTimer = null;
     let pacingChartInstance = null;
     let shareChartInstance = null;
     let parsedImportRows = [];
     let isPacingChartExpanded = true;
-    let expandedPlatformCard = null;
+    let activeModalDay = 1;
+
+    // Table sorting state for Platform Performance Summary
+    let platformSortKey = 'roas';
+    let platformSortAsc = false;
+
+    function renderAll() {
+      renderKPIs();
+      renderPlatformCards();
+      renderPacingChart();
+      renderDailyTable();
+      renderSalesPerformance();
+      renderChannelControls();
+      renderChannelShareChart();
+      renderCalendarDays();
+    }
+
+    function switchMainView(viewName) {
+      const views = {
+        daily: { btn: 'viewTabDaily', section: 'sectionDailyTracker' },
+        salesperf: { btn: 'viewTabSalesPerf', section: 'sectionSalesPerformance' },
+        channels: { btn: 'viewTabChannels', section: 'sectionChannelAllocation' },
+        daytypes: { btn: 'viewTabDayTypes', section: 'sectionDayTypePlanner' }
+      };
+
+      Object.entries(views).forEach(([key, conf]) => {
+        const sec = document.getElementById(conf.section);
+        const btn = document.getElementById(conf.btn);
+        const isActive = (key === viewName);
+
+        if (sec) sec.classList.toggle('hidden', !isActive);
+        if (btn) {
+          if (isActive) {
+            btn.className = "px-3.5 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition flex items-center space-x-1.5";
+          } else {
+            btn.className = "px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5";
+          }
+        }
+      });
+
+      if (viewName === 'salesperf') renderSalesPerformance();
+      else if (viewName === 'channels') { renderChannelControls(); renderChannelShareChart(); }
+      else if (viewName === 'daytypes') renderCalendarDays();
+      else if (viewName === 'daily') { renderDailyTable(); renderPacingChart(); }
+    }
+
+    function openModal(modalId) {
+      const el = document.getElementById(modalId);
+      if (el) el.classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      const el = document.getElementById(modalId);
+      if (el) el.classList.add('hidden');
+    }
+
+    function closeDailySpendModal() {
+      closeModal('spendModal');
+    }
+
+    function openTodaySpendModal() {
+      const today = new Date().getDate();
+      const validDay = (today >= 1 && today <= DAYS_IN_MONTH) ? today : 1;
+      openDailySpendModal(validDay);
+    }
+
+    function togglePasteFallback() {
+      const wrapper = document.getElementById('pasteFallbackWrapper');
+      const icon = document.getElementById('togglePasteIcon');
+      if (!wrapper) return;
+      const isHidden = wrapper.classList.contains('hidden');
+      wrapper.classList.toggle('hidden', !isHidden);
+      if (icon) icon.innerText = isHidden ? '▲' : '▼';
+    }
 
     function togglePacingChartVisibility() {
       isPacingChartExpanded = !isPacingChartExpanded;
       const wrapper = document.getElementById('pacingChartWrapper');
       const icon = document.getElementById('toggleChartIcon');
+      const text = document.getElementById('toggleChartText');
       if (wrapper) wrapper.classList.toggle('hidden', !isPacingChartExpanded);
       if (icon) icon.innerText = isPacingChartExpanded ? '▲' : '▼';
-    }
+      if (text) text.innerText = isPacingChartExpanded ? 'ซ่อนกราฟ' : 'แสดงกราฟ';
 
-    function togglePlatformCardDetail(platformId) {
-      if (expandedPlatformCard === platformId) {
-        expandedPlatformCard = null;
-      } else {
-        expandedPlatformCard = platformId;
+      if (isPacingChartExpanded && pacingChartInstance) {
+        setTimeout(() => {
+          try { pacingChartInstance.resize(); } catch(e){}
+        }, 50);
       }
-      renderPlatformCards();
     }
 
-    // Initialize Store
     function initProjectStore() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY_PROJECTS);
@@ -786,7 +1175,6 @@
         console.warn('Failed to parse projectStore from localStorage', e);
       }
 
-      // If store is empty, seed Project INE and a sample Project Brand B
       if (!projectStore || Object.keys(projectStore).length === 0) {
         projectStore = {
           'project_ine': {
@@ -794,6 +1182,7 @@
             name: 'Project INE',
             platforms: JSON.parse(JSON.stringify(DEFAULT_INE_PLATFORMS)),
             dayTypeWeights: { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 },
+            targets: { targetOrders: 3000, targetRoas: 4.0, targetGmv: 1200000 },
             dailyData: createInitialDailyData(DEFAULT_INE_PLATFORMS)
           }
         };
@@ -807,7 +1196,6 @@
       }
     }
 
-    // Creates clean 31-day log with zeroed spends for provided platforms
     function createInitialDailyData(platformsObj) {
       const days = [];
       const channelIds = [];
@@ -822,20 +1210,27 @@
         else if (day >= 25) type = 'PAYDAY';
 
         const spends = {};
-        channelIds.forEach(id => { spends[id] = 0; });
+        const orders = {};
+        const gmv = {};
+        channelIds.forEach(id => {
+          spends[id] = 0;
+          orders[id] = 0;
+          gmv[id] = 0;
+        });
 
         days.push({
           day: day,
           type: type,
           plannedSpend: 0,
           channelPlans: {},
-          spends: spends
+          spends: spends,
+          orders: orders,
+          gmv: gmv
         });
       }
       return days;
     }
 
-    // Loads a specific project into memory
     function loadProject(projId) {
       if (!projectStore[projId]) projId = Object.keys(projectStore)[0];
       activeProjectId = projId;
@@ -843,7 +1238,10 @@
 
       currentProject = projectStore[activeProjectId];
 
-      // Update Header Text and Badges
+      if (!currentProject.targets) {
+        currentProject.targets = { targetOrders: 3000, targetRoas: 4.0, targetGmv: 1200000 };
+      }
+
       const titleEl = document.getElementById('headerProjectTitle');
       const avatarEl = document.getElementById('projectAvatarBadge');
       const boxTitle = document.getElementById('boxTitleProjectBudget');
@@ -852,14 +1250,20 @@
 
       if (titleEl) titleEl.innerText = currentProject.name;
       if (avatarEl) {
-        const initials = currentProject.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 3).toUpperCase() || 'PRJ';
+        const initials = currentProject.name.replace(/[^A-Za-z0-9]/g, '').slice(0, 3).toUpperCase() || 'PRO';
         avatarEl.innerText = initials;
       }
       if (boxTitle) boxTitle.innerText = `${currentProject.name} Total Budget`;
       if (chartTitle) chartTitle.innerText = currentProject.name;
       if (labelId) labelId.innerText = currentProject.name;
 
-      // Update Weights inputs
+      const tOrders = document.getElementById('inputTargetOrders');
+      const tRoas = document.getElementById('inputTargetRoas');
+      const tGmv = document.getElementById('inputTargetGmv');
+      if (tOrders) tOrders.value = currentProject.targets.targetOrders || 3000;
+      if (tRoas) tRoas.value = currentProject.targets.targetRoas || 4.0;
+      if (tGmv) tGmv.value = currentProject.targets.targetGmv || 1200000;
+
       const weights = currentProject.dayTypeWeights || { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 };
       const wD = document.getElementById('weightDday');
       const wM = document.getElementById('weightMidmonth');
@@ -875,50 +1279,55 @@
       autoDistributePlannedBudget();
       renderProjectSelectOptions();
 
-      // Default active tab to first channel if not set
       if (ALL_CHANNELS.length > 0 && !ALL_CHANNELS.some(c => c.id === activeChannelTabId)) {
         activeChannelTabId = ALL_CHANNELS[0].id;
       }
 
       renderAll();
-      showToast(`Switched to ${currentProject.name}`);
+      showToast(`Loaded ${currentProject.name}`);
     }
 
-    // Rebuild flattened channel index from the current project's platforms
     function rebuildAllChannelsIndex() {
       ALL_CHANNELS = [];
       if (!currentProject || !currentProject.platforms) return;
 
-      Object.values(currentProject.platforms).forEach(platform => {
-        (platform.channels || []).forEach(ch => {
+      Object.entries(currentProject.platforms).forEach(([platformKey, platformObj]) => {
+        (platformObj.channels || []).forEach(ch => {
           ALL_CHANNELS.push({
-            ...ch,
-            platformId: platform.id,
-            platformName: platform.name,
-            platformColor: platform.color,
-            platformBadgeBg: platform.badgeBg,
-            platformTextColor: platform.textColor
+            id: ch.id,
+            name: ch.name,
+            budget: Number(ch.budget || 0),
+            platformId: platformKey,
+            platformName: platformObj.name,
+            platformColor: platformObj.color || '#6366f1',
+            platformBadgeBg: platformObj.badgeBg || 'bg-slate-100',
+            platformTextColor: platformObj.textColor || 'text-slate-800'
           });
         });
       });
+
+      const subLabel = document.getElementById('labelActiveChannelsCountSubtitle');
+      if (subLabel) subLabel.innerText = `${ALL_CHANNELS.length} Configured Channels`;
     }
 
-    // Guarantees all 31 days exist and have matching keys for all active channels
     function ensureDailyDataIntegrity() {
       if (!currentProject.dailyData || currentProject.dailyData.length !== DAYS_IN_MONTH) {
         currentProject.dailyData = createInitialDailyData(currentProject.platforms);
       }
       currentProject.dailyData.forEach(d => {
         if (!d.spends) d.spends = {};
+        if (!d.orders) d.orders = {};
+        if (!d.gmv) d.gmv = {};
         if (!d.channelPlans) d.channelPlans = {};
         ALL_CHANNELS.forEach(ch => {
           if (d.spends[ch.id] === undefined) d.spends[ch.id] = 0;
+          if (d.orders[ch.id] === undefined) d.orders[ch.id] = 0;
+          if (d.gmv[ch.id] === undefined) d.gmv[ch.id] = 0;
           if (d.channelPlans[ch.id] === undefined) d.channelPlans[ch.id] = 0;
         });
       });
     }
 
-    // Calculates Master Monthly Budget as the sum of Set Channel Budgets
     function getProjectMasterBudget() {
       let sum = 0;
       ALL_CHANNELS.forEach(ch => {
@@ -927,7 +1336,6 @@
       return sum;
     }
 
-    // Saves current project state to localStorage
     function saveCurrentProject(silent = false) {
       if (!currentProject) return;
 
@@ -971,7 +1379,6 @@
       }
     }
 
-    // Switch active project
     function switchProject(projId) {
       saveCurrentProject(true);
       loadProject(projId);
@@ -991,7 +1398,6 @@
       });
     }
 
-    // Create New Project Plan
     function openNewProjectModal() {
       const input = document.getElementById('inputNewProjectName');
       if (input) input.value = '';
@@ -1025,6 +1431,7 @@
         name: name,
         platforms: newPlatforms,
         dayTypeWeights: { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 },
+        targets: { targetOrders: 3000, targetRoas: 4.0, targetGmv: 1200000 },
         dailyData: createInitialDailyData(newPlatforms)
       };
 
@@ -1033,7 +1440,6 @@
       loadProject(newId);
     }
 
-    // Rename active project
     function openRenameProjectModal() {
       const input = document.getElementById('inputProjectRename');
       if (input && currentProject) input.value = currentProject.name;
@@ -1052,7 +1458,6 @@
       saveCurrentProject(false);
     }
 
-    // Delete project
     function deleteCurrentProject() {
       if (Object.keys(projectStore).length <= 1) {
         showCustomConfirm({
@@ -1083,11 +1488,9 @@
       return ALL_CHANNELS.find(c => c.id === channelId) || null;
     }
 
-    // Updates a specific channel's budget and automatically updates Master Budget
     function updateChannelBudget(channelId, val) {
       const numVal = Math.max(0, parseFloat(val) || 0);
 
-      // Locate channel in platforms
       for (const p of Object.values(currentProject.platforms)) {
         const found = p.channels.find(c => c.id === channelId);
         if (found) {
@@ -1101,7 +1504,6 @@
       scheduleAutoSave();
     }
 
-    // Open Edit Channel Modal
     function openEditChannelModal(channelId) {
       const ch = getChannelById(channelId);
       if (!ch) return;
@@ -1142,7 +1544,6 @@
       targetChannel.name = newName;
       targetChannel.budget = newBudget;
 
-      // Platform shift if user moved channel to a different platform
       if (currentPlatformKey !== newPlatform && currentProject.platforms[newPlatform]) {
         currentProject.platforms[currentPlatformKey].channels = currentProject.platforms[currentPlatformKey].channels.filter(c => c.id !== channelId);
         currentProject.platforms[newPlatform].channels.push(targetChannel);
@@ -1184,7 +1585,6 @@
       });
     }
 
-    // Add New Channel Modal
     function openAddChannelModal() {
       document.getElementById('newChannelNameInput').value = '';
       document.getElementById('newChannelBudgetInput').value = '30000';
@@ -1202,16 +1602,11 @@
       }
 
       const newId = `${platformKey}_${Date.now()}`;
-      const newChannel = {
-        id: newId,
-        name: name,
-        budget: budget
-      };
+      const newChannel = { id: newId, name: name, budget: budget };
 
       if (!currentProject.platforms[platformKey]) return;
       currentProject.platforms[platformKey].channels.push(newChannel);
 
-      // Initialize entry in all 31 days
       currentProject.dailyData.forEach(d => {
         if (!d.spends) d.spends = {};
         if (!d.channelPlans) d.channelPlans = {};
@@ -1243,7 +1638,6 @@
       });
     }
 
-    // Auto distribute planned budget based on weights and channel budgets
     function autoDistributePlannedBudget() {
       if (!currentProject || !currentProject.dailyData) return;
 
@@ -1271,794 +1665,311 @@
       renderAll();
     }
 
-    // Calculate actual total for a given day
-    function calculateDayActualTotal(dayObj) {
-      if (!dayObj || !dayObj.spends) return 0;
-      let total = 0;
-      Object.values(dayObj.spends).forEach(val => {
-        total += Number(val || 0);
-      });
-      return total;
+    function saveMonthlySalesTargets() {
+      if (!currentProject) return;
+      const targetOrders = Math.max(0, parseInt(document.getElementById('inputTargetOrders')?.value, 10) || 0);
+      const targetRoas = Math.max(0.1, parseFloat(document.getElementById('inputTargetRoas')?.value) || 0);
+      const targetGmv = Math.max(0, parseFloat(document.getElementById('inputTargetGmv')?.value) || 0);
+
+      currentProject.targets = {
+        targetOrders: targetOrders,
+        targetRoas: targetRoas,
+        targetGmv: targetGmv
+      };
+
+      scheduleAutoSave();
+      renderSalesPerformance();
+      showToast('Saved Monthly Sales & ROAS Targets!');
     }
 
-    function renderKPIs() {
-      const masterTotal = getProjectMasterBudget();
-      let totalActualMTD = 0;
-      let plannedToDate = 0;
-      let loggedDaysCount = 0;
+    function renderSalesPerformance() {
+      if (!currentProject) return;
 
-      currentProject.dailyData.forEach(d => {
-        const dayActual = calculateDayActualTotal(d);
-        if (dayActual > 0) {
-          totalActualMTD += dayActual;
-          plannedToDate += d.plannedSpend;
-          loggedDaysCount++;
-        }
+      const targets = currentProject.targets || { targetOrders: 3000, targetRoas: 4.0, targetGmv: 1200000 };
+      const masterBudget = getProjectMasterBudget();
+
+      let grandSpend = 0;
+      let grandOrders = 0;
+      let grandGmv = 0;
+
+      const platformStats = {};
+      Object.keys(currentProject.platforms).forEach(pKey => {
+        platformStats[pKey] = { spend: 0, orders: 0, gmv: 0 };
       });
 
-      if (plannedToDate === 0 && currentProject.dailyData.length > 0) {
-        plannedToDate = currentProject.dailyData[0].plannedSpend;
-      }
-
-      const varianceMTD = plannedToDate - totalActualMTD;
-      const spentPct = masterTotal > 0 ? Math.min(100, Math.round((totalActualMTD / masterTotal) * 100)) : 0;
-      const pacingRate = plannedToDate > 0 ? ((totalActualMTD / plannedToDate) * 100).toFixed(1) : '100.0';
-      const remainingBudget = Math.max(0, masterTotal - totalActualMTD);
-      const daysRemaining = Math.max(1, DAYS_IN_MONTH - loggedDaysCount);
-      const recDaily = Math.round(remainingBudget / daysRemaining);
-
-      // DOM Updates
-      document.getElementById('kpiTargetBudget').innerText = `฿${masterTotal.toLocaleString()}`;
-      document.getElementById('displayMasterBudget').innerText = `฿${masterTotal.toLocaleString()}`;
-
-      document.getElementById('kpiActualSpent').innerText = `฿${totalActualMTD.toLocaleString()}`;
-      document.getElementById('kpiSpentPercent').innerText = `${spentPct}% ของงบ`;
-      const plannedRatio = document.getElementById('kpiPlannedProgressRatio');
-      if (plannedRatio) plannedRatio.innerText = `฿${totalActualMTD.toLocaleString()} / ฿${masterTotal.toLocaleString()}`;
-
-      const progressBar = document.getElementById('masterProgressBar');
-      if (progressBar) progressBar.style.width = `${spentPct}%`;
-
-      const varTag = document.getElementById('kpiVarianceTag');
-      if (varTag) {
-        if (varianceMTD >= 0) {
-          varTag.innerText = 'ประหยัดกว่าแผน (On Track)';
-          varTag.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
-        } else {
-          varTag.innerText = 'ใช้เร็วกว่าแผน (Over Paced)';
-          varTag.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200';
-        }
-      }
-
-      const pacingBadge = document.getElementById('kpiPacingRateBadge');
-      if (pacingBadge) pacingBadge.innerText = `Pacing: ${pacingRate}%`;
-
-      document.getElementById('kpiRemaining').innerText = `฿${remainingBudget.toLocaleString()}`;
-      document.getElementById('kpiDaysLeft').innerText = `เหลืออีก ${daysRemaining} วัน`;
-      document.getElementById('kpiRecDailySpend').innerText = `฿${recDaily.toLocaleString()}`;
-    }
-
-    function renderPlatformCards() {
-      const container = document.getElementById('platformCardsContainer');
-      if (!container) return;
-      container.innerHTML = '';
-
-      Object.values(currentProject.platforms).forEach(plat => {
-        let platBudget = 0;
-        let platSpent = 0;
-
-        plat.channels.forEach(ch => {
-          platBudget += Number(ch.budget || 0);
-        });
-
-        currentProject.dailyData.forEach(d => {
-          plat.channels.forEach(ch => {
-            platSpent += Number(d.spends[ch.id] || 0);
-          });
-        });
-
-        const burnPct = platBudget > 0 ? Math.min(100, Math.round((platSpent / platBudget) * 100)) : 0;
-        const isExpanded = expandedPlatformCard === plat.id;
-
-        const card = document.createElement('div');
-        card.className = "bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-xs flex flex-col justify-between transition-all duration-200";
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-xs font-bold ${plat.textColor} flex items-center space-x-1.5">
-                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${plat.color}"></span>
-                <span>${plat.name}</span>
-              </span>
-              <button onclick="togglePlatformCardDetail('${plat.id}')" class="text-[10px] font-bold text-slate-500 hover:text-indigo-600 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200 transition flex items-center gap-1">
-                <span>${plat.channels.length} ช่องทาง</span>
-                <span>${isExpanded ? '▲' : '▼'}</span>
-              </button>
-            </div>
-            <div class="flex items-baseline justify-between mt-1">
-              <span class="text-base font-bold text-slate-900">฿${platSpent.toLocaleString()}</span>
-              <span class="text-[11px] text-slate-400 font-semibold">/ ฿${platBudget.toLocaleString()}</span>
-            </div>
-          </div>
-          <div class="mt-2.5">
-            <div class="flex items-center justify-between text-[10px] text-slate-400 font-medium mb-1">
-              <span>เบิร์นไปแล้ว</span>
-              <span class="font-bold ${burnPct > 90 ? 'text-rose-600' : 'text-slate-700'}">${burnPct}%</span>
-            </div>
-            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-              <div class="h-1.5 rounded-full transition-all duration-500" style="width: ${burnPct}%; background-color: ${plat.color}"></div>
-            </div>
-          </div>
-
-          ${isExpanded ? `
-            <div class="mt-3 pt-2.5 border-t border-slate-100 space-y-1.5 text-[11px]">
-              ${plat.channels.map(ch => {
-                let chSpent = 0;
-                currentProject.dailyData.forEach(d => chSpent += Number(d.spends[ch.id] || 0));
-                return `
-                  <div class="flex justify-between items-center text-slate-600 py-0.5">
-                    <span class="truncate pr-1">${ch.name}</span>
-                    <span class="font-bold text-slate-900 shrink-0">฿${chSpent.toLocaleString()}</span>
-                  </div>
-                `;
-              }).join('')}
-            </div>
-          ` : ''}
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    function renderChannelControls() {
-      const container = document.getElementById('channelListControl');
-      if (!container) return;
-      container.innerHTML = '';
-
-      Object.values(currentProject.platforms).forEach(plat => {
-        const group = document.createElement('div');
-        group.className = "p-3 rounded-xl border border-slate-100 bg-slate-50/50 space-y-2";
-        group.innerHTML = `
-          <div class="flex items-center justify-between text-xs font-bold ${plat.textColor}">
-            <div class="flex items-center space-x-1.5">
-              <span class="w-2 h-2 rounded-full" style="background-color: ${plat.color}"></span>
-              <span>${plat.name}</span>
-            </div>
-            <span class="text-[10px] text-slate-400">${plat.channels.length} Channels</span>
-          </div>
-          <div class="space-y-1.5">
-            ${plat.channels.length === 0 ? '<div class="text-[11px] text-slate-400 py-1 italic">No channels assigned. Click + Add Channel to create one.</div>' : ''}
-            ${plat.channels.map(ch => `
-              <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200/80 text-xs hover:border-slate-300 transition">
-                <div class="flex items-center space-x-1.5 min-w-0 pr-2">
-                  <button onclick="openEditChannelModal('${ch.id}')" class="p-1 text-slate-400 hover:text-indigo-600 rounded transition" title="Edit channel details or delete">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                  </button>
-                  <span class="font-bold text-slate-800 truncate cursor-pointer hover:text-indigo-600" onclick="openEditChannelModal('${ch.id}')">${ch.name}</span>
-                </div>
-                <div class="relative w-28 shrink-0">
-                  <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-slate-400 text-xs font-bold">฿</span>
-                  <input type="number" 
-                         value="${ch.budget}" 
-                         step="1000" 
-                         min="0"
-                         onchange="updateChannelBudget('${ch.id}', this.value)"
-                         class="w-full pl-6 pr-1.5 py-1 text-right text-xs font-bold text-slate-800 rounded-md border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50 hover:bg-white transition">
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        `;
-        container.appendChild(group);
-      });
-    }
-
-    function renderChannelShareChart() {
-      const canvas = document.getElementById('channelSharePieChart');
-      const summaryList = document.getElementById('channelShareSummaryList');
-      if (!canvas || !summaryList) return;
-
-      const labels = [];
-      const data = [];
-      const colors = ['#EE4D2D', '#F97316', '#FB923C', '#000000', '#334155', '#64748B', '#94A3B8', '#1877F2', '#60A5FA', '#0F146D', '#4F46E5', '#8B5CF6'];
-
-      summaryList.innerHTML = '';
-      const masterTotal = getProjectMasterBudget();
-
-      ALL_CHANNELS.forEach((ch, idx) => {
-        labels.push(ch.name);
-        data.push(ch.budget || 0);
-
-        const pct = masterTotal > 0 ? (((ch.budget || 0) / masterTotal) * 100).toFixed(1) : 0;
-        const item = document.createElement('div');
-        item.className = "flex items-center justify-between text-xs py-1 border-b border-slate-50";
-        item.innerHTML = `
-          <div class="flex items-center space-x-2 truncate pr-2">
-            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${colors[idx % colors.length]}"></span>
-            <span class="font-medium text-slate-700 truncate">${ch.name}</span>
-          </div>
-          <div class="flex items-center space-x-3 shrink-0">
-            <span class="font-bold text-slate-900">฿${(ch.budget || 0).toLocaleString()}</span>
-            <span class="text-[11px] text-slate-400 w-10 text-right font-bold">${pct}%</span>
-          </div>
-        `;
-        summaryList.appendChild(item);
-      });
-
-      if (shareChartInstance) shareChartInstance.destroy();
-      const ctx = canvas.getContext('2d');
-      shareChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: data,
-            backgroundColor: colors,
-            borderWidth: 2,
-            borderColor: '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '68%',
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: (ctx) => ` ${ctx.label}: ฿${(ctx.parsed || 0).toLocaleString()}`
-              }
-            }
-          }
-        }
-      });
-    }
-
-    function renderPacingChart() {
-      const canvas = document.getElementById('dailyPacingChart');
-      if (!canvas) return;
-
-      const labels = currentProject.dailyData.map(d => `D${d.day}`);
-      const plannedValues = currentProject.dailyData.map(d => d.plannedSpend);
-      const actualValues = currentProject.dailyData.map(d => calculateDayActualTotal(d));
-      const barColors = currentProject.dailyData.map(d => {
-        if (d.type === 'DDAY') return '#ef4444';
-        if (d.type === 'MIDMONTH') return '#6366f1';
-        if (d.type === 'PAYDAY') return '#f59e0b';
-        return '#10b981';
-      });
-
-      if (pacingChartInstance) pacingChartInstance.destroy();
-      const ctx = canvas.getContext('2d');
-      pacingChartInstance = new Chart(ctx, {
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              type: 'line',
-              label: 'Planned Target',
-              data: plannedValues,
-              borderColor: '#818cf8',
-              backgroundColor: 'rgba(129, 140, 248, 0.12)',
-              borderWidth: 2,
-              pointRadius: 2,
-              tension: 0.3,
-              fill: true
-            },
-            {
-              type: 'bar',
-              label: 'Actual Spend',
-              data: actualValues,
-              backgroundColor: barColors,
-              borderRadius: 4
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: ctx => ` ${ctx.dataset.label}: ฿${(ctx.parsed.y || 0).toLocaleString()}`
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { callback: val => '฿' + (val >= 1000 ? (val / 1000) + 'k' : val) },
-              grid: { color: '#f8fafc' }
-            },
-            x: { grid: { display: false } }
-          }
-        }
-      });
-    }
-
-    function setDailyTableViewMode(mode) {
-      currentTableMode = mode;
-      const btnPlatform = document.getElementById('btnViewPlatform');
-      const btnMatrix = document.getElementById('btnViewMatrix');
-      const btnFocus = document.getElementById('btnViewFocus');
-      const tabsBar = document.getElementById('channelTabsBarWrapper');
-      const badge = document.getElementById('activeViewModeBadge');
-
-      [btnPlatform, btnMatrix, btnFocus].forEach(btn => {
-        if (btn) btn.className = "px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition font-bold";
-      });
-
-      if (mode === 'platform') {
-        if (btnPlatform) btnPlatform.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs font-bold transition";
-        if (tabsBar) tabsBar.classList.add('hidden');
-        if (badge) badge.innerText = "Platforms";
-      } else if (mode === 'matrix') {
-        if (btnMatrix) btnMatrix.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs font-bold transition";
-        if (tabsBar) tabsBar.classList.add('hidden');
-        if (badge) badge.innerText = "All Channels";
-      } else if (mode === 'focus') {
-        if (btnFocus) btnFocus.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs font-bold transition";
-        if (tabsBar) tabsBar.classList.remove('hidden');
-        renderChannelTabs();
-        if (badge) badge.innerText = "Channel Tabs";
-      }
-
-      renderDailyTable();
-    }
-
-    function renderChannelTabs() {
-      const container = document.getElementById('channelTabPillsContainer');
-      if (!container) return;
-      container.innerHTML = '';
-
-      if (!activeChannelTabId && ALL_CHANNELS.length > 0) {
-        activeChannelTabId = ALL_CHANNELS[0].id;
-      }
-
+      const channelStats = {};
       ALL_CHANNELS.forEach(ch => {
-        const isActive = ch.id === activeChannelTabId;
-        const tabBtn = document.createElement('button');
-        tabBtn.onclick = () => selectChannelTab(ch.id);
-
-        if (isActive) {
-          tabBtn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs flex items-center space-x-1.5 shrink-0 transition";
-        } else {
-          tabBtn.className = "px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 flex items-center space-x-1.5 shrink-0 transition";
-        }
-
-        tabBtn.innerHTML = `
-          <span class="w-2 h-2 rounded-full" style="background-color: ${ch.platformColor}"></span>
-          <span>${ch.name}</span>
-        `;
-        container.appendChild(tabBtn);
+        channelStats[ch.id] = { spend: 0, orders: 0, gmv: 0 };
       });
+
+      currentProject.dailyData.forEach(d => {
+        ALL_CHANNELS.forEach(ch => {
+          const sp = Number(d.spends?.[ch.id] || 0);
+          const ord = Number(d.orders?.[ch.id] || 0);
+          const g = Number(d.gmv?.[ch.id] || 0);
+
+          grandSpend += sp;
+          grandOrders += ord;
+          grandGmv += g;
+
+          if (platformStats[ch.platformId]) {
+            platformStats[ch.platformId].spend += sp;
+            platformStats[ch.platformId].orders += ord;
+            platformStats[ch.platformId].gmv += g;
+          }
+
+          if (channelStats[ch.id]) {
+            channelStats[ch.id].spend += sp;
+            channelStats[ch.id].orders += ord;
+            channelStats[ch.id].gmv += g;
+          }
+        });
+      });
+
+      const blendedRoas = grandSpend > 0 ? (grandGmv / grandSpend) : 0;
+      const overallAov = grandOrders > 0 ? Math.round(grandGmv / grandOrders) : 0;
+      const overallCpo = grandOrders > 0 ? Math.round(grandSpend / grandOrders) : 0;
+
+      const ordersPacePct = targets.targetOrders > 0 ? ((grandOrders / targets.targetOrders) * 100).toFixed(1) : 0;
+      const gmvPacePct = targets.targetGmv > 0 ? ((grandGmv / targets.targetGmv) * 100).toFixed(1) : 0;
+      const spendBurnPct = masterBudget > 0 ? ((grandSpend / masterBudget) * 100).toFixed(1) : 0;
+
+      // Update 4 Target vs Actual Comparison Cards
+      const actOrdersEl = document.getElementById('salesActualOrdersLabel');
+      const actRoasEl = document.getElementById('salesActualRoasLabel');
+      const actGmvEl = document.getElementById('salesActualGmvLabel');
+      const ordersPaceEl = document.getElementById('salesOrdersPacePct');
+      const gmvPaceEl = document.getElementById('salesGmvPacePct');
+      const roasDiffTag = document.getElementById('salesRoasDiffTag');
+      const roasDiffAmount = document.getElementById('salesRoasDiffAmount');
+      const barGmv = document.getElementById('barGmvAchieved');
+      const barOrders = document.getElementById('barOrdersAchieved');
+      const barSpend = document.getElementById('barSpendBurned');
+      const elCompMaster = document.getElementById('salesCompareMasterBudget');
+      const elCompActual = document.getElementById('salesCompareActualSpent');
+      const elSpendBurnBadge = document.getElementById('salesSpendBurnBadge');
+
+      if (actOrdersEl) actOrdersEl.innerText = grandOrders.toLocaleString();
+      if (actRoasEl) actRoasEl.innerText = `${blendedRoas.toFixed(2)}x`;
+      if (actGmvEl) actGmvEl.innerText = `฿${grandGmv.toLocaleString()}`;
+      if (ordersPaceEl) ordersPaceEl.innerText = `${ordersPacePct}% Achieved`;
+      if (gmvPaceEl) gmvPaceEl.innerText = `${gmvPacePct}% Achieved`;
+      if (barGmv) barGmv.style.width = `${Math.min(100, gmvPacePct)}%`;
+      if (barOrders) barOrders.style.width = `${Math.min(100, ordersPacePct)}%`;
+      if (barSpend) barSpend.style.width = `${Math.min(100, spendBurnPct)}%`;
+      if (elCompMaster) elCompMaster.innerText = `฿${masterBudget.toLocaleString()}`;
+      if (elCompActual) elCompActual.innerText = `฿${grandSpend.toLocaleString()}`;
+      if (elSpendBurnBadge) elSpendBurnBadge.innerText = `${spendBurnPct}% Spent`;
+
+      if (roasDiffTag && roasDiffAmount) {
+        const roasDiff = blendedRoas - targets.targetRoas;
+        roasDiffAmount.innerText = `${roasDiff >= 0 ? '+' : ''}${roasDiff.toFixed(2)}x vs Target`;
+        if (roasDiff >= 0) {
+          roasDiffTag.innerText = `Beat Target`;
+          roasDiffTag.className = 'font-bold px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800';
+        } else {
+          roasDiffTag.innerText = `Below Target`;
+          roasDiffTag.className = 'font-bold px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800';
+        }
+      }
+
+      // Update Ribbon KPIs
+      const kGmv = document.getElementById('perfKpiTotalGmv');
+      const kOrd = document.getElementById('perfKpiTotalOrders');
+      const kRoas = document.getElementById('perfKpiBlendedRoas');
+      const kAov = document.getElementById('perfKpiAov');
+      const kCpo = document.getElementById('perfKpiCpo');
+      const kSpendSub = document.getElementById('perfKpiSpendSub');
+      const kTargetOrdersSub = document.getElementById('perfKpiTargetOrdersSub');
+      const kTargetRoasSub = document.getElementById('perfKpiTargetRoasSub');
+      const kGmvPace = document.getElementById('perfKpiGmvPace');
+      const kRoasBadge = document.getElementById('perfKpiRoasStatusBadge');
+
+      if (kGmv) kGmv.innerText = `฿${grandGmv.toLocaleString()}`;
+      if (kOrd) kOrd.innerText = grandOrders.toLocaleString();
+      if (kRoas) kRoas.innerText = `${blendedRoas.toFixed(2)}x`;
+      if (kAov) kAov.innerText = `฿${overallAov.toLocaleString()}`;
+      if (kCpo) kCpo.innerText = `฿${overallCpo.toLocaleString()}`;
+      if (kSpendSub) kSpendSub.innerText = `฿${grandSpend.toLocaleString()}`;
+      if (kTargetOrdersSub) kTargetOrdersSub.innerText = targets.targetOrders.toLocaleString();
+      if (kTargetRoasSub) kTargetRoasSub.innerText = `${targets.targetRoas.toFixed(2)}x`;
+      if (kGmvPace) kGmvPace.innerText = `${gmvPacePct}% of ฿${targets.targetGmv.toLocaleString()} Target`;
+
+      if (kRoasBadge) {
+        if (blendedRoas >= targets.targetRoas) {
+          kRoasBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+          kRoasBadge.innerText = 'On Target';
+        } else {
+          kRoasBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200';
+          kRoasBadge.innerText = 'Under Target';
+        }
+      }
+
+      renderSortedPlatformTable(platformStats, grandSpend, grandOrders, grandGmv, blendedRoas, overallAov, overallCpo, targets);
+      renderChannelPerformanceTable(channelStats, grandSpend, grandOrders, grandGmv, blendedRoas, overallAov, overallCpo, targets);
     }
 
-    function selectChannelTab(channelId) {
-      activeChannelTabId = channelId;
-      renderChannelTabs();
-      renderDailyTable();
-    }
-
-    function renderDailyTable() {
-      const thead = document.getElementById('dailyTableHead');
-      const tbody = document.getElementById('dailyTableBody');
-      const tfoot = document.getElementById('dailyTableFoot');
-      if (!thead || !tbody || !tfoot) return;
-
-      const filterType = document.getElementById('filterDayType')?.value || 'ALL';
-      const filtered = filterType === 'ALL' ? currentProject.dailyData : currentProject.dailyData.filter(d => d.type === filterType);
-
-      if (currentTableMode === 'matrix') {
-        renderMatrixView(thead, tbody, tfoot, filtered);
-      } else if (currentTableMode === 'focus') {
-        renderFocusView(thead, tbody, tfoot, filtered);
+    function toggleSortPlatformTable(key) {
+      if (platformSortKey === key) {
+        platformSortAsc = !platformSortAsc;
       } else {
-        renderPlatformSummaryView(thead, tbody, tfoot, filtered);
+        platformSortKey = key;
+        platformSortAsc = false; // Default high to low
+      }
+      renderSalesPerformance();
+    }
+
+    function renderSortedPlatformTable(platformStats, grandSpend, grandOrders, grandGmv, blendedRoas, overallAov, overallCpo, targets) {
+      const pBody = document.getElementById('tablePlatformPerfBody');
+      const pFoot = document.getElementById('tablePlatformPerfFoot');
+      if (!pBody) return;
+
+      // Update header arrow indicators
+      const columns = ['name', 'spend', 'orders', 'gmv', 'aov', 'cpo', 'roas', 'share'];
+      columns.forEach(col => {
+        const icon = document.getElementById(`sort_icon_${col}`);
+        if (icon) {
+          if (col === platformSortKey) {
+            icon.innerText = platformSortAsc ? '▲' : '▼';
+            icon.className = 'text-indigo-600 font-extrabold';
+          } else {
+            icon.innerText = '⇅';
+            icon.className = 'text-slate-400 font-normal';
+          }
+        }
+      });
+
+      // Prepare list of platform records
+      const platformList = Object.entries(currentProject.platforms).map(([pKey, pObj]) => {
+        const stats = platformStats[pKey] || { spend: 0, orders: 0, gmv: 0 };
+        const pRoas = stats.spend > 0 ? (stats.gmv / stats.spend) : 0;
+        const pAov = stats.orders > 0 ? Math.round(stats.gmv / stats.orders) : 0;
+        const pCpo = stats.orders > 0 ? Math.round(stats.spend / stats.orders) : 0;
+        const gmvShare = grandGmv > 0 ? (stats.gmv / grandGmv) * 100 : 0;
+
+        return {
+          key: pKey,
+          name: pObj.name,
+          color: pObj.color,
+          textColor: pObj.textColor,
+          spend: stats.spend,
+          orders: stats.orders,
+          gmv: stats.gmv,
+          roas: pRoas,
+          aov: pAov,
+          cpo: pCpo,
+          share: gmvShare
+        };
+      });
+
+      // Sort platform list
+      platformList.sort((a, b) => {
+        let valA = a[platformSortKey];
+        let valB = b[platformSortKey];
+        if (typeof valA === 'string') {
+          return platformSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+        return platformSortAsc ? (valA - valB) : (valB - valA);
+      });
+
+      pBody.innerHTML = '';
+      platformList.forEach(p => {
+        const isHealthy = p.roas >= targets.targetRoas;
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3.5 font-bold ${p.textColor} flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${p.color}"></span>
+            <span>${p.name}</span>
+          </td>
+          <td class="py-2.5 px-3 text-right font-semibold text-slate-800">฿${p.spend.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right font-bold text-slate-900">${p.orders.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right font-bold text-slate-900">฿${p.gmv.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right text-slate-700">฿${p.aov.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right text-slate-700">฿${p.cpo.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right font-black ${isHealthy ? 'text-emerald-700' : 'text-amber-700'}">${p.roas.toFixed(2)}x</td>
+          <td class="py-2.5 px-3 text-right font-semibold text-slate-600">${p.share.toFixed(1)}%</td>
+          <td class="py-2.5 px-3.5 text-center">
+            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold ${isHealthy ? 'bg-emerald-50 text-emerald-700' : (p.spend === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-700')}">
+              ${p.spend === 0 ? 'No Spend' : (isHealthy ? 'Great' : 'Needs Optimization')}
+            </span>
+          </td>
+        `;
+        pBody.appendChild(tr);
+      });
+
+      if (pFoot) {
+        pFoot.innerHTML = `
+          <tr>
+            <td class="py-3 px-3.5 font-extrabold">All Platforms Total</td>
+            <td class="py-3 px-3 text-right">฿${grandSpend.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right">${grandOrders.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right text-indigo-900">฿${grandGmv.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right">฿${overallAov.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right">฿${overallCpo.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right text-indigo-700 font-black">${blendedRoas.toFixed(2)}x</td>
+            <td class="py-3 px-3 text-right">100.0%</td>
+            <td class="py-3 px-3.5 text-center">
+              <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${blendedRoas >= targets.targetRoas ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900'}">
+                ${blendedRoas >= targets.targetRoas ? 'Target Met' : 'Under Target'}
+              </span>
+            </td>
+          </tr>
+        `;
       }
     }
 
-    function renderPlatformSummaryView(thead, tbody, tfoot, filtered) {
-      thead.innerHTML = `
-        <tr>
-          <th class="py-3 px-3 w-8"></th>
-          <th class="py-3 px-3 w-14">Day</th>
-          <th class="py-3 px-3 w-28">Type</th>
-          <th class="py-3 px-3 text-right">Planned (THB)</th>
-          <th class="py-3 px-3 text-right">Actual (THB)</th>
-          <th class="py-3 px-3 text-right">Variance</th>
-          <th class="py-3 px-3 text-right text-orange-600 border-l border-orange-100">Shopee</th>
-          <th class="py-3 px-3 text-right text-slate-800 border-l border-slate-100">TikTok</th>
-          <th class="py-3 px-3 text-right text-blue-600 border-l border-blue-100">Facebook</th>
-          <th class="py-3 px-3 text-right text-indigo-900 border-l border-indigo-100">Lazada</th>
-          <th class="py-3 px-3 text-center w-20">Action</th>
-        </tr>
-      `;
+    function renderChannelPerformanceTable(channelStats, grandSpend, grandOrders, grandGmv, blendedRoas, overallAov, overallCpo, targets) {
+      const cBody = document.getElementById('tableChannelPerfBody');
+      const cFoot = document.getElementById('tableChannelPerfFoot');
+      if (!cBody) return;
 
-      tbody.innerHTML = '';
-      let totalPlan = 0, totalActual = 0, totalShopee = 0, totalTiktok = 0, totalFB = 0, totalLazada = 0;
+      cBody.innerHTML = '';
+      ALL_CHANNELS.forEach(ch => {
+        const stats = channelStats[ch.id] || { spend: 0, orders: 0, gmv: 0 };
+        const cRoas = stats.spend > 0 ? (stats.gmv / stats.spend) : 0;
+        const cAov = stats.orders > 0 ? Math.round(stats.gmv / stats.orders) : 0;
+        const cCpo = stats.orders > 0 ? Math.round(stats.spend / stats.orders) : 0;
+        const isRoasPass = cRoas >= targets.targetRoas;
 
-      filtered.forEach(d => {
-        const actual = calculateDayActualTotal(d);
-        const variance = d.plannedSpend - actual;
-        totalPlan += d.plannedSpend;
-        totalActual += actual;
-
-        let shopeeSpend = 0, tiktokSpend = 0, fbSpend = 0, lazadaSpend = 0;
-        (currentProject.platforms.shopee?.channels || []).forEach(c => shopeeSpend += Number(d.spends[c.id] || 0));
-        (currentProject.platforms.tiktok?.channels || []).forEach(c => tiktokSpend += Number(d.spends[c.id] || 0));
-        (currentProject.platforms.facebook?.channels || []).forEach(c => fbSpend += Number(d.spends[c.id] || 0));
-        (currentProject.platforms.lazada?.channels || []).forEach(c => lazadaSpend += Number(d.spends[c.id] || 0));
-
-        totalShopee += shopeeSpend;
-        totalTiktok += tiktokSpend;
-        totalFB += fbSpend;
-        totalLazada += lazadaSpend;
-
-        let badgeClass = 'badge-normal';
-        if (d.type === 'DDAY') badgeClass = 'badge-dday';
-        else if (d.type === 'MIDMONTH') badgeClass = 'badge-midmonth';
-        else if (d.type === 'PAYDAY') badgeClass = 'badge-payday';
-
-        const isExpanded = expandedDays.has(d.day);
-        const row = document.createElement('tr');
-        row.className = `hover:bg-slate-50 transition-colors border-b border-slate-100 cursor-pointer ${isExpanded ? 'bg-indigo-50/20' : ''}`;
-        row.innerHTML = `
-          <td class="py-2.5 px-3 text-center" onclick="toggleRowExpand(${d.day})">
-            <span class="text-slate-400 text-xs">${isExpanded ? '▼' : '▶'}</span>
-          </td>
-          <td class="py-2.5 px-3 font-bold text-slate-800" onclick="toggleRowExpand(${d.day})">D${d.day}</td>
-          <td class="py-2.5 px-3" onclick="toggleRowExpand(${d.day})">
-            <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded border ${badgeClass}">${d.type}</span>
-          </td>
-          <td class="py-2.5 px-3 text-right font-semibold text-slate-700" onclick="toggleRowExpand(${d.day})">฿${d.plannedSpend.toLocaleString()}</td>
-          <td class="py-2.5 px-3 text-right font-bold ${actual > 0 ? 'text-slate-900' : 'text-slate-300'}" onclick="toggleRowExpand(${d.day})">฿${actual.toLocaleString()}</td>
-          <td class="py-2.5 px-3 text-right" onclick="toggleRowExpand(${d.day})">
-            ${actual === 0 ? '<span class="text-slate-300">-</span>' : `
-              <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${variance >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">
-                ${variance >= 0 ? '+' : ''}฿${variance.toLocaleString()}
-              </span>
-            `}
-          </td>
-          <td class="py-2.5 px-3 text-right text-orange-600 font-semibold border-l border-orange-50">฿${shopeeSpend.toLocaleString()}</td>
-          <td class="py-2.5 px-3 text-right text-slate-800 font-semibold border-l border-slate-100">฿${tiktokSpend.toLocaleString()}</td>
-          <td class="py-2.5 px-3 text-right text-blue-600 font-semibold border-l border-blue-50">฿${fbSpend.toLocaleString()}</td>
-          <td class="py-2.5 px-3 text-right text-indigo-900 font-semibold border-l border-indigo-50">฿${lazadaSpend.toLocaleString()}</td>
-          <td class="py-2.5 px-3 text-center">
-            <button onclick="event.stopPropagation(); openDailySpendModal(${d.day})" class="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded text-[11px] font-bold text-slate-600 transition">
-              Log
-            </button>
-          </td>
-        `;
-        tbody.appendChild(row);
-
-        if (isExpanded) {
-          const detailRow = document.createElement('tr');
-          detailRow.className = "bg-slate-50/80 border-b border-slate-200";
-          detailRow.innerHTML = `
-            <td colspan="11" class="p-3">
-              <div class="bg-white p-3 rounded-xl border border-slate-200 space-y-3 shadow-xs">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <span class="text-xs font-bold text-slate-800">Day ${d.day} Direct Spend Input (${currentProject.name})</span>
-                  <span class="text-[11px] text-slate-500 font-semibold">Day Spend: ฿${actual.toLocaleString()}</span>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  ${Object.values(currentProject.platforms).map(p => `
-                    <div class="p-2 rounded-lg border border-slate-100 bg-slate-50/60 space-y-1.5">
-                      <div class="text-[11px] font-bold ${p.textColor} flex justify-between">
-                        <span>${p.name}</span>
-                      </div>
-                      ${p.channels.map(c => `
-                        <div class="bg-white p-1.5 rounded border border-slate-200 text-xs flex items-center justify-between">
-                          <span class="text-[11px] font-semibold text-slate-700 truncate pr-1" title="${c.name}">${c.name}</span>
-                          <div class="relative w-24 shrink-0">
-                            <span class="absolute inset-y-0 left-0 pl-1.5 flex items-center text-slate-400 text-[10px]">฿</span>
-                            <input type="number" 
-                                   value="${d.spends[c.id] || 0}" 
-                                   min="0"
-                                   step="50"
-                                   onchange="updateInlineSpend(${d.day}, '${c.id}', this.value)"
-                                   class="w-full pl-4 pr-1 py-0.5 text-right font-bold text-slate-800 rounded border border-slate-200 text-xs focus:ring-1 focus:ring-indigo-500">
-                          </div>
-                        </div>
-                      `).join('')}
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            </td>
-          `;
-          tbody.appendChild(detailRow);
-        }
-      });
-
-      const totalVariance = totalPlan - totalActual;
-      tfoot.innerHTML = `
-        <tr class="bg-slate-100/95 text-xs">
-          <td></td>
-          <td class="py-3 px-3 font-bold" colspan="2">Filtered Total</td>
-          <td class="py-3 px-3 text-right text-indigo-700 font-bold">฿${totalPlan.toLocaleString()}</td>
-          <td class="py-3 px-3 text-right text-slate-900 font-bold">฿${totalActual.toLocaleString()}</td>
-          <td class="py-3 px-3 text-right">
-            <span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${totalVariance >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-              ${totalVariance >= 0 ? '+' : ''}฿${totalVariance.toLocaleString()}
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3.5 font-bold text-slate-800">${ch.name}</td>
+          <td class="py-2.5 px-2.5">
+            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${ch.platformTextColor} ${ch.platformBadgeBg}">
+              ${ch.platformName}
             </span>
           </td>
-          <td class="py-3 px-3 text-right text-orange-700 font-bold border-l border-orange-200">฿${totalShopee.toLocaleString()}</td>
-          <td class="py-3 px-3 text-right text-slate-800 font-bold border-l border-slate-200">฿${totalTiktok.toLocaleString()}</td>
-          <td class="py-3 px-3 text-right text-blue-700 font-bold border-l border-blue-200">฿${totalFB.toLocaleString()}</td>
-          <td class="py-3 px-3 text-right text-indigo-800 font-bold border-l border-indigo-200">฿${totalLazada.toLocaleString()}</td>
-          <td></td>
-        </tr>
-      `;
-    }
-
-    function renderMatrixView(thead, tbody, tfoot, filtered) {
-      thead.innerHTML = `
-        <tr>
-          <th class="py-3 px-2 w-12 text-center">Day</th>
-          <th class="py-3 px-2 w-16">Type</th>
-          <th class="py-3 px-2 text-right">Total Actual</th>
-          ${ALL_CHANNELS.map(ch => `
-            <th class="py-3 px-2 text-right border-l border-slate-200" title="${ch.platformName}: ${ch.name}">
-              <span class="inline-block max-w-[85px] truncate">${ch.name}</span>
-            </th>
-          `).join('')}
-          <th class="py-3 px-2 text-center w-16">Action</th>
-        </tr>
-      `;
-
-      tbody.innerHTML = '';
-      const channelSums = {};
-      ALL_CHANNELS.forEach(ch => channelSums[ch.id] = 0);
-      let grandTotalActual = 0;
-
-      filtered.forEach(d => {
-        const dayActual = calculateDayActualTotal(d);
-        grandTotalActual += dayActual;
-
-        ALL_CHANNELS.forEach(ch => {
-          channelSums[ch.id] += Number(d.spends[ch.id] || 0);
-        });
-
-        let badgeClass = 'badge-normal';
-        if (d.type === 'DDAY') badgeClass = 'badge-dday';
-        else if (d.type === 'MIDMONTH') badgeClass = 'badge-midmonth';
-        else if (d.type === 'PAYDAY') badgeClass = 'badge-payday';
-
-        const row = document.createElement('tr');
-        row.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 text-xs";
-        row.innerHTML = `
-          <td class="py-2.5 px-2 text-center font-bold text-slate-800">D${d.day}</td>
-          <td class="py-2.5 px-2">
-            <span class="inline-block px-1.5 py-0.5 text-[9px] font-bold rounded border ${badgeClass}">${d.type}</span>
-          </td>
-          <td class="py-2.5 px-2 text-right font-bold text-slate-900">฿${dayActual.toLocaleString()}</td>
-          ${ALL_CHANNELS.map(ch => `
-            <td class="py-2.5 px-2 text-right border-l border-slate-100 ${d.spends[ch.id] ? 'text-slate-900 font-bold' : 'text-slate-300'}">
-              ฿${(d.spends[ch.id] || 0).toLocaleString()}
-            </td>
-          `).join('')}
-          <td class="py-2.5 px-2 text-center">
-            <button onclick="openDailySpendModal(${d.day})" class="px-2 py-0.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded text-[10px] font-bold text-slate-700">
-              Edit
-            </button>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-
-      tfoot.innerHTML = `
-        <tr class="bg-slate-100/95 text-xs">
-          <td colspan="2" class="py-3 px-2 font-bold text-center">Total</td>
-          <td class="py-3 px-2 text-right text-indigo-700 font-bold">฿${grandTotalActual.toLocaleString()}</td>
-          ${ALL_CHANNELS.map(ch => `
-            <td class="py-3 px-2 text-right font-bold border-l border-slate-200">
-              ฿${(channelSums[ch.id] || 0).toLocaleString()}
-            </td>
-          `).join('')}
-          <td></td>
-        </tr>
-      `;
-    }
-
-    function renderFocusView(thead, tbody, tfoot, filtered) {
-      const selectedChannelId = activeChannelTabId || (ALL_CHANNELS[0]?.id || '');
-      const ch = getChannelById(selectedChannelId);
-      if (!ch) return;
-
-      const channelBudget = Number(ch.budget || 0);
-      let channelTotalSpent = 0;
-      currentProject.dailyData.forEach(d => {
-        channelTotalSpent += Number(d.spends[ch.id] || 0);
-      });
-      const channelRemaining = channelBudget - channelTotalSpent;
-      const channelBurnPct = channelBudget > 0 ? ((channelTotalSpent / channelBudget) * 100).toFixed(1) : '0.0';
-
-      // Update Channel Strip
-      document.getElementById('activeChannelBadgePlatform').innerText = `${ch.platformName} • ${ch.name}`;
-      document.getElementById('activeTabTotalBudget').innerText = `฿${channelBudget.toLocaleString()}`;
-      document.getElementById('activeTabTotalSpent').innerText = `฿${channelTotalSpent.toLocaleString()}`;
-      const rEl = document.getElementById('activeTabRemaining');
-      rEl.innerText = `฿${channelRemaining.toLocaleString()}`;
-      rEl.className = `text-base font-bold mt-0.5 ${channelRemaining >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
-      document.getElementById('activeTabBurnPct').innerText = `${channelBurnPct}%`;
-
-      thead.innerHTML = `
-        <tr>
-          <th class="py-3 px-3 w-14 text-center">Day</th>
-          <th class="py-3 px-3 w-28">Date / Type</th>
-          <th class="py-3 px-3 text-right text-indigo-700 bg-indigo-50/30">% Budget</th>
-          <th class="py-3 px-3 text-right">Budget (Planned)</th>
-          <th class="py-3 px-3 text-right bg-slate-50">Actual Spend</th>
-          <th class="py-3 px-3 text-right font-bold text-slate-800">Remaining</th>
-          <th class="py-3 px-3 text-right">Variance</th>
-          <th class="py-3 px-3 text-center">Status</th>
-          <th class="py-3 px-3 text-center w-20">Action</th>
-        </tr>
-      `;
-
-      tbody.innerHTML = '';
-      let sumPlan = 0, sumActual = 0, runningCumulativeSpend = 0;
-
-      filtered.forEach(d => {
-        const plan = (d.channelPlans && d.channelPlans[ch.id]) || 0;
-        const actual = Number(d.spends[ch.id] || 0);
-        const variance = plan - actual;
-        const pctBudget = channelBudget > 0 ? ((plan / channelBudget) * 100).toFixed(2) : '0.00';
-
-        runningCumulativeSpend += actual;
-        const runningRemaining = channelBudget - runningCumulativeSpend;
-
-        sumPlan += plan;
-        sumActual += actual;
-        const pacingPct = plan > 0 ? Math.round((actual / plan) * 100) : 0;
-
-        let badgeClass = 'badge-normal';
-        if (d.type === 'DDAY') badgeClass = 'badge-dday';
-        else if (d.type === 'MIDMONTH') badgeClass = 'badge-midmonth';
-        else if (d.type === 'PAYDAY') badgeClass = 'badge-payday';
-
-        const row = document.createElement('tr');
-        row.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 text-xs";
-        row.innerHTML = `
-          <td class="py-2.5 px-3 text-center font-bold text-slate-800">D${d.day}</td>
-          <td class="py-2.5 px-3">
-            <span class="inline-block px-2 py-0.5 text-[10px] font-bold rounded border ${badgeClass}">${d.type}</span>
-          </td>
-          <td class="py-2.5 px-3 text-right font-bold text-indigo-600 bg-indigo-50/20">${pctBudget}%</td>
-          <td class="py-2.5 px-3 text-right font-semibold text-slate-700">฿${plan.toLocaleString()}</td>
-          <td class="py-2.5 px-3 text-right bg-slate-50/50">
-            <div class="relative w-28 ml-auto">
-              <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-slate-400 text-[10px]">฿</span>
-              <input type="number" 
-                     value="${actual}" 
-                     step="100" 
-                     min="0"
-                     onchange="updateInlineSpend(${d.day}, '${ch.id}', this.value)"
-                     class="w-full pl-5 pr-1.5 py-1 text-right text-xs font-bold text-slate-900 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white shadow-xs">
-            </div>
-          </td>
-          <td class="py-2.5 px-3 text-right font-bold ${runningRemaining >= 0 ? 'text-emerald-700' : 'text-rose-600'}">
-            ฿${runningRemaining.toLocaleString()}
-          </td>
-          <td class="py-2.5 px-3 text-right">
-            ${actual === 0 ? '<span class="text-slate-300">-</span>' : `
-              <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${variance >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">
-                ${variance >= 0 ? '+' : ''}฿${variance.toLocaleString()}
-              </span>
-            `}
-          </td>
-          <td class="py-2.5 px-3 text-center">
-            ${actual === 0 ? '<span class="text-slate-400 text-[10px]">Pending</span>' : `
-              <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${pacingPct > 105 ? 'bg-rose-50 text-rose-700' : (pacingPct < 90 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700')}">
-                ${pacingPct}% Paced
-              </span>
-            `}
-          </td>
-          <td class="py-2.5 px-3 text-center">
-            <button onclick="openDailySpendModal(${d.day})" class="px-2.5 py-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded text-[11px] font-bold text-slate-600 transition">
-              Log
-            </button>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-
-      const totalVar = sumPlan - sumActual;
-      tfoot.innerHTML = `
-        <tr class="bg-slate-100/95 text-xs">
-          <td colspan="2" class="py-3 px-3 font-bold">Total / Balance</td>
-          <td class="py-3 px-3 text-right font-bold text-indigo-700">100%</td>
-          <td class="py-3 px-3 text-right text-indigo-700 font-bold">฿${sumPlan.toLocaleString()}</td>
-          <td class="py-3 px-3 text-right text-slate-900 font-bold">฿${sumActual.toLocaleString()}</td>
-          <td class="py-3 px-3 text-right font-bold ${channelRemaining >= 0 ? 'text-emerald-700' : 'text-rose-700'}">
-            ฿${channelRemaining.toLocaleString()}
-          </td>
-          <td class="py-3 px-3 text-right">
-            <span class="inline-block px-1.5 py-0.5 rounded text-[11px] font-bold ${totalVar >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-              ${totalVar >= 0 ? '+' : ''}฿${totalVar.toLocaleString()}
+          <td class="py-2.5 px-3 text-right font-semibold text-slate-800">฿${stats.spend.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right font-bold text-slate-900">${stats.orders.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right font-bold text-slate-900">฿${stats.gmv.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right text-slate-700">฿${cAov.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right text-slate-700">฿${cCpo.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right font-black ${isRoasPass ? 'text-emerald-700' : 'text-slate-800'}">${cRoas.toFixed(2)}x</td>
+          <td class="py-2.5 px-3.5 text-center">
+            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold ${stats.spend === 0 ? 'bg-slate-100 text-slate-400' : (isRoasPass ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200')}">
+              ${stats.spend === 0 ? 'Inactive' : (isRoasPass ? 'Above Target' : 'Below Target')}
             </span>
           </td>
-          <td class="py-3 px-3 text-center font-bold text-slate-700">${sumPlan > 0 ? ((sumActual/sumPlan)*100).toFixed(1) : 0}%</td>
-          <td></td>
-        </tr>
-      `;
-    }
-
-    function toggleRowExpand(dayNum) {
-      if (expandedDays.has(dayNum)) expandedDays.delete(dayNum);
-      else expandedDays.add(dayNum);
-      renderDailyTable();
-    }
-
-    function updateInlineSpend(dayNum, channelId, val) {
-      const dayObj = currentProject.dailyData.find(d => d.day === dayNum);
-      if (!dayObj) return;
-
-      const numVal = Math.max(0, parseFloat(val) || 0);
-      dayObj.spends[channelId] = numVal;
-
-      scheduleAutoSave();
-      renderKPIs();
-      renderPlatformCards();
-      renderPacingChart();
-      renderDailyTable();
-    }
-
-    // Interactive Calendar Day Types
-    function renderCalendarDays() {
-      const container = document.getElementById('calendarDayTypeSelector');
-      if (!container) return;
-      container.innerHTML = '';
-
-      currentProject.dailyData.forEach(d => {
-        let badgeColor = 'bg-slate-100 text-slate-700 border-slate-200';
-        if (d.type === 'DDAY') badgeColor = 'bg-red-100 text-red-700 border-red-300 font-bold';
-        else if (d.type === 'MIDMONTH') badgeColor = 'bg-indigo-100 text-indigo-700 border-indigo-300 font-bold';
-        else if (d.type === 'PAYDAY') badgeColor = 'bg-amber-100 text-amber-800 border-amber-300 font-bold';
-
-        const btn = document.createElement('button');
-        btn.onclick = () => cycleDayType(d.day);
-        btn.className = `p-2 rounded-xl border text-center transition hover:shadow-xs flex flex-col items-center justify-center ${badgeColor}`;
-        btn.innerHTML = `
-          <span class="text-xs font-extrabold">D${d.day}</span>
-          <span class="text-[9px] mt-0.5 tracking-tight uppercase">${d.type}</span>
-          <span class="text-[9px] text-slate-500 mt-1 font-semibold">฿${Math.round(d.plannedSpend/1000)}k</span>
         `;
-        container.appendChild(btn);
+        cBody.appendChild(tr);
       });
-    }
 
-    function cycleDayType(dayNum) {
-      const dayObj = currentProject.dailyData.find(d => d.day === dayNum);
-      if (!dayObj) return;
-
-      const cycle = ['NORMAL', 'DDAY', 'MIDMONTH', 'PAYDAY'];
-      const nextIdx = (cycle.indexOf(dayObj.type) + 1) % cycle.length;
-      dayObj.type = cycle[nextIdx];
-
-      autoDistributePlannedBudget();
-      scheduleAutoSave();
-    }
-
-    function updateWeights() {
-      currentProject.dayTypeWeights.DDAY = Math.max(0.5, parseFloat(document.getElementById('weightDday')?.value) || 4.0);
-      currentProject.dayTypeWeights.MIDMONTH = Math.max(0.5, parseFloat(document.getElementById('weightMidmonth')?.value) || 2.2);
-      currentProject.dayTypeWeights.PAYDAY = Math.max(0.5, parseFloat(document.getElementById('weightPayday')?.value) || 2.8);
-      currentProject.dayTypeWeights.NORMAL = Math.max(0.2, parseFloat(document.getElementById('weightNormal')?.value) || 1.0);
-
-      autoDistributePlannedBudget();
-      scheduleAutoSave();
-    }
-
-    // Modal Spend Handlers
-    let activeModalDay = 1;
-    function openTodaySpendModal() {
-      // Defaults to current calendar day or day 1
-      const today = new Date().getDate();
-      const targetDay = (today >= 1 && today <= 31) ? today : 1;
-      openDailySpendModal(targetDay);
+      if (cFoot) {
+        cFoot.innerHTML = `
+          <tr>
+            <td colspan="2" class="py-3 px-3.5 font-bold">Total Summary</td>
+            <td class="py-3 px-3 text-right">฿${grandSpend.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right">${grandOrders.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right text-indigo-900">฿${grandGmv.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right">฿${overallAov.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right">฿${overallCpo.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right text-indigo-700 font-black">${blendedRoas.toFixed(2)}x</td>
+            <td></td>
+          </tr>
+        `;
+      }
     }
 
     function openDailySpendModal(dayNum = 1) {
@@ -2072,8 +1983,8 @@
 
       const dayObj = currentProject.dailyData.find(d => d.day === dayNum) || currentProject.dailyData[0];
 
-      title.innerText = `Log Daily Spend • Day ${dayObj.day}`;
-      subtitle.innerText = `${currentProject.name} • Record verified ad channel spend`;
+      title.innerText = `Log Spend & Performance • Day ${dayObj.day}`;
+      subtitle.innerText = `${currentProject.name} • Record ad spend, orders, and GMV revenue`;
       dayTypeSelect.value = dayObj.type;
       dailyPlanInput.value = dayObj.plannedSpend;
 
@@ -2086,21 +1997,46 @@
         platBox.innerHTML = `
           <div class="flex items-center justify-between text-xs font-bold ${plat.textColor}">
             <span>${plat.name}</span>
-            <span class="text-[10px] text-slate-400">Actual Spend (THB)</span>
+            <span class="text-[10px] text-slate-400">Spend | Orders | GMV</span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div class="space-y-2">
             ${plat.channels.map(ch => `
-              <div class="bg-white p-2 rounded-lg border border-slate-200">
-                <label class="block text-[11px] font-semibold text-slate-600 truncate">${ch.name}</label>
-                <div class="relative mt-1">
-                  <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-slate-400 text-xs">฿</span>
-                  <input type="number" 
-                         id="modal_spend_${ch.id}" 
-                         value="${dayObj.spends[ch.id] || 0}" 
-                         step="50" 
-                         min="0"
-                         oninput="recalculateModalTotal()"
-                         class="w-full pl-6 pr-2 py-1 text-right text-xs font-bold text-slate-800 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              <div class="bg-white p-2.5 rounded-xl border border-slate-200">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-xs font-bold text-slate-800 truncate">${ch.name}</span>
+                  <span id="modal_calc_roas_${ch.id}" class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">0.00x ROAS</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                  <div>
+                    <label class="block text-[10px] font-semibold text-slate-500">Spend (฿)</label>
+                    <input type="number" 
+                           id="modal_spend_${ch.id}" 
+                           value="${dayObj.spends?.[ch.id] || 0}" 
+                           step="50" 
+                           min="0"
+                           oninput="recalculateModalTotal()"
+                           class="w-full mt-0.5 px-2 py-1 text-right text-xs font-bold text-slate-800 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-semibold text-slate-500">Orders</label>
+                    <input type="number" 
+                           id="modal_orders_${ch.id}" 
+                           value="${dayObj.orders?.[ch.id] || 0}" 
+                           step="1" 
+                           min="0"
+                           oninput="recalculateModalTotal()"
+                           class="w-full mt-0.5 px-2 py-1 text-right text-xs font-bold text-indigo-700 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-semibold text-slate-500">GMV (฿)</label>
+                    <input type="number" 
+                           id="modal_gmv_${ch.id}" 
+                           value="${dayObj.gmv?.[ch.id] || 0}" 
+                           step="100" 
+                           min="0"
+                           oninput="recalculateModalTotal()"
+                           class="w-full mt-0.5 px-2 py-1 text-right text-xs font-bold text-emerald-700 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                  </div>
                 </div>
               </div>
             `).join('')}
@@ -2113,17 +2049,38 @@
       modal.classList.remove('hidden');
     }
 
-    function closeDailySpendModal() {
-      document.getElementById('spendModal')?.classList.add('hidden');
-    }
-
     function recalculateModalTotal() {
-      let sum = 0;
+      let sumSpend = 0;
+      let sumOrders = 0;
+      let sumGmv = 0;
+
       ALL_CHANNELS.forEach(ch => {
-        const input = document.getElementById(`modal_spend_${ch.id}`);
-        if (input) sum += Math.max(0, parseFloat(input.value) || 0);
+        const inputSp = document.getElementById(`modal_spend_${ch.id}`);
+        const inputOrd = document.getElementById(`modal_orders_${ch.id}`);
+        const inputGmv = document.getElementById(`modal_gmv_${ch.id}`);
+        const roasBadge = document.getElementById(`modal_calc_roas_${ch.id}`);
+
+        const sp = Math.max(0, parseFloat(inputSp?.value) || 0);
+        const ord = Math.max(0, parseInt(inputOrd?.value, 10) || 0);
+        const gmv = Math.max(0, parseFloat(inputGmv?.value) || 0);
+
+        sumSpend += sp;
+        sumOrders += ord;
+        sumGmv += gmv;
+
+        if (roasBadge) {
+          const chRoas = sp > 0 ? (gmv / sp).toFixed(2) : '0.00';
+          roasBadge.innerText = `${chRoas}x ROAS`;
+        }
       });
-      document.getElementById('modalTotalLogged').innerText = `฿${sum.toLocaleString()}`;
+
+      const dayRoas = sumSpend > 0 ? (sumGmv / sumSpend).toFixed(2) : '0.00';
+
+      document.getElementById('modalTotalLogged').innerText = `฿${sumSpend.toLocaleString()}`;
+      document.getElementById('modalDaySpendSummary').innerText = `฿${sumSpend.toLocaleString()}`;
+      document.getElementById('modalDayOrdersSummary').innerText = sumOrders.toLocaleString();
+      document.getElementById('modalDayGmvSummary').innerText = `฿${sumGmv.toLocaleString()}`;
+      document.getElementById('modalDayRoasSummary').innerText = `${dayRoas}x`;
     }
 
     function saveModalSpend() {
@@ -2136,36 +2093,384 @@
       if (dayTypeSelect) dayObj.type = dayTypeSelect.value;
       if (dailyPlanInput) dayObj.plannedSpend = Math.max(0, parseFloat(dailyPlanInput.value) || 0);
 
+      if (!dayObj.spends) dayObj.spends = {};
+      if (!dayObj.orders) dayObj.orders = {};
+      if (!dayObj.gmv) dayObj.gmv = {};
+
       ALL_CHANNELS.forEach(ch => {
-        const input = document.getElementById(`modal_spend_${ch.id}`);
-        if (input) dayObj.spends[ch.id] = Math.max(0, parseFloat(input.value) || 0);
+        const inputSp = document.getElementById(`modal_spend_${ch.id}`);
+        const inputOrd = document.getElementById(`modal_orders_${ch.id}`);
+        const inputGmv = document.getElementById(`modal_gmv_${ch.id}`);
+
+        if (inputSp) dayObj.spends[ch.id] = Math.max(0, parseFloat(inputSp.value) || 0);
+        if (inputOrd) dayObj.orders[ch.id] = Math.max(0, parseInt(inputOrd.value, 10) || 0);
+        if (inputGmv) dayObj.gmv[ch.id] = Math.max(0, parseFloat(inputGmv.value) || 0);
       });
 
       closeDailySpendModal();
       scheduleAutoSave();
       renderAll();
-      showToast(`Saved spend log for Day ${activeModalDay}!`);
+      showToast(`Saved Spend, Orders & GMV for Day ${activeModalDay}!`);
     }
 
-    // Excel Sync
-    function openImportExcelModal() {
-      const modal = document.getElementById('importExcelModal');
-      const textarea = document.getElementById('excelPasteArea');
-      if (textarea) textarea.value = '';
-      resetImportPreview();
-      modal?.classList.remove('hidden');
+    function getMetricTypeFromHeader(rawHeader, matchedChannel) {
+      if (!rawHeader) return 'spend';
+      const h = String(rawHeader).toLowerCase().trim();
+
+      // Check Spend keywords first (prevents TikTok GMV MAX Ad Spend from false-triggering as GMV)
+      if (h.includes('spend') || h.includes('cost') || h.includes('ค่าแอด') || h.includes('จ่ายจริง') || h.includes('จ่าย') || h.includes('actual') || h.includes('งบ')) {
+        return 'spend';
+      }
+
+      // Check Orders
+      if (h.includes('order') || h.includes('ออเดอร์') || h.includes('orders') || h.includes('txn')) {
+        return 'orders';
+      }
+
+      // Check GMV
+      let stripped = h;
+      if (matchedChannel && matchedChannel.name) {
+        stripped = h.replace(matchedChannel.name.toLowerCase(), '');
+      }
+
+      if (stripped.includes('gmv') || stripped.includes('sale') || stripped.includes('ยอดขาย') || stripped.includes('revenue') || stripped.includes('rev')) {
+        return 'gmv';
+      }
+
+      if (h.endsWith('gmv') || h.includes(' gmv') || h.includes('_gmv') || h.includes('-gmv')) {
+        return 'gmv';
+      }
+
+      return 'spend';
     }
 
-    function closeImportExcelModal() {
-      document.getElementById('importExcelModal')?.classList.add('hidden');
+    function matchChannelFromHeader(rawHeader) {
+      if (!rawHeader) return null;
+      let h = String(rawHeader).toLowerCase().trim();
+
+      let cleanH = h
+        .replace(/(actual\s*)?spend/gi, '')
+        .replace(/cost/gi, '')
+        .replace(/budget/gi, '')
+        .replace(/orders?/gi, '')
+        .replace(/gmv/gi, '')
+        .replace(/sales?/gi, '')
+        .replace(/revenue/gi, '')
+        .replace(/ยอดขาย/gi, '')
+        .replace(/ออเดอร์/gi, '')
+        .replace(/ค่าแอด/gi, '')
+        .replace(/บาท/gi, '')
+        .replace(/thb/gi, '')
+        .replace(/[^a-z0-9ก-๙]/g, '');
+
+      for (const ch of ALL_CHANNELS) {
+        const chPure = ch.name.toLowerCase().replace(/ad$/i, '').replace(/[^a-z0-9ก-๙]/g, '');
+        const chFull = ch.name.toLowerCase().replace(/[^a-z0-9ก-๙]/g, '');
+        
+        if (cleanH === chPure || cleanH === chFull || (cleanH.length >= 4 && (chPure.includes(cleanH) || cleanH.includes(chPure)))) {
+          return ch;
+        }
+      }
+
+      const aliasRules = [
+        { channelId: 'tiktok_live_gmv', patterns: ['tiktoklive', 'ttlive', 'livegmv', 'tiktokshoplive', 'ไลฟ์', 'ttlivegmv'] },
+        { channelId: 'tiktok_awareness', patterns: ['tiktokawareness', 'ttawareness', 'tiktokreach', 'tiktokbrand', 'tiktokaw'] },
+        { channelId: 'tiktok_follower', patterns: ['tiktokfollower', 'tiktokfollowers', 'ttfollower', 'tiktokfl', 'follower'] },
+        { channelId: 'tiktok_gmv_max', patterns: ['tiktokgmv', 'gmvmax', 'ttgmv', 'tiktokmax', 'tiktokad', 'tiktokads', 'tiktokspend', 'tiktok', 'ติ๊กต๊อก'] },
+
+        { channelId: 'shopee_live', patterns: ['shopeelive', 'shplive', 'ช้อปปี้ไลฟ์'] },
+        { channelId: 'shopee_gsa', patterns: ['shopeegsa', 'gsa', 'googleforgames'] },
+        { channelId: 'shopee_ad', patterns: ['shopeead', 'shopeesearch', 'shopeediscovery', 'shopee', 'ช้อปปี้'] },
+
+        { channelId: 'fb_shopee_cpas', patterns: ['shopeecpas', 'cpas', 'fbcpas', 'facebookcpas', 'collaborativeads'] },
+        { channelId: 'fb_awareness', patterns: ['facebookawareness', 'fbawareness', 'facebookreach', 'facebook', 'fb'] },
+
+        { channelId: 'lazada_ad', patterns: ['lazadaad', 'lazada', 'laz', 'ลาซาด้า'] }
+      ];
+
+      for (const rule of aliasRules) {
+        if (rule.patterns.some(p => cleanH.includes(p) || p.includes(cleanH))) {
+          const found = ALL_CHANNELS.find(c => c.id === rule.channelId);
+          if (found) return found;
+        }
+      }
+
+      return null;
     }
 
     function resetImportPreview() {
-      document.getElementById('importEmptyNotice').classList.remove('hidden');
-      document.getElementById('importPreviewTable').classList.add('hidden');
-      document.getElementById('btnConfirmImport').disabled = true;
-      document.getElementById('importTotalAmount').innerText = '฿0';
+      const notice = document.getElementById('importEmptyNotice');
+      const table = document.getElementById('importPreviewTable');
+      const btn = document.getElementById('btnConfirmImport');
+      const metrics = document.getElementById('importSummaryMetrics');
+      const fileInfo = document.getElementById('uploadedFileInfo');
+      const fileInput = document.getElementById('excelFileInput');
+      const badges = document.getElementById('importMappingBadges');
+
+      if (notice) notice.classList.remove('hidden');
+      if (table) table.classList.add('hidden');
+      if (badges) {
+        badges.classList.add('hidden');
+        badges.innerHTML = '';
+      }
+      if (btn) btn.disabled = true;
+      if (metrics) metrics.innerText = '฿0 Spend | 0 Orders | ฿0 GMV';
+      if (fileInfo) fileInfo.classList.add('hidden');
+      if (fileInput) fileInput.value = '';
       parsedImportRows = [];
+    }
+
+    function setupDragAndDropHandlers() {
+      const dropZone = document.getElementById('excelDropZone');
+      if (!dropZone) return;
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add('border-emerald-500', 'bg-emerald-100/50');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('border-emerald-500', 'bg-emerald-100/50');
+        }, false);
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) {
+          processExcelFile(files[0]);
+        }
+      }, false);
+    }
+
+    function handleExcelFileInput(event) {
+      const files = event.target.files;
+      if (files && files.length > 0) {
+        processExcelFile(files[0]);
+      }
+    }
+
+    function processExcelFile(file) {
+      if (!file) return;
+
+      const fileNameEl = document.getElementById('uploadedFileName');
+      const fileSizeEl = document.getElementById('uploadedFileSize');
+      const fileInfoBox = document.getElementById('uploadedFileInfo');
+
+      if (fileNameEl) fileNameEl.innerText = file.name;
+      if (fileSizeEl) fileSizeEl.innerText = `(${(file.size / 1024).toFixed(1)} KB)`;
+      if (fileInfoBox) fileInfoBox.classList.remove('hidden');
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          if (typeof XLSX === 'undefined') {
+            showToast('SheetJS library is loading. Please try again.');
+            return;
+          }
+
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+          if (!rows || rows.length === 0) {
+            showToast('The uploaded sheet is empty.');
+            resetImportPreview();
+            return;
+          }
+
+          parseArrayOfRows(rows);
+        } catch (err) {
+          console.error('Error parsing file:', err);
+          showToast('Failed to parse file. Please verify it is a valid .xlsx or .csv.');
+          resetImportPreview();
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    function parseArrayOfRows(rows) {
+      if (!rows || rows.length === 0) {
+        resetImportPreview();
+        return;
+      }
+
+      const validRows = rows.filter(r => Array.isArray(r) && r.some(c => String(c).trim().length > 0));
+      if (validRows.length === 0) {
+        resetImportPreview();
+        return;
+      }
+
+      const firstLineCols = validRows[0].map(c => String(c).trim());
+      let startRowIdx = 0;
+      let dayColIndex = 0;
+      let colMap = [];
+
+      const hasHeaders = firstLineCols.some(h => {
+        const norm = String(h).toLowerCase();
+        return norm.includes('day') || norm.includes('วัน') || norm.includes('spend') || norm.includes('order') || norm.includes('gmv') || norm.includes('sales') || norm.includes('tiktok') || norm.includes('shopee') || norm.includes('lazada');
+      });
+
+      if (hasHeaders) {
+        startRowIdx = 1;
+        firstLineCols.forEach((colName, idx) => {
+          const norm = String(colName).toLowerCase().replace(/[^a-z0-9ก-๙]/g, '');
+          if (norm === 'day' || norm === 'date' || norm === 'd' || norm === 'วัน' || norm === 'วันที่') {
+            dayColIndex = idx;
+            return;
+          }
+
+          const matchedCh = matchChannelFromHeader(colName);
+          if (matchedCh) {
+            const metricType = getMetricTypeFromHeader(colName, matchedCh);
+            colMap.push({
+              colIdx: idx,
+              channelId: matchedCh.id,
+              channelName: matchedCh.name,
+              platformColor: matchedCh.platformColor,
+              type: metricType,
+              headerLabel: colName
+            });
+          }
+        });
+
+        if (colMap.length === 0 && ALL_CHANNELS.length > 0) {
+          firstLineCols.forEach((colName, idx) => {
+            const norm = String(colName).toLowerCase();
+            if (norm.includes('spend') || norm.includes('cost') || norm.includes('ค่าแอด')) {
+              colMap.push({ colIdx: idx, channelId: ALL_CHANNELS[0].id, channelName: ALL_CHANNELS[0].name, type: 'spend', headerLabel: colName });
+            } else if (norm.includes('order') || norm.includes('ออเดอร์')) {
+              colMap.push({ colIdx: idx, channelId: ALL_CHANNELS[0].id, channelName: ALL_CHANNELS[0].name, type: 'orders', headerLabel: colName });
+            } else if (norm.includes('gmv') || norm.includes('sales') || norm.includes('ยอดขาย')) {
+              colMap.push({ colIdx: idx, channelId: ALL_CHANNELS[0].id, channelName: ALL_CHANNELS[0].name, type: 'gmv', headerLabel: colName });
+            }
+          });
+        }
+      } else {
+        let col = 1;
+        ALL_CHANNELS.forEach(ch => {
+          colMap.push({ colIdx: col++, channelId: ch.id, channelName: ch.name, type: 'spend', headerLabel: `${ch.name} Spend` });
+          colMap.push({ colIdx: col++, channelId: ch.id, channelName: ch.name, type: 'orders', headerLabel: `${ch.name} Orders` });
+          colMap.push({ colIdx: col++, channelId: ch.id, channelName: ch.name, type: 'gmv', headerLabel: `${ch.name} GMV` });
+        });
+      }
+
+      parsedImportRows = [];
+      let totalParsedSpend = 0;
+      let totalParsedOrders = 0;
+      let totalParsedGmv = 0;
+
+      for (let i = startRowIdx; i < validRows.length; i++) {
+        const cols = validRows[i].map(c => String(c).trim());
+        if (cols.length === 0) continue;
+
+        let dayRaw = cols[dayColIndex] || `${parsedImportRows.length + 1}`;
+        let dayNum = parseInt(String(dayRaw).replace(/[^0-9]/g, ''), 10);
+        if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) dayNum = parsedImportRows.length + 1;
+
+        const spends = {};
+        const orders = {};
+        const gmv = {};
+        let daySpend = 0, dayOrders = 0, dayGmv = 0;
+
+        colMap.forEach(mapping => {
+          const valStr = String(cols[mapping.colIdx] || '0').replace(/[^0-9.-]/g, '');
+          const num = Math.max(0, parseFloat(valStr) || 0);
+
+          if (mapping.type === 'spend') {
+            spends[mapping.channelId] = (spends[mapping.channelId] || 0) + num;
+            daySpend += num;
+          } else if (mapping.type === 'orders') {
+            orders[mapping.channelId] = (orders[mapping.channelId] || 0) + parseInt(num, 10);
+            dayOrders += parseInt(num, 10);
+          } else if (mapping.type === 'gmv') {
+            gmv[mapping.channelId] = (gmv[mapping.channelId] || 0) + num;
+            dayGmv += num;
+          }
+        });
+
+        totalParsedSpend += daySpend;
+        totalParsedOrders += dayOrders;
+        totalParsedGmv += dayGmv;
+
+        parsedImportRows.push({
+          day: dayNum,
+          spends: spends,
+          orders: orders,
+          gmv: gmv,
+          daySpend: daySpend,
+          dayOrders: dayOrders,
+          dayGmv: dayGmv
+        });
+      }
+
+      renderImportPreviewTable(totalParsedSpend, totalParsedOrders, totalParsedGmv, colMap);
+    }
+
+    function renderImportPreviewTable(totalParsedSpend, totalParsedOrders, totalParsedGmv, colMap = []) {
+      const previewTable = document.getElementById('importPreviewTable');
+      const thead = document.getElementById('importPreviewHead');
+      const tbody = document.getElementById('importPreviewBody');
+      const btn = document.getElementById('btnConfirmImport');
+      const badgesContainer = document.getElementById('importMappingBadges');
+
+      document.getElementById('importEmptyNotice').classList.add('hidden');
+      previewTable.classList.remove('hidden');
+      btn.disabled = parsedImportRows.length === 0;
+      document.getElementById('importSummaryMetrics').innerText = `฿${totalParsedSpend.toLocaleString()} Spend | ${totalParsedOrders.toLocaleString()} Orders | ฿${totalParsedGmv.toLocaleString()} GMV`;
+
+      if (badgesContainer && colMap.length > 0) {
+        badgesContainer.classList.remove('hidden');
+        badgesContainer.innerHTML = '<span class="text-[10px] font-bold text-slate-400 uppercase w-full mb-1">Matched Channels Detected:</span>';
+        
+        const uniqueMappings = [];
+        colMap.forEach(m => {
+          if (!uniqueMappings.some(u => u.channelId === m.channelId && u.type === m.type)) {
+            uniqueMappings.push(m);
+          }
+        });
+
+        uniqueMappings.forEach(m => {
+          const pill = document.createElement('span');
+          pill.className = "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200";
+          pill.innerHTML = `✓ ${m.channelName} (${m.type.toUpperCase()})`;
+          badgesContainer.appendChild(pill);
+        });
+      }
+
+      thead.innerHTML = `
+        <tr>
+          <th class="py-2 px-2.5">Day</th>
+          <th class="py-2 px-2.5 text-right font-bold text-slate-900">Total Spend</th>
+          <th class="py-2 px-2.5 text-right font-bold text-indigo-700">Orders</th>
+          <th class="py-2 px-2.5 text-right font-bold text-emerald-700">GMV (฿)</th>
+          <th class="py-2 px-2.5 text-right font-bold text-slate-800">ROAS</th>
+        </tr>
+      `;
+
+      tbody.innerHTML = '';
+      parsedImportRows.slice(0, 10).forEach(r => {
+        const roas = r.daySpend > 0 ? (r.dayGmv / r.daySpend).toFixed(2) : '0.00';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="py-1.5 px-2.5 font-bold">D${r.day}</td>
+          <td class="py-1.5 px-2.5 text-right font-bold text-slate-900">฿${r.daySpend.toLocaleString()}</td>
+          <td class="py-1.5 px-2.5 text-right font-bold text-indigo-700">${r.dayOrders.toLocaleString()}</td>
+          <td class="py-1.5 px-2.5 text-right font-bold text-emerald-700">฿${r.dayGmv.toLocaleString()}</td>
+          <td class="py-1.5 px-2.5 text-right font-bold text-violet-700">${roas}x</td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
     function handleExcelPasteInput(rawText) {
@@ -2181,91 +2486,8 @@
       }
 
       const delimiter = lines[0].includes('\t') ? '\t' : (lines[0].includes(',') ? ',' : ';');
-      const firstLineCols = lines[0].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
-
-      let startRowIdx = 0;
-      let colIndexToChannel = {};
-      let dayColIndex = 0;
-
-      // Detect header keywords
-      const hasHeaders = firstLineCols.some(h => {
-        const norm = h.toLowerCase().replace(/[^a-z0-9]/g, '');
-        return norm.includes('day') || norm.includes('date') || norm.includes('shopee') || norm.includes('tiktok') || norm.includes('facebook') || norm.includes('lazada');
-      });
-
-      if (hasHeaders) {
-        startRowIdx = 1;
-        firstLineCols.forEach((colName, idx) => {
-          const norm = colName.toLowerCase().replace(/[^a-z0-9]/g, '');
-          if (norm === 'day' || norm === 'date' || norm === 'd') {
-            dayColIndex = idx;
-            return;
-          }
-          for (const ch of ALL_CHANNELS) {
-            const chNorm = ch.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (norm === chNorm || norm.includes(chNorm) || chNorm.includes(norm)) {
-              colIndexToChannel[idx] = ch;
-              break;
-            }
-          }
-        });
-      } else {
-        ALL_CHANNELS.forEach((ch, idx) => { colIndexToChannel[idx + 1] = ch; });
-      }
-
-      parsedImportRows = [];
-      let grandTotal = 0;
-
-      for (let i = startRowIdx; i < lines.length; i++) {
-        const cols = lines[i].split(delimiter).map(c => c.trim().replace(/^["']|["']$/g, ''));
-        if (cols.length === 0) continue;
-
-        let dayRaw = cols[dayColIndex] || `${parsedImportRows.length + 1}`;
-        let dayNum = parseInt(dayRaw.replace(/[^0-9]/g, ''), 10);
-        if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) dayNum = parsedImportRows.length + 1;
-
-        const spends = {};
-        let daySum = 0;
-        Object.entries(colIndexToChannel).forEach(([cIdx, ch]) => {
-          const val = Math.max(0, parseFloat((cols[cIdx] || '0').replace(/[^0-9.-]/g, '')) || 0);
-          spends[ch.id] = val;
-          daySum += val;
-        });
-
-        grandTotal += daySum;
-        parsedImportRows.push({ day: dayNum, spends: spends, dayTotal: daySum });
-      }
-
-      // Render Preview
-      const previewTable = document.getElementById('importPreviewTable');
-      const thead = document.getElementById('importPreviewHead');
-      const tbody = document.getElementById('importPreviewBody');
-      const btn = document.getElementById('btnConfirmImport');
-
-      document.getElementById('importEmptyNotice').classList.add('hidden');
-      previewTable.classList.remove('hidden');
-      btn.disabled = false;
-      document.getElementById('importTotalAmount').innerText = `฿${grandTotal.toLocaleString()}`;
-
-      const mappedChannels = Object.values(colIndexToChannel);
-      thead.innerHTML = `
-        <tr>
-          <th class="py-2 px-2.5">Day</th>
-          <th class="py-2 px-2.5 text-right font-bold text-slate-900">Total</th>
-          ${mappedChannels.map(ch => `<th class="py-2 px-2 text-right">${ch.name}</th>`).join('')}
-        </tr>
-      `;
-
-      tbody.innerHTML = '';
-      parsedImportRows.slice(0, 10).forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="py-1.5 px-2.5 font-bold">D${r.day}</td>
-          <td class="py-1.5 px-2.5 text-right font-bold text-emerald-700">฿${r.dayTotal.toLocaleString()}</td>
-          ${mappedChannels.map(ch => `<td class="py-1.5 px-2 text-right">฿${(r.spends[ch.id]||0).toLocaleString()}</td>`).join('')}
-        `;
-        tbody.appendChild(tr);
-      });
+      const rowArrays = lines.map(line => line.split(delimiter));
+      parseArrayOfRows(rowArrays);
     }
 
     function applyExcelImport() {
@@ -2275,127 +2497,863 @@
         const targetDay = currentProject.dailyData.find(d => d.day === imported.day);
         if (targetDay) {
           if (!targetDay.spends) targetDay.spends = {};
-          Object.entries(imported.spends).forEach(([chId, val]) => {
-            targetDay.spends[chId] = val;
-          });
+          if (!targetDay.orders) targetDay.orders = {};
+          if (!targetDay.gmv) targetDay.gmv = {};
+
+          Object.entries(imported.spends).forEach(([chId, val]) => { targetDay.spends[chId] = val; });
+          Object.entries(imported.orders).forEach(([chId, val]) => { targetDay.orders[chId] = val; });
+          Object.entries(imported.gmv).forEach(([chId, val]) => { targetDay.gmv[chId] = val; });
         }
       });
 
       closeImportExcelModal();
       scheduleAutoSave();
       renderAll();
-      showToast(`Imported ${parsedImportRows.length} days of spend into ${currentProject.name}!`);
+      showToast(`Imported ${parsedImportRows.length} days of Spend, Orders & GMV!`);
     }
 
-    function downloadExcelTemplate() {
-      const headers = ['Day', 'Day Type', ...ALL_CHANNELS.map(c => c.name)];
-      let csv = headers.join(',') + '\n';
-      for (let day = 1; day <= DAYS_IN_MONTH; day++) {
-        csv += `${day},NORMAL,` + ALL_CHANNELS.map(() => '').join(',') + '\n';
-      }
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `${currentProject.name.replace(/\s+/g, '_')}_Template.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function exportSpendToCSV() {
-      let csv = 'Day,Day Type,Planned Total,Actual Total,Variance,' + ALL_CHANNELS.map(c => `"${c.platformName} - ${c.name}"`).join(',') + '\n';
-      currentProject.dailyData.forEach(d => {
-        const actual = calculateDayActualTotal(d);
-        const variance = d.plannedSpend - actual;
-        csv += [`Day ${d.day}`, d.type, d.plannedSpend, actual, variance, ...ALL_CHANNELS.map(c => d.spends[c.id] || 0)].join(',') + '\n';
+    function downloadExcelTemplate(format = 'xlsx') {
+      const headers = ['Day', 'Day Type'];
+      ALL_CHANNELS.forEach(c => {
+        headers.push(`${c.name} Spend`);
+        headers.push(`${c.name} Orders`);
+        headers.push(`${c.name} GMV`);
       });
 
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `${currentProject.name.replace(/\s+/g, '_')}_SpendLog.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast('Exported project data to CSV!');
+      const rows = [headers];
+      for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+        let dayType = 'NORMAL';
+        if (day === 10) dayType = 'DDAY';
+        else if (day >= 14 && day <= 16) dayType = 'MIDMONTH';
+        else if (day >= 25) dayType = 'PAYDAY';
+
+        let row = [`Day ${day}`, dayType];
+        ALL_CHANNELS.forEach(() => {
+          row.push(0);
+          row.push(0);
+          row.push(0);
+        });
+        rows.push(row);
+      }
+
+      const fileName = `${currentProject.name.replace(/\s+/g, '_')}_Spend_Orders_GMV_Template`;
+
+      if (format === 'xlsx' && typeof XLSX !== 'undefined') {
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Ad_Spend_Log");
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
+        showToast('Downloaded .xlsx Template!');
+      } else {
+        const csvContent = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${fileName}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('Downloaded .csv Template!');
+      }
     }
 
-    // Modal Helpers
-    function openModal(id) { document.getElementById(id)?.classList.remove('hidden'); }
-    function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
+    function openImportExcelModal() {
+      resetImportPreview();
+      const area = document.getElementById('excelPasteArea');
+      if (area) area.value = '';
+      openModal('importExcelModal');
+      setupDragAndDropHandlers();
+    }
+
+    function closeImportExcelModal() {
+      closeModal('importExcelModal');
+    }
+
+    function showToast(message, icon = '✓') {
+      const toast = document.getElementById('toastNotification');
+      const msgEl = document.getElementById('toastMessage');
+      const iconEl = document.getElementById('toastIcon');
+      if (!toast || !msgEl) return;
+
+      msgEl.innerText = message;
+      if (iconEl) iconEl.innerText = icon;
+
+      toast.classList.remove('opacity-0', 'translate-y-20');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-20');
+      }, 2600);
+    }
+
     function showCustomConfirm({ title, message, confirmText = 'Confirm', onConfirm }) {
-      document.getElementById('confirmModalTitle').innerText = title;
-      document.getElementById('confirmModalMessage').innerText = message;
-      const btn = document.getElementById('btnExecuteConfirmAction');
-      btn.innerText = confirmText;
-      btn.onclick = onConfirm;
+      const modal = document.getElementById('confirmActionModal');
+      const titleEl = document.getElementById('confirmModalTitle');
+      const msgEl = document.getElementById('confirmModalMessage');
+      const confirmBtn = document.getElementById('btnExecuteConfirmAction');
+
+      if (titleEl) titleEl.innerText = title;
+      if (msgEl) msgEl.innerText = message;
+      if (confirmBtn) {
+        confirmBtn.innerText = confirmText;
+        confirmBtn.onclick = onConfirm;
+      }
       openModal('confirmActionModal');
     }
 
-    function showToast(msg) {
-      const toast = document.getElementById('toastNotification');
-      document.getElementById('toastMessage').innerText = msg;
-      toast.classList.remove('opacity-0', 'translate-y-20');
-      toast.classList.add('opacity-100', 'translate-y-0');
-      clearTimeout(window._toastT);
-      window._toastT = setTimeout(() => {
-        toast.classList.remove('opacity-100', 'translate-y-0');
-        toast.classList.add('opacity-0', 'translate-y-20');
-      }, 2500);
-    }
+    function renderKPIs() {
+      if (!currentProject) return;
 
-    function switchMainView(tabName) {
-      const sDaily = document.getElementById('sectionDailyTracker');
-      const sChannels = document.getElementById('sectionChannelAllocation');
-      const sDayTypes = document.getElementById('sectionDayTypePlanner');
+      const masterBudget = getProjectMasterBudget();
+      let totalSpent = 0;
+      let plannedToDate = 0;
+      const todayDate = new Date().getDate();
+      const effectiveCutoff = (todayDate >= 1 && todayDate <= DAYS_IN_MONTH) ? todayDate : DAYS_IN_MONTH;
 
-      const tDaily = document.getElementById('viewTabDaily');
-      const tChannels = document.getElementById('viewTabChannels');
-      const tDayTypes = document.getElementById('viewTabDayTypes');
+      (currentProject.dailyData || []).forEach(d => {
+        let daySpent = 0;
+        ALL_CHANNELS.forEach(ch => {
+          daySpent += Number(d.spends?.[ch.id] || 0);
+        });
+        totalSpent += daySpent;
 
-      [sDaily, sChannels, sDayTypes].forEach(el => el.classList.add('hidden'));
-      [tDaily, tChannels, tDayTypes].forEach(btn => {
-        btn.className = "px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition";
+        if (d.day <= effectiveCutoff) {
+          plannedToDate += Number(d.plannedSpend || 0);
+        }
       });
 
-      if (tabName === 'daily') {
-        sDaily.classList.remove('hidden');
-        tDaily.className = "px-3.5 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition";
-        if (pacingChartInstance) pacingChartInstance.resize();
-      } else if (tabName === 'channels') {
-        sChannels.classList.remove('hidden');
-        tChannels.className = "px-3.5 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition";
-        renderChannelControls();
-        renderChannelShareChart();
-      } else if (tabName === 'daytypes') {
-        sDayTypes.classList.remove('hidden');
-        tDayTypes.className = "px-3.5 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition";
-        renderCalendarDays();
+      const spentPct = masterBudget > 0 ? ((totalSpent / masterBudget) * 100).toFixed(1) : 0;
+      const variance = plannedToDate - totalSpent;
+      const pacingRate = plannedToDate > 0 ? ((totalSpent / plannedToDate) * 100).toFixed(1) : 0.0;
+      const remaining = masterBudget - totalSpent;
+      const daysLeft = Math.max(0, DAYS_IN_MONTH - effectiveCutoff);
+      const recDaily = daysLeft > 0 ? Math.round(Math.max(0, remaining) / daysLeft) : 0;
+
+      const elTargetBudget = document.getElementById('kpiTargetBudget');
+      const elTotalChannels = document.getElementById('kpiTotalChannelsCount');
+      const elActualSpent = document.getElementById('kpiActualSpent');
+      const elSpentPercent = document.getElementById('kpiSpentPercent');
+      const elPlannedToDate = document.getElementById('kpiPlannedToDate');
+      const elVariance = document.getElementById('kpiVariance');
+      const elVarianceTag = document.getElementById('kpiVarianceTag');
+      const elPacingRate = document.getElementById('kpiPacingRate');
+      const elRemaining = document.getElementById('kpiRemaining');
+      const elDaysLeft = document.getElementById('kpiDaysLeft');
+      const elRecDailySpend = document.getElementById('kpiRecDailySpend');
+
+      if (elTargetBudget) elTargetBudget.innerText = `฿${masterBudget.toLocaleString()}`;
+      if (elTotalChannels) elTotalChannels.innerText = `${ALL_CHANNELS.length} channels`;
+      if (elActualSpent) elActualSpent.innerText = `฿${totalSpent.toLocaleString()}`;
+      if (elSpentPercent) elSpentPercent.innerText = `${spentPct}%`;
+      if (elPlannedToDate) elPlannedToDate.innerText = `฿${plannedToDate.toLocaleString()}`;
+      if (elVariance) elVariance.innerText = `฿${Math.abs(variance).toLocaleString()}`;
+      if (elPacingRate) elPacingRate.innerText = `${pacingRate}%`;
+      if (elRemaining) elRemaining.innerText = `฿${Math.max(0, remaining).toLocaleString()}`;
+      if (elDaysLeft) elDaysLeft.innerText = `${daysLeft} days left`;
+      if (elRecDailySpend) elRecDailySpend.innerText = `฿${recDaily.toLocaleString()}`;
+
+      if (elVarianceTag) {
+        if (variance >= 0) {
+          elVarianceTag.className = "text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700";
+          elVarianceTag.innerText = "Under Budget";
+        } else {
+          elVarianceTag.className = "text-xs font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700";
+          elVarianceTag.innerText = "Over Budget";
+        }
       }
     }
 
-    function renderAll() {
+    function renderPlatformCards() {
+      const container = document.getElementById('platformCardsContainer');
+      if (!container || !currentProject) return;
+
+      container.innerHTML = '';
+      Object.entries(currentProject.platforms).forEach(([platformKey, pObj]) => {
+        let pBudget = 0;
+        let pSpent = 0;
+
+        (pObj.channels || []).forEach(ch => {
+          pBudget += Number(ch.budget || 0);
+          (currentProject.dailyData || []).forEach(d => {
+            pSpent += Number(d.spends?.[ch.id] || 0);
+          });
+        });
+
+        const pBurn = pBudget > 0 ? Math.min(100, Math.round((pSpent / pBudget) * 100)) : 0;
+        const pRem = Math.max(0, pBudget - pSpent);
+        const card = document.createElement('div');
+        card.className = "bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between";
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold ${pObj.textColor}">${pObj.name}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${pObj.badgeBg} ${pObj.textColor}">
+                ${(pObj.channels || []).length} Channels
+              </span>
+            </div>
+            <div class="mt-2 text-2xl font-extrabold text-slate-900">฿${pSpent.toLocaleString()}</div>
+            <div class="text-xs text-slate-400 mt-0.5">Budget: ฿${pBudget.toLocaleString()}</div>
+          </div>
+          <div class="mt-4">
+            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden mb-1.5">
+              <div class="h-1.5 rounded-full transition-all duration-300" style="width: ${pBurn}%; background-color: ${pObj.color}"></div>
+            </div>
+            <div class="flex justify-between text-[11px] text-slate-500 font-semibold">
+              <span>Spent ${pBurn}%</span>
+              <span>Rem: ฿${pRem.toLocaleString()}</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderPacingChart() {
+      const canvas = document.getElementById('dailyPacingChart');
+      if (!canvas || !currentProject || typeof Chart === 'undefined') return;
+
+      const labels = [];
+      const plannedPoints = [];
+      const actualPoints = [];
+      const barColors = [];
+
+      (currentProject.dailyData || []).forEach(d => {
+        labels.push(`D${d.day}`);
+        plannedPoints.push(Number(d.plannedSpend || 0));
+
+        let dayActual = 0;
+        ALL_CHANNELS.forEach(ch => {
+          dayActual += Number(d.spends?.[ch.id] || 0);
+        });
+        actualPoints.push(dayActual);
+
+        if (d.type === 'DDAY') barColors.push('#f87171');
+        else if (d.type === 'MIDMONTH') barColors.push('#818cf8');
+        else if (d.type === 'PAYDAY') barColors.push('#fbbf24');
+        else barColors.push('#10b981');
+      });
+
+      if (pacingChartInstance) {
+        pacingChartInstance.destroy();
+      }
+
+      const ctx = canvas.getContext('2d');
+      pacingChartInstance = new Chart(ctx, {
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              type: 'line',
+              label: 'Planned Target',
+              data: plannedPoints,
+              borderColor: '#6366f1',
+              backgroundColor: 'rgba(99, 102, 241, 0.08)',
+              borderWidth: 2,
+              pointRadius: 2,
+              tension: 0.25,
+              fill: true,
+              yAxisID: 'y'
+            },
+            {
+              type: 'bar',
+              label: 'Actual Spend',
+              data: actualPoints,
+              backgroundColor: barColors,
+              borderRadius: 4,
+              yAxisID: 'y'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return `${ctx.dataset.label}: ฿${Number(ctx.raw || 0).toLocaleString()}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 10 } }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: '#f1f5f9' },
+              ticks: {
+                font: { size: 10 },
+                callback: function(v) { return '฿' + (v >= 1000 ? (v / 1000) + 'k' : v); }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderChannelShareChart() {
+      const canvas = document.getElementById('channelSharePieChart');
+      const summaryList = document.getElementById('channelShareSummaryList');
+      const footerNote = document.getElementById('channelCountFooterNote');
+
+      if (!canvas || !currentProject || typeof Chart === 'undefined') return;
+
+      const masterTotal = getProjectMasterBudget();
+      if (footerNote) {
+        footerNote.innerText = `${ALL_CHANNELS.length} channels configured across ${Object.keys(currentProject.platforms).length} platforms`;
+      }
+
+      const labels = [];
+      const dataValues = [];
+      const bgColors = [];
+
+      ALL_CHANNELS.forEach(ch => {
+        labels.push(ch.name);
+        dataValues.push(ch.budget);
+        bgColors.push(ch.platformColor || '#6366f1');
+      });
+
+      if (summaryList) {
+        summaryList.innerHTML = '';
+        ALL_CHANNELS.forEach(ch => {
+          const pct = masterTotal > 0 ? ((ch.budget / masterTotal) * 100).toFixed(1) : 0;
+          const row = document.createElement('div');
+          row.className = "flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs";
+          row.innerHTML = `
+            <div class="flex items-center space-x-2 truncate">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${ch.platformColor}"></span>
+              <span class="font-bold text-slate-800 truncate">${ch.name}</span>
+            </div>
+            <div class="flex items-center space-x-2 shrink-0">
+              <span class="font-semibold text-slate-500">${pct}%</span>
+              <span class="font-bold text-slate-900">฿${ch.budget.toLocaleString()}</span>
+            </div>
+          `;
+          summaryList.appendChild(row);
+        });
+      }
+
+      if (shareChartInstance) {
+        shareChartInstance.destroy();
+      }
+
+      const ctx = canvas.getContext('2d');
+      shareChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: dataValues.length > 0 ? dataValues : [1],
+            backgroundColor: bgColors.length > 0 ? bgColors : ['#cbd5e1'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          cutout: '68%'
+        }
+      });
+    }
+
+    function setDailyTableViewMode(mode) {
+      currentTableMode = mode;
+      const bPlatform = document.getElementById('btnViewPlatform');
+      const bMatrix = document.getElementById('btnViewMatrix');
+      const bFocus = document.getElementById('btnViewFocus');
+      const dropdownWrapper = document.getElementById('channelDropdownBarWrapper');
+      const badge = document.getElementById('activeViewModeBadge');
+
+      [bPlatform, bMatrix, bFocus].forEach(b => {
+        if (b) b.className = "px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition font-bold";
+      });
+
+      if (mode === 'platform' && bPlatform) {
+        bPlatform.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs font-bold transition";
+        if (dropdownWrapper) dropdownWrapper.classList.add('hidden');
+        if (badge) badge.innerText = "Platforms";
+      } else if (mode === 'matrix' && bMatrix) {
+        bMatrix.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs font-bold transition";
+        if (dropdownWrapper) dropdownWrapper.classList.add('hidden');
+        if (badge) badge.innerText = "All Channels";
+      } else if (mode === 'focus' && bFocus) {
+        bFocus.className = "px-2.5 py-1 rounded-md bg-white text-indigo-600 shadow-xs font-bold transition";
+        if (dropdownWrapper) dropdownWrapper.classList.remove('hidden');
+        if (badge) badge.innerText = "Channel Ledger";
+        renderChannelDropdownOptions();
+      }
+
+      renderDailyTable();
+    }
+
+    function renderChannelDropdownOptions() {
+      const select = document.getElementById('selectActiveChannelLedger');
+      const activeBadge = document.getElementById('activeChannelBadgePlatform');
+      if (!select) return;
+
+      select.innerHTML = '';
+      if (!activeChannelTabId && ALL_CHANNELS.length > 0) {
+        activeChannelTabId = ALL_CHANNELS[0].id;
+      }
+
+      // Group options by platform
+      const groups = {};
+      ALL_CHANNELS.forEach(ch => {
+        if (!groups[ch.platformName]) groups[ch.platformName] = [];
+        groups[ch.platformName].push(ch);
+      });
+
+      Object.entries(groups).forEach(([platName, channels]) => {
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = platName;
+        channels.forEach(ch => {
+          const opt = document.createElement('option');
+          opt.value = ch.id;
+          opt.innerText = `${ch.name} (Budget: ฿${ch.budget.toLocaleString()})`;
+          if (ch.id === activeChannelTabId) opt.selected = true;
+          optgroup.appendChild(opt);
+        });
+        select.appendChild(optgroup);
+      });
+
+      const selected = getChannelById(activeChannelTabId);
+      if (selected && activeBadge) {
+        activeBadge.innerText = `${selected.platformName} • ${selected.name}`;
+      }
+      updateChannelSummaryStrip();
+    }
+
+    function selectChannelDropdown(channelId) {
+      activeChannelTabId = channelId;
+      const activeBadge = document.getElementById('activeChannelBadgePlatform');
+      const selected = getChannelById(activeChannelTabId);
+      if (selected && activeBadge) {
+        activeBadge.innerText = `${selected.platformName} • ${selected.name}`;
+      }
+      updateChannelSummaryStrip();
+      renderDailyTable();
+    }
+
+    function updateChannelSummaryStrip() {
+      const ch = getChannelById(activeChannelTabId);
+      if (!ch) return;
+
+      let totalSpent = 0;
+      (currentProject.dailyData || []).forEach(d => {
+        totalSpent += Number(d.spends?.[ch.id] || 0);
+      });
+
+      const rem = Math.max(0, ch.budget - totalSpent);
+      const burnPct = ch.budget > 0 ? ((totalSpent / ch.budget) * 100).toFixed(1) : 0;
+
+      const elBudget = document.getElementById('activeTabTotalBudget');
+      const elSpent = document.getElementById('activeTabTotalSpent');
+      const elRem = document.getElementById('activeTabRemaining');
+      const elBurn = document.getElementById('activeTabBurnPct');
+
+      if (elBudget) elBudget.innerText = `฿${ch.budget.toLocaleString()}`;
+      if (elSpent) elSpent.innerText = `฿${totalSpent.toLocaleString()}`;
+      if (elRem) elRem.innerText = `฿${rem.toLocaleString()}`;
+      if (elBurn) elBurn.innerText = `${burnPct}%`;
+    }
+
+    function renderDailyTable() {
+      const thead = document.getElementById('dailyTableHead');
+      const tbody = document.getElementById('dailyTableBody');
+      const tfoot = document.getElementById('dailyTableFoot');
+      const filterSelect = document.getElementById('filterDayType');
+      const activeFilter = filterSelect ? filterSelect.value : 'ALL';
+
+      if (!thead || !tbody || !tfoot || !currentProject) return;
+
+      const daysList = (currentProject.dailyData || []).filter(d => {
+        if (activeFilter === 'ALL') return true;
+        return d.type === activeFilter;
+      });
+
+      // 1. Channel Ledger (Focus View)
+      if (currentTableMode === 'focus') {
+        const activeCh = getChannelById(activeChannelTabId) || ALL_CHANNELS[0];
+        if (!activeCh) return;
+
+        thead.innerHTML = `
+          <tr>
+            <th class="py-3 px-3">Day / Tier</th>
+            <th class="py-3 px-3 text-right">Planned (฿)</th>
+            <th class="py-3 px-3 text-right">Actual Spend (฿)</th>
+            <th class="py-3 px-3 text-right">Remaining (฿)</th>
+            <th class="py-3 px-3 text-center">Status</th>
+            <th class="py-3 px-2 text-center w-12">Edit</th>
+          </tr>
+        `;
+
+        tbody.innerHTML = '';
+        let sumPlanned = 0;
+        let sumActual = 0;
+        let runningRemaining = activeCh.budget;
+
+        daysList.forEach(d => {
+          const planned = Number(d.channelPlans?.[activeCh.id] || 0);
+          const actual = Number(d.spends?.[activeCh.id] || 0);
+          runningRemaining -= actual;
+          sumPlanned += planned;
+          sumActual += actual;
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+          tr.innerHTML = `
+            <td class="py-2.5 px-3 font-bold">
+              <span class="inline-block w-6 text-slate-400 font-mono">D${d.day}</span>
+              <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${getDayBadgeClass(d.type)}">${d.type}</span>
+            </td>
+            <td class="py-2.5 px-3 text-right font-medium text-slate-600">฿${planned.toLocaleString()}</td>
+            <td class="py-2.5 px-3 text-right">
+              <input type="number" value="${actual}" min="0" step="50"
+                     onchange="updateInlineChannelSpend(${d.day}, '${activeCh.id}', this.value)"
+                     class="w-24 px-2 py-1 text-right font-bold text-indigo-700 bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </td>
+            <td class="py-2.5 px-3 text-right font-bold ${runningRemaining < 0 ? 'text-rose-600' : 'text-slate-800'}">
+              ฿${runningRemaining.toLocaleString()}
+            </td>
+            <td class="py-2.5 px-3 text-center">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                actual > planned ? 'bg-rose-50 text-rose-700' : (actual === 0 ? 'bg-slate-100 text-slate-400' : 'bg-emerald-50 text-emerald-700')
+              }">
+                ${actual > planned ? 'Over Plan' : (actual === 0 ? 'No Spend' : 'Within Plan')}
+              </span>
+            </td>
+            <td class="py-2.5 px-2 text-center">
+              <button onclick="openDailySpendModal(${d.day})" class="text-slate-400 hover:text-indigo-600 p-1 rounded" title="Open full day modal">
+                ✎
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        tfoot.innerHTML = `
+          <tr>
+            <td class="py-3 px-3">Total (${daysList.length} Days)</td>
+            <td class="py-3 px-3 text-right">฿${sumPlanned.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right text-indigo-700">฿${sumActual.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right">฿${Math.max(0, activeCh.budget - sumActual).toLocaleString()}</td>
+            <td colspan="2"></td>
+          </tr>
+        `;
+        return;
+      }
+
+      // 2. All Channels Matrix View
+      if (currentTableMode === 'matrix') {
+        let thChannels = '';
+        ALL_CHANNELS.forEach(ch => {
+          thChannels += `<th class="py-2.5 px-2 text-right truncate min-w-[110px]" title="${ch.name}">${ch.name}</th>`;
+        });
+
+        thead.innerHTML = `
+          <tr>
+            <th class="py-3 px-3 sticky left-0 bg-slate-50 z-10">Day / Tier</th>
+            <th class="py-3 px-3 text-right">Planned (฿)</th>
+            <th class="py-3 px-3 text-right font-bold text-slate-900">Total Spend</th>
+            ${thChannels}
+            <th class="py-3 px-2 text-center">Action</th>
+          </tr>
+        `;
+
+        tbody.innerHTML = '';
+        const channelTotals = {};
+        ALL_CHANNELS.forEach(ch => channelTotals[ch.id] = 0);
+        let grandPlanned = 0;
+        let grandActual = 0;
+
+        daysList.forEach(d => {
+          grandPlanned += Number(d.plannedSpend || 0);
+          let dayTotal = 0;
+          let tdChannels = '';
+
+          ALL_CHANNELS.forEach(ch => {
+            const sp = Number(d.spends?.[ch.id] || 0);
+            channelTotals[ch.id] += sp;
+            dayTotal += sp;
+            tdChannels += `
+              <td class="py-1.5 px-1.5 text-right">
+                <input type="number" value="${sp}" min="0" step="50"
+                       onchange="updateInlineChannelSpend(${d.day}, '${ch.id}', this.value)"
+                       class="w-20 px-1.5 py-0.5 text-right text-[11px] font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+              </td>
+            `;
+          });
+          grandActual += dayTotal;
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+          tr.innerHTML = `
+            <td class="py-2 px-3 font-bold sticky left-0 bg-white z-10">
+              <span class="font-mono text-slate-400">D${d.day}</span>
+              <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${getDayBadgeClass(d.type)}">${d.type}</span>
+            </td>
+            <td class="py-2 px-3 text-right text-slate-600 font-medium">฿${Number(d.plannedSpend || 0).toLocaleString()}</td>
+            <td class="py-2 px-3 text-right font-bold text-slate-900">฿${dayTotal.toLocaleString()}</td>
+            ${tdChannels}
+            <td class="py-2 px-2 text-center">
+              <button onclick="openDailySpendModal(${d.day})" class="text-slate-400 hover:text-indigo-600 p-1" title="Edit day breakdown">✎</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        let tfChannels = '';
+        ALL_CHANNELS.forEach(ch => {
+          tfChannels += `<td class="py-3 px-2 text-right">฿${(channelTotals[ch.id] || 0).toLocaleString()}</td>`;
+        });
+
+        tfoot.innerHTML = `
+          <tr>
+            <td class="py-3 px-3 sticky left-0 bg-slate-100 z-10">Total</td>
+            <td class="py-3 px-3 text-right">฿${grandPlanned.toLocaleString()}</td>
+            <td class="py-3 px-3 text-right text-indigo-900">฿${grandActual.toLocaleString()}</td>
+            ${tfChannels}
+            <td></td>
+          </tr>
+        `;
+        return;
+      }
+
+      // 3. Platform Summary View (Default)
+      const platformKeys = Object.keys(currentProject.platforms);
+      let thPlatforms = '';
+      platformKeys.forEach(pk => {
+        thPlatforms += `<th class="py-3 px-3 text-right">${currentProject.platforms[pk].name} (฿)</th>`;
+      });
+
+      thead.innerHTML = `
+        <tr>
+          <th class="py-3 px-3">Day / Tier</th>
+          <th class="py-3 px-3 text-right">Daily Plan</th>
+          <th class="py-3 px-3 text-right font-bold text-slate-900">Total Spend</th>
+          ${thPlatforms}
+          <th class="py-3 px-3 text-right">Variance</th>
+          <th class="py-3 px-2 text-center">Action</th>
+        </tr>
+      `;
+
+      tbody.innerHTML = '';
+      const platformSums = {};
+      platformKeys.forEach(pk => platformSums[pk] = 0);
+      let sumPlan = 0;
+      let sumAct = 0;
+
+      daysList.forEach(d => {
+        sumPlan += Number(d.plannedSpend || 0);
+        let daySpentTotal = 0;
+        let tdPlatforms = '';
+
+        platformKeys.forEach(pk => {
+          let pTotal = 0;
+          (currentProject.platforms[pk].channels || []).forEach(ch => {
+            pTotal += Number(d.spends?.[ch.id] || 0);
+          });
+          platformSums[pk] += pTotal;
+          daySpentTotal += pTotal;
+          tdPlatforms += `<td class="py-2.5 px-3 text-right font-semibold text-slate-700">฿${pTotal.toLocaleString()}</td>`;
+        });
+        sumAct += daySpentTotal;
+        const diff = Number(d.plannedSpend || 0) - daySpentTotal;
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-bold">
+            <span class="font-mono text-slate-400">D${d.day}</span>
+            <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${getDayBadgeClass(d.type)}">${d.type}</span>
+          </td>
+          <td class="py-2.5 px-3 text-right text-slate-600 font-medium">฿${Number(d.plannedSpend || 0).toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right font-black text-slate-900">฿${daySpentTotal.toLocaleString()}</td>
+          ${tdPlatforms}
+          <td class="py-2.5 px-3 text-right font-bold ${diff >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
+            ${diff >= 0 ? '+' : ''}฿${diff.toLocaleString()}
+          </td>
+          <td class="py-2.5 px-2 text-center">
+            <button onclick="openDailySpendModal(${d.day})" class="text-indigo-600 hover:text-indigo-800 font-bold px-2 py-1 rounded hover:bg-indigo-50 transition" title="Log day spend">
+              Log
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      let tfPlatforms = '';
+      platformKeys.forEach(pk => {
+        tfPlatforms += `<td class="py-3 px-3 text-right">฿${(platformSums[pk] || 0).toLocaleString()}</td>`;
+      });
+
+      tfoot.innerHTML = `
+        <tr>
+          <td class="py-3 px-3">Total Summary</td>
+          <td class="py-3 px-3 text-right">฿${sumPlan.toLocaleString()}</td>
+          <td class="py-3 px-3 text-right text-indigo-900">฿${sumAct.toLocaleString()}</td>
+          ${tfPlatforms}
+          <td class="py-3 px-3 text-right ${sumPlan - sumAct >= 0 ? 'text-emerald-700' : 'text-rose-700'}">
+            ${sumPlan - sumAct >= 0 ? '+' : ''}฿${(sumPlan - sumAct).toLocaleString()}
+          </td>
+          <td></td>
+        </tr>
+      `;
+    }
+
+    function updateInlineChannelSpend(dayNum, channelId, val) {
+      const numVal = Math.max(0, parseFloat(val) || 0);
+      const dayObj = (currentProject.dailyData || []).find(d => d.day === dayNum);
+      if (!dayObj) return;
+
+      if (!dayObj.spends) dayObj.spends = {};
+      dayObj.spends[channelId] = numVal;
+
+      scheduleAutoSave();
       renderKPIs();
       renderPlatformCards();
       renderPacingChart();
-      renderDailyTable();
-      renderChannelControls();
-      renderChannelShareChart();
-      renderCalendarDays();
-
-      // Update Planner weight labels
-      const weights = currentProject.dayTypeWeights || { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 };
-      let totalPts = 0;
-      currentProject.dailyData.forEach(d => totalPts += (weights[d.type] || 1.0));
-      const rate = getProjectMasterBudget() / (totalPts || 1);
-
-      document.getElementById('summaryDdayAlloc').innerText = `Planned/Day: ~฿${Math.round(rate * weights.DDAY).toLocaleString()}`;
-      document.getElementById('summaryMidmonthAlloc').innerText = `Planned/Day: ~฿${Math.round(rate * weights.MIDMONTH).toLocaleString()}`;
-      document.getElementById('summaryPaydayAlloc').innerText = `Planned/Day: ~฿${Math.round(rate * weights.PAYDAY).toLocaleString()}`;
-      document.getElementById('summaryNormalAlloc').innerText = `Planned/Day: ~฿${Math.round(rate * weights.NORMAL).toLocaleString()}`;
+      updateChannelSummaryStrip();
     }
 
-    // App Initialization
+    function getDayBadgeClass(type) {
+      if (type === 'DDAY') return 'badge-dday border';
+      if (type === 'MIDMONTH') return 'badge-midmonth border';
+      if (type === 'PAYDAY') return 'badge-payday border';
+      return 'badge-normal border';
+    }
+
+    function renderChannelControls() {
+      const container = document.getElementById('channelListControl');
+      const displayTotal = document.getElementById('displayMasterBudget');
+      if (!container || !currentProject) return;
+
+      const masterTotal = getProjectMasterBudget();
+      if (displayTotal) displayTotal.innerText = `฿${masterTotal.toLocaleString()}`;
+
+      container.innerHTML = '';
+      Object.entries(currentProject.platforms).forEach(([platformKey, pObj]) => {
+        let pTotal = 0;
+        (pObj.channels || []).forEach(c => pTotal += Number(c.budget || 0));
+
+        const box = document.createElement('div');
+        box.className = "p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2.5";
+        box.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full" style="background-color: ${pObj.color}"></span>
+              <span class="font-extrabold ${pObj.textColor} text-xs">${pObj.name}</span>
+            </div>
+            <span class="text-xs font-bold text-slate-800">฿${pTotal.toLocaleString()}</span>
+          </div>
+          <div class="space-y-2">
+            ${(pObj.channels || []).map(ch => `
+              <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
+                <span class="text-xs font-bold text-slate-700 truncate pr-2">${ch.name}</span>
+                <div class="flex items-center space-x-1 shrink-0">
+                  <span class="text-slate-400 text-xs">฿</span>
+                  <input type="number" value="${ch.budget}" min="0" step="5000"
+                         onchange="updateChannelBudget('${ch.id}', this.value)"
+                         class="w-24 px-2 py-0.5 text-right font-bold text-xs rounded border border-slate-200 text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                  <button onclick="openEditChannelModal('${ch.id}')" class="p-1 text-slate-400 hover:text-indigo-600 rounded transition" title="Edit or rename channel">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(box);
+      });
+    }
+
+    function renderCalendarDays() {
+      const container = document.getElementById('calendarDayTypeSelector');
+      if (!container || !currentProject) return;
+
+      container.innerHTML = '';
+      (currentProject.dailyData || []).forEach(d => {
+        const btn = document.createElement('button');
+        btn.className = `p-2.5 rounded-xl border text-center transition hover:shadow-xs ${getDayBadgeClass(d.type)}`;
+        btn.innerHTML = `
+          <div class="text-[11px] font-black">Day ${d.day}</div>
+          <div class="text-[9px] font-bold mt-1 uppercase">${d.type}</div>
+          <div class="text-[9px] text-slate-500 font-semibold mt-0.5">฿${(d.plannedSpend || 0).toLocaleString()}</div>
+        `;
+        btn.onclick = () => cycleDayType(d.day);
+        container.appendChild(btn);
+      });
+    }
+
+    function cycleDayType(dayNum) {
+      const dayObj = (currentProject.dailyData || []).find(d => d.day === dayNum);
+      if (!dayObj) return;
+
+      const cycle = ['NORMAL', 'DDAY', 'MIDMONTH', 'PAYDAY'];
+      const nextIdx = (cycle.indexOf(dayObj.type) + 1) % cycle.length;
+      dayObj.type = cycle[nextIdx];
+
+      autoDistributePlannedBudget();
+      scheduleAutoSave();
+    }
+
+    function updateWeights() {
+      if (!currentProject) return;
+
+      const wD = parseFloat(document.getElementById('weightDday')?.value) || 4.0;
+      const wM = parseFloat(document.getElementById('weightMidmonth')?.value) || 2.2;
+      const wP = parseFloat(document.getElementById('weightPayday')?.value) || 2.8;
+      const wN = parseFloat(document.getElementById('weightNormal')?.value) || 1.0;
+
+      currentProject.dayTypeWeights = {
+        DDAY: Math.max(0.1, wD),
+        MIDMONTH: Math.max(0.1, wM),
+        PAYDAY: Math.max(0.1, wP),
+        NORMAL: Math.max(0.1, wN)
+      };
+
+      autoDistributePlannedBudget();
+      scheduleAutoSave();
+      showToast('Updated Day Weights!');
+    }
+
+    function exportSpendToCSV() {
+      if (!currentProject) return;
+
+      const headers = ['Day', 'Day Type', 'Daily Planned Spend', 'Total Actual Spend'];
+      ALL_CHANNELS.forEach(ch => headers.push(`"${ch.name} Spend"`));
+
+      let csv = headers.join(',') + '\n';
+      (currentProject.dailyData || []).forEach(d => {
+        let dayActual = 0;
+        ALL_CHANNELS.forEach(ch => dayActual += Number(d.spends?.[ch.id] || 0));
+
+        const row = [
+          `Day ${d.day}`,
+          d.type,
+          d.plannedSpend || 0,
+          dayActual
+        ];
+        ALL_CHANNELS.forEach(ch => row.push(d.spends?.[ch.id] || 0));
+        csv += row.join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${currentProject.name.replace(/\s+/g, '_')}_Daily_Budget_Log.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       initProjectStore();
       loadProject(activeProjectId);
@@ -2408,7 +3366,6 @@
       setDailyTableViewMode(currentTableMode);
     }
 
-    // Auto-save hooks
     window.addEventListener('beforeunload', () => saveCurrentProject(true));
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') saveCurrentProject(true);
