@@ -35,6 +35,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col font-sans">
 
+  <!-- Header Bar -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
       <!-- Project Switcher & Title -->
@@ -87,18 +88,19 @@
     </div>
   </header>
 
+  <!-- Main View Container -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-6">
 
     <!-- Top View Switcher Tabs -->
     <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-      <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-600">
-        <button id="viewTabDaily" onclick="switchMainView('daily')" class="px-3.5 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition">Daily Tracker</button>
-        <button id="viewTabSalesPerf" onclick="switchMainView('salesperf')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5">
+      <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-600 overflow-x-auto">
+        <button id="viewTabDaily" onclick="switchMainView('daily')" class="px-3.5 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition whitespace-nowrap">Daily Tracker</button>
+        <button id="viewTabSalesPerf" onclick="switchMainView('salesperf')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5 whitespace-nowrap">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>Sales & ROAS Performance</span>
         </button>
-        <button id="viewTabChannels" onclick="switchMainView('channels')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold">Set Channel Budgets</button>
-        <button id="viewTabDayTypes" onclick="switchMainView('daytypes')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold">Campaign Day Weights</button>
+        <button id="viewTabChannels" onclick="switchMainView('channels')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold whitespace-nowrap">Set Channel Budgets</button>
+        <button id="viewTabDayTypes" onclick="switchMainView('daytypes')" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold whitespace-nowrap">Campaign Day Weights</button>
       </div>
       <div class="text-xs text-slate-500 font-medium hidden sm:flex items-center space-x-2">
         <span>Active Project ID:</span>
@@ -183,6 +185,7 @@
       <!-- Injected dynamically via JS: Shopee, TikTok Ad, Facebook, Lazada -->
     </div>
 
+    <!-- SECTION: Daily Tracker -->
     <div id="sectionDailyTracker" class="space-y-5">
       <!-- Pacing Chart Container with Collapse Toggle -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -200,7 +203,7 @@
                 <span class="w-2.5 h-2.5 bg-emerald-500 rounded-xs mr-1.5"></span> Actual Spend
               </span>
             </div>
-            <button onclick="togglePacingChartVisibility()" id="btnToggleChart" class="text-xs font-bold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition flex items-center space-x-1">
+            <button onclick="window.togglePacingChartVisibility && window.togglePacingChartVisibility()" id="btnToggleChart" class="text-xs font-bold text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg transition flex items-center space-x-1">
               <span id="toggleChartIcon">▲</span>
               <span id="toggleChartText">ซ่อนกราฟ</span>
             </button>
@@ -219,7 +222,7 @@
               <h3 class="text-base font-bold text-slate-900">Daily Channel Budget & Spend Log</h3>
               <span id="activeViewModeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Platforms</span>
             </div>
-            <p class="text-xs text-slate-500 mt-0.5">Records and spreads daily spend against planned weights</p>
+            <p class="text-xs text-slate-500 mt-0.5">Records daily spend and dynamically re-paces remaining budget across upcoming days</p>
           </div>
 
           <!-- Controls row -->
@@ -240,17 +243,32 @@
               <option value="NORMAL">Normal BAU</option>
             </select>
 
+            <!-- Dynamic Re-Pace Button -->
+            <button onclick="dynamicRePaceRemainingBudget()" class="text-xs bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-200 px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1 shadow-2xs" title="Calculate leftover/overspent budget and re-weight it proportionally across remaining days">
+              <span>🔄</span>
+              <span>Dynamic Re-Pace</span>
+            </button>
+
+            <!-- Baseline Re-calculate button -->
+            <button onclick="autoDistributePlannedBudget()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-1.5 rounded-lg font-bold transition" title="Recompute daily planned targets based on original month-start weights">
+              ⚡ Base Spread
+            </button>
+
             <!-- Export CSV -->
             <button onclick="exportSpendToCSV()" class="inline-flex items-center text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-bold transition" title="Export this project data to CSV">
               <svg class="w-3.5 h-3.5 mr-1 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-              Export CSV
-            </button>
-
-            <!-- Re-calculate button -->
-            <button onclick="autoDistributePlannedBudget()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-lg font-bold transition" title="Recompute daily planned targets based on channel budgets and weights">
-              ⚡ Auto-Spread
+              CSV
             </button>
           </div>
+        </div>
+
+        <!-- Dynamic Re-Pace Status Banner -->
+        <div id="dynamicRePaceBanner" class="hidden bg-gradient-to-r from-violet-50 to-indigo-50 border-b border-indigo-100 px-4 py-2.5 flex items-center justify-between text-xs">
+          <div class="flex items-center space-x-2 text-violet-900 font-medium">
+            <span class="w-2 h-2 rounded-full bg-violet-600 animate-ping"></span>
+            <span id="rePaceBannerText"><strong>Dynamic Re-Pace Active:</strong> Unspent budget has been redistributed into upcoming days.</span>
+          </div>
+          <button onclick="autoDistributePlannedBudget()" class="text-[11px] font-bold text-violet-700 hover:text-violet-900 underline">Reset to Baseline</button>
         </div>
 
         <!-- Channel Dropdown Selector (Active in Channel Ledger View) -->
@@ -297,6 +315,7 @@
       </div>
     </div>
 
+    <!-- SECTION: Sales & ROAS Performance -->
     <div id="sectionSalesPerformance" class="hidden space-y-6">
       <!-- Target Setting & Direct Target vs Actual Comparison -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -476,6 +495,7 @@
         </div>
       </div>
 
+      <!-- Platform Performance Summary Table -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
@@ -554,88 +574,101 @@
       </div>
     </div>
 
-    <div id="sectionChannelAllocation" class="hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Monthly Budget Setup Column -->
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div>
-              <h2 class="text-base font-bold text-slate-900" id="boxTitleProjectBudget">Project Total Budget</h2>
-              <p class="text-xs text-slate-500">Master budget is automatically summed from all channel budgets</p>
-            </div>
-            <span class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-extrabold text-sm">฿</span>
+    <!-- SECTION: Set Channel Budgets -->
+    <div id="sectionChannelAllocation" class="hidden space-y-5">
+      <!-- 1. Top Executive Master Budget Ribbon -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-black text-xl shadow-xs shrink-0">
+            ฿
           </div>
-
-          <!-- Master Budget Display -->
-          <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4">
-            <div class="flex items-center justify-between mb-1">
-              <label class="block text-xs font-bold text-indigo-900 uppercase">Monthly Master Budget (THB)</label>
-              <span class="text-[10px] font-extrabold text-indigo-700 bg-white border border-indigo-200 px-2 py-0.5 rounded-full">Auto-Summed</span>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="text-base sm:text-lg font-bold text-slate-900" id="boxTitleProjectBudget">Project Total Budget</h2>
+              <span class="text-[10px] font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">Auto-Summed</span>
             </div>
-            <div class="relative mt-2">
+            <div class="flex items-baseline space-x-2 mt-1">
               <span class="text-2xl sm:text-3xl font-black text-indigo-900" id="displayMasterBudget">฿0</span>
-            </div>
-            <p class="text-[11px] text-slate-500 mt-2">
-              The master budget updates in real-time as you add, remove, or edit channel allocations below.
-            </p>
-          </div>
-
-          <!-- Channel List Controls -->
-          <div class="pt-2">
-            <div class="flex items-center justify-between mb-3">
-              <div>
-                <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wide">Set Channel Budgets</h3>
-                <span class="text-[11px] text-slate-400">Freely add, edit name, or change platform</span>
-              </div>
-              <button onclick="openAddChannelModal()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg border border-indigo-200 transition flex items-center space-x-1 shadow-xs">
-                <span>+ Add Channel</span>
-              </button>
-            </div>
-
-            <div class="space-y-3.5" id="channelListControl">
-              <!-- Injected via JS -->
+              <span class="text-xs text-slate-500 font-semibold" id="displayMasterChannelsCount">(10 Channels across 4 Platforms)</span>
             </div>
           </div>
         </div>
 
-        <!-- Channel Visual Distribution Chart & Summary -->
-        <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="openAddChannelModal()" class="inline-flex items-center px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition">
+            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            + Add Channel
+          </button>
+          <button onclick="saveCurrentProject(false)" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 rounded-xl text-xs font-bold transition">
+            Save Plan
+          </button>
+          <button onclick="resetDefaultChannels()" class="px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-xs font-semibold transition" title="Restore default channels">
+            Reset Defaults
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Balanced 2-Column Grid: Visual Share (Left) vs Channel Settings (Right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <!-- LEFT: Channel Share & Visual Allocation (5 Cols) -->
+        <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
           <div>
-            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            <!-- Header with View Toggle -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
               <div>
-                <h3 class="text-base font-bold text-slate-900">Project Channel Share & Allocations</h3>
-                <p class="text-xs text-slate-500">Live planned proportion of monthly budget for each active channel</p>
+                <h3 class="text-sm sm:text-base font-bold text-slate-900">Budget Share & Allocations</h3>
+                <p class="text-[11px] text-slate-500">Live planned proportions of monthly budget</p>
               </div>
-              <button onclick="openAddChannelModal()" class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg shadow-xs transition">
-                + New Channel
-              </button>
+              <!-- Toggle: Platform vs Sub-Channel -->
+              <div class="inline-flex p-1 bg-slate-100 rounded-xl text-xs font-semibold shrink-0">
+                <button id="btnShareGroupPlatform" onclick="setChannelShareGrouping('platform')" class="px-2.5 py-1 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition text-[11px]">By Platform</button>
+                <button id="btnShareGroupChannels" onclick="setChannelShareGrouping('channels')" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold text-[11px]">By Sub-Channel</button>
+              </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div class="h-64 relative flex items-center justify-center">
-                <canvas id="channelSharePieChart"></canvas>
+
+            <!-- Doughnut Chart Container -->
+            <div class="h-56 relative flex items-center justify-center my-2">
+              <canvas id="channelSharePieChart"></canvas>
+              <!-- Centered Doughnut Metric Summary -->
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none text-center">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Master Budget</span>
+                <span id="doughnutCenterTotal" class="text-sm sm:text-base font-black text-slate-900">฿0</span>
+                <span id="doughnutCenterChannels" class="text-[10px] font-semibold text-indigo-600">4 Platforms</span>
               </div>
-              <div class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1" id="channelShareSummaryList">
-                <!-- Injected via JS -->
-              </div>
+            </div>
+
+            <!-- Share Summary Breakdown Cards with Progress Bars -->
+            <div class="space-y-2 max-h-[380px] overflow-y-auto pr-1" id="channelShareSummaryList">
+              <!-- Dynamically populated in JS -->
             </div>
           </div>
 
-          <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap gap-2 items-center justify-between text-xs text-slate-500">
-            <span id="channelCountFooterNote">Total channels configured for this project</span>
-            <div class="space-x-2">
-              <button onclick="saveCurrentProject(false)" class="text-emerald-700 hover:text-emerald-900 font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 transition">
-                Save Project
-              </button>
-              <button onclick="resetDefaultChannels()" class="text-indigo-600 hover:text-indigo-800 font-semibold underline px-2 py-1">
-                Reset to INE Defaults
-              </button>
+          <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 font-medium text-center" id="channelCountFooterNote">
+            Total channels configured for this project
+          </div>
+        </div>
+
+        <!-- RIGHT: Channel Budget Setup 2x2 Grid (7 Cols) -->
+        <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900">Set Platform & Channel Budgets</h3>
+              <p class="text-[11px] text-slate-500">Edit monthly allocation or adjust individual channel name/budget</p>
             </div>
+            <button onclick="openAddChannelModal()" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 transition">
+              + Add Channel
+            </button>
+          </div>
+
+          <!-- 2-Column Responsive Platform Cards Container -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="channelListControl">
+            <!-- Platform cards dynamically generated -->
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Section: Campaign Day Weights & Multipliers -->
+    <!-- SECTION: Campaign Day Weights & Multipliers -->
     <div id="sectionDayTypePlanner" class="hidden space-y-6">
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
@@ -718,7 +751,7 @@
     </div>
   </main>
 
-  <!-- Spend Modal (Supports Spend, Orders, GMV) -->
+  <!-- MODAL: Spend Modal (Supports Spend, Orders, GMV) -->
   <div id="spendModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -773,7 +806,7 @@
     </div>
   </div>
 
-  <!-- Excel Import Modal -->
+  <!-- MODAL: Excel Import Modal -->
   <div id="importExcelModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 max-h-[92vh] flex flex-col">
       <div class="flex items-center justify-between pb-4 border-b border-slate-100">
@@ -870,7 +903,7 @@
     </div>
   </div>
 
-  <!-- Channel Add Modal -->
+  <!-- MODAL: Channel Add Modal -->
   <div id="channelAddModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
@@ -906,7 +939,7 @@
     </div>
   </div>
 
-  <!-- Channel Edit Modal -->
+  <!-- MODAL: Channel Edit Modal -->
   <div id="channelEditModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
@@ -949,7 +982,7 @@
     </div>
   </div>
 
-  <!-- Rename Project Modal -->
+  <!-- MODAL: Rename Project Modal -->
   <div id="projectRenameModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
       <h3 class="text-base font-bold text-slate-900 mb-1">Rename Project</h3>
@@ -962,7 +995,7 @@
     </div>
   </div>
 
-  <!-- Create New Project Modal -->
+  <!-- MODAL: Create New Project Modal -->
   <div id="newProjectModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
       <h3 class="text-base font-bold text-slate-900 mb-1">Create New Project Plan</h3>
@@ -988,7 +1021,7 @@
     </div>
   </div>
 
-  <!-- Custom Confirm Modal -->
+  <!-- MODAL: Custom Confirm Modal -->
   <div id="confirmActionModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200">
       <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-base mb-3">!</div>
@@ -1007,12 +1040,64 @@
     <span id="toastMessage">Success</span>
   </div>
 
+  <!-- JAVASCRIPT CORE APPLICATION LOGIC -->
   <script>
     const DAYS_IN_MONTH = 31;
-    const STORAGE_KEY_PROJECTS = 'MULTI_PROJECT_BUDGET_STORE_V4';
-    const STORAGE_KEY_ACTIVE_PROJECT = 'MULTI_PROJECT_ACTIVE_ID_V4';
+    const STORAGE_KEY_PROJECTS = 'MULTI_PROJECT_BUDGET_STORE_V5';
+    const STORAGE_KEY_ACTIVE_PROJECT = 'MULTI_PROJECT_ACTIVE_ID_V5';
 
-    // Baseline Default INE Template
+    // Helper functions for comma formatting & parsing (supporting decimals)
+    function parseNum(val) {
+      if (val === null || val === undefined) return 0;
+      const clean = String(val).replace(/,/g, '').trim();
+      return Math.max(0, parseFloat(clean) || 0);
+    }
+
+    function formatCurrency(num, maxDec = 2) {
+      const n = Number(num) || 0;
+      return n.toLocaleString('en-US', {
+        minimumFractionDigits: (n % 1 !== 0) ? 2 : 0,
+        maximumFractionDigits: maxDec
+      });
+    }
+
+    function formatCommaNumberInput(el, allowDecimals = true) {
+      if (!el) return;
+      const selStart = el.selectionStart;
+      const prevLen = el.value.length;
+      let raw = el.value.replace(/,/g, '');
+      if (raw === '') return;
+
+      let formatted = '';
+      if (allowDecimals) {
+        // Strip out non-numeric and extra dots
+        raw = raw.replace(/[^0-9.]/g, '');
+        const parts = raw.split('.');
+
+        // Format integer part
+        let intPart = parts[0] ? parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') : (parts.length > 1 ? '0' : '');
+
+        if (parts.length > 1) {
+          // Keep up to 2 decimal digits while preserving trailing dot during typing
+          const decPart = parts.slice(1).join('').slice(0, 2);
+          formatted = intPart + '.' + decPart;
+        } else {
+          formatted = intPart;
+        }
+      } else {
+        raw = raw.replace(/[^0-9]/g, '');
+        formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
+
+      el.value = formatted;
+      const diff = formatted.length - prevLen;
+      const newPos = Math.max(0, selStart + diff);
+      try {
+        el.setSelectionRange(newPos, newPos);
+      } catch (e) {}
+    }
+
+    // Baseline Default INE Template (10 Ad Channels)
     const DEFAULT_INE_PLATFORMS = {
       shopee: {
         id: 'shopee',
@@ -1028,7 +1113,7 @@
       },
       tiktok: {
         id: 'tiktok',
-        name: 'TikTok Ad',
+        name: 'Tiktok',
         color: '#000000',
         badgeBg: 'bg-slate-100',
         textColor: 'text-slate-900',
@@ -1062,7 +1147,7 @@
       }
     };
 
-    // Project Data Store
+    // State Variables
     let projectStore = {};
     let activeProjectId = 'project_ine';
     let currentProject = null;
@@ -1076,19 +1161,26 @@
     let isPacingChartExpanded = true;
     let activeModalDay = 1;
 
-    // Table sorting state for Platform Performance Summary
+    // Share Chart Grouping Mode: 'platform' (default) vs 'channels'
+    let shareChartGroupingMode = 'platform';
+
+    // Sorting state for Platform Performance Summary table
     let platformSortKey = 'roas';
     let platformSortAsc = false;
 
     function renderAll() {
-      renderKPIs();
-      renderPlatformCards();
-      renderPacingChart();
-      renderDailyTable();
-      renderSalesPerformance();
-      renderChannelControls();
-      renderChannelShareChart();
-      renderCalendarDays();
+      try {
+        renderKPIs();
+        renderPlatformCards();
+        renderPacingChart();
+        renderDailyTable();
+        renderSalesPerformance();
+        renderChannelControls();
+        renderChannelShareChart();
+        renderCalendarDays();
+      } catch (e) {
+        console.error("Error executing renderAll:", e);
+      }
     }
 
     function switchMainView(viewName) {
@@ -1107,9 +1199,9 @@
         if (sec) sec.classList.toggle('hidden', !isActive);
         if (btn) {
           if (isActive) {
-            btn.className = "px-3.5 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition flex items-center space-x-1.5";
+            btn.className = "px-3.5 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs font-bold transition flex items-center space-x-1.5 whitespace-nowrap";
           } else {
-            btn.className = "px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5";
+            btn.className = "px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold flex items-center space-x-1.5 whitespace-nowrap";
           }
         }
       });
@@ -1149,7 +1241,7 @@
       if (icon) icon.innerText = isHidden ? '▲' : '▼';
     }
 
-    function togglePacingChartVisibility() {
+    window.togglePacingChartVisibility = function() {
       isPacingChartExpanded = !isPacingChartExpanded;
       const wrapper = document.getElementById('pacingChartWrapper');
       const icon = document.getElementById('toggleChartIcon');
@@ -1163,13 +1255,19 @@
           try { pacingChartInstance.resize(); } catch(e){}
         }, 50);
       }
-    }
+    };
 
     function initProjectStore() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY_PROJECTS);
         if (raw) {
           projectStore = JSON.parse(raw);
+          // Migrate any existing 'TikTok Ad' to 'Tiktok'
+          Object.values(projectStore).forEach(p => {
+            if (p.platforms && p.platforms.tiktok && p.platforms.tiktok.name === 'TikTok Ad') {
+              p.platforms.tiktok.name = 'Tiktok';
+            }
+          });
         }
       } catch (e) {
         console.warn('Failed to parse projectStore from localStorage', e);
@@ -1225,7 +1323,8 @@
           channelPlans: {},
           spends: spends,
           orders: orders,
-          gmv: gmv
+          gmv: gmv,
+          isRePaced: false
         });
       }
       return days;
@@ -1260,9 +1359,9 @@
       const tOrders = document.getElementById('inputTargetOrders');
       const tRoas = document.getElementById('inputTargetRoas');
       const tGmv = document.getElementById('inputTargetGmv');
-      if (tOrders) tOrders.value = currentProject.targets.targetOrders || 3000;
+      if (tOrders) tOrders.value = Number(currentProject.targets.targetOrders || 3000).toLocaleString();
       if (tRoas) tRoas.value = currentProject.targets.targetRoas || 4.0;
-      if (tGmv) tGmv.value = currentProject.targets.targetGmv || 1200000;
+      if (tGmv) tGmv.value = formatCurrency(currentProject.targets.targetGmv || 1200000);
 
       const weights = currentProject.dayTypeWeights || { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 };
       const wD = document.getElementById('weightDday');
@@ -1319,6 +1418,8 @@
         if (!d.orders) d.orders = {};
         if (!d.gmv) d.gmv = {};
         if (!d.channelPlans) d.channelPlans = {};
+        if (d.isRePaced === undefined) d.isRePaced = false;
+
         ALL_CHANNELS.forEach(ch => {
           if (d.spends[ch.id] === undefined) d.spends[ch.id] = 0;
           if (d.orders[ch.id] === undefined) d.orders[ch.id] = 0;
@@ -1418,7 +1519,7 @@
       } else if (template === 'clean_slate') {
         newPlatforms = {
           shopee: { id: 'shopee', name: 'Shopee', color: '#EE4D2D', badgeBg: 'bg-orange-50', textColor: 'text-orange-600', channels: [] },
-          tiktok: { id: 'tiktok', name: 'TikTok Ad', color: '#000000', badgeBg: 'bg-slate-100', textColor: 'text-slate-900', channels: [] },
+          tiktok: { id: 'tiktok', name: 'Tiktok', color: '#000000', badgeBg: 'bg-slate-100', textColor: 'text-slate-900', channels: [] },
           facebook: { id: 'facebook', name: 'Facebook', color: '#1877F2', badgeBg: 'bg-blue-50', textColor: 'text-blue-600', channels: [] },
           lazada: { id: 'lazada', name: 'Lazada', color: '#0F146D', badgeBg: 'bg-indigo-50', textColor: 'text-indigo-900', channels: [] }
         };
@@ -1489,7 +1590,7 @@
     }
 
     function updateChannelBudget(channelId, val) {
-      const numVal = Math.max(0, parseFloat(val) || 0);
+      const numVal = parseNum(val);
 
       for (const p of Object.values(currentProject.platforms)) {
         const found = p.channels.find(c => c.id === channelId);
@@ -1511,7 +1612,7 @@
       document.getElementById('editChannelTargetId').value = channelId;
       document.getElementById('editChannelNameInput').value = ch.name;
       document.getElementById('editChannelPlatformSelect').value = ch.platformId || 'shopee';
-      document.getElementById('editChannelBudgetInput').value = ch.budget;
+      document.getElementById('editChannelBudgetInput').value = formatCurrency(ch.budget);
 
       openModal('channelEditModal');
     }
@@ -1520,7 +1621,7 @@
       const channelId = document.getElementById('editChannelTargetId').value;
       const newName = (document.getElementById('editChannelNameInput').value || '').trim();
       const newPlatform = document.getElementById('editChannelPlatformSelect').value;
-      const newBudget = Math.max(0, parseFloat(document.getElementById('editChannelBudgetInput').value) || 0);
+      const newBudget = parseNum(document.getElementById('editChannelBudgetInput').value);
 
       if (!newName) {
         showToast('Channel name cannot be empty');
@@ -1587,14 +1688,14 @@
 
     function openAddChannelModal() {
       document.getElementById('newChannelNameInput').value = '';
-      document.getElementById('newChannelBudgetInput').value = '30000';
+      document.getElementById('newChannelBudgetInput').value = '30,000';
       openModal('channelAddModal');
     }
 
     function confirmAddNewChannel() {
       const platformKey = document.getElementById('newChannelPlatformSelect').value;
       const name = (document.getElementById('newChannelNameInput').value || '').trim();
-      const budget = Math.max(0, parseFloat(document.getElementById('newChannelBudgetInput').value) || 0);
+      const budget = parseNum(document.getElementById('newChannelBudgetInput').value);
 
       if (!name) {
         showToast('Please enter a channel name');
@@ -1645,31 +1746,185 @@
       let totalPoints = 0;
       currentProject.dailyData.forEach(d => {
         totalPoints += (weights[d.type] || 1.0);
+        d.isRePaced = false;
+        if (!d.channelPlans) d.channelPlans = {};
+        if (!d.baseChannelPlans) d.baseChannelPlans = {};
       });
       if (totalPoints <= 0) totalPoints = 1;
 
-      const masterTotal = getProjectMasterBudget();
+      // Apportion each channel's exact budget without exceeding by even 1 Baht
+      ALL_CHANNELS.forEach(ch => {
+        const chBudget = Number(ch.budget || 0);
+        let allocated = 0;
 
-      currentProject.dailyData.forEach(d => {
-        const dayWeight = weights[d.type] || 1.0;
-        const ratio = dayWeight / totalPoints;
-
-        d.plannedSpend = Math.round(masterTotal * ratio);
-        d.channelPlans = {};
-
-        ALL_CHANNELS.forEach(ch => {
-          d.channelPlans[ch.id] = Math.round((ch.budget || 0) * ratio);
+        currentProject.dailyData.forEach((d, idx) => {
+          const isLastDay = (idx === currentProject.dailyData.length - 1);
+          if (isLastDay) {
+            // Final day takes the exact remaining balance so total == chBudget exactly
+            d.channelPlans[ch.id] = Math.max(0, chBudget - allocated);
+          } else {
+            const dayWeight = weights[d.type] || 1.0;
+            const dayAlloc = Math.floor(chBudget * (dayWeight / totalPoints));
+            d.channelPlans[ch.id] = dayAlloc;
+            allocated += dayAlloc;
+          }
+          // Preserve baseline plan for reference
+          d.baseChannelPlans[ch.id] = d.channelPlans[ch.id];
         });
       });
+
+      // Sum each day's planned spend directly from its channel plans
+      currentProject.dailyData.forEach(d => {
+        let daySum = 0;
+        ALL_CHANNELS.forEach(ch => {
+          daySum += (d.channelPlans[ch.id] || 0);
+        });
+        d.plannedSpend = daySum;
+        d.basePlannedSpend = daySum;
+      });
+
+      const banner = document.getElementById('dynamicRePaceBanner');
+      if (banner) banner.classList.add('hidden');
 
       renderAll();
     }
 
+    function dynamicRePaceRemainingBudget() {
+      if (!currentProject || !currentProject.dailyData) return;
+
+      const weights = currentProject.dayTypeWeights || { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 };
+      let lastLoggedDay = 0;
+
+      // Find the last day that actually has logged spend > 0
+      currentProject.dailyData.forEach(d => {
+        let hasSpend = false;
+        ALL_CHANNELS.forEach(ch => {
+          if (Number(d.spends?.[ch.id] || 0) > 0) hasSpend = true;
+        });
+        if (hasSpend) lastLoggedDay = Math.max(lastLoggedDay, d.day);
+      });
+
+      // Cutoff is the last day with logged spend.
+      // If you logged Day 1–6, cutoff is Day 6, so re-pacing starts on Day 7!
+      const cutoffDay = lastLoggedDay;
+
+      if (cutoffDay >= DAYS_IN_MONTH) {
+        showToast("Month is completed; no remaining future days to re-pace.");
+        return;
+      }
+
+      // Reconcile past days (Day 1 to cutoffDay):
+      // Set past channelPlans to equal actual spend so past underspend is not double-counted
+      currentProject.dailyData.forEach(d => {
+        if (d.day <= cutoffDay) {
+          ALL_CHANNELS.forEach(ch => {
+            d.channelPlans[ch.id] = Number(d.spends?.[ch.id] || 0);
+          });
+          d.plannedSpend = ALL_CHANNELS.reduce((sum, ch) => sum + (d.channelPlans[ch.id] || 0), 0);
+          d.isRePaced = false;
+        }
+      });
+
+      // Calculate remaining budget allowance strictly capped at channel budget
+      const channelRemaining = {};
+      const exhaustedChannels = [];
+
+      ALL_CHANNELS.forEach(ch => {
+        let channelSpentToDate = 0;
+        currentProject.dailyData.forEach(d => {
+          if (d.day <= cutoffDay) {
+            channelSpentToDate += Number(d.spends?.[ch.id] || 0);
+          }
+        });
+
+        const chBudget = Number(ch.budget || 0);
+        const remainingAllowance = Math.max(0, chBudget - channelSpentToDate);
+        channelRemaining[ch.id] = remainingAllowance;
+
+        if (channelSpentToDate >= chBudget && chBudget > 0) {
+          exhaustedChannels.push(ch.name);
+        }
+      });
+
+      // Sum weight points for remaining future days (Day cutoffDay + 1 to 31)
+      const remainingDays = currentProject.dailyData.filter(d => d.day > cutoffDay);
+      let remainingPoints = 0;
+      remainingDays.forEach(d => {
+        remainingPoints += (weights[d.type] || 1.0);
+      });
+
+      if (remainingPoints <= 0) remainingPoints = 1;
+
+      // Re-distribute remaining channel budgets with strict reconciliation per channel
+      ALL_CHANNELS.forEach(ch => {
+        const remainingBudget = channelRemaining[ch.id] || 0;
+        let allocatedSoFar = 0;
+
+        remainingDays.forEach((d, idx) => {
+          if (!d.channelPlans) d.channelPlans = {};
+
+          if (remainingBudget === 0) {
+            // Channel is already exhausted; lock future target at ฿0
+            d.channelPlans[ch.id] = 0;
+            return;
+          }
+
+          const isLastRemainingDay = (idx === remainingDays.length - 1);
+          if (isLastRemainingDay) {
+            // Last day absorbs the exact leftover balance so total NEVER exceeds remainingBudget
+            const finalAlloc = Math.max(0, remainingBudget - allocatedSoFar);
+            d.channelPlans[ch.id] = finalAlloc;
+            allocatedSoFar += finalAlloc;
+          } else {
+            const dayWeight = weights[d.type] || 1.0;
+            const ratio = dayWeight / remainingPoints;
+            let dayAlloc = Math.floor(remainingBudget * ratio);
+
+            // Safety clamp: ensure allocatedSoFar + dayAlloc <= remainingBudget
+            if (allocatedSoFar + dayAlloc > remainingBudget) {
+              dayAlloc = Math.max(0, remainingBudget - allocatedSoFar);
+            }
+
+            d.channelPlans[ch.id] = dayAlloc;
+            allocatedSoFar += dayAlloc;
+          }
+        });
+      });
+
+      let totalRePacedMaster = 0;
+      currentProject.dailyData.forEach(d => {
+        if (d.day > cutoffDay) {
+          let daySum = 0;
+          ALL_CHANNELS.forEach(ch => {
+            daySum += (d.channelPlans[ch.id] || 0);
+          });
+          d.plannedSpend = daySum;
+          d.isRePaced = true;
+          totalRePacedMaster += daySum;
+        }
+      });
+
+      const banner = document.getElementById('dynamicRePaceBanner');
+      const bannerText = document.getElementById('rePaceBannerText');
+      if (banner && bannerText) {
+        banner.classList.remove('hidden');
+        let statusMsg = `<strong>Dynamic Re-Pace Active:</strong> Re-pacing starting on <strong>Day ${cutoffDay + 1} through Day ${DAYS_IN_MONTH}</strong> (${DAYS_IN_MONTH - cutoffDay} days). Every channel's 31-day plan is strictly capped at its set budget.`;
+        if (exhaustedChannels.length > 0) {
+          statusMsg += ` <span class="text-amber-800 font-bold ml-1">⚠️ [${exhaustedChannels.join(', ')}] reached 100% budget and locked at ฿0 for future days.</span>`;
+        }
+        bannerText.innerHTML = statusMsg;
+      }
+
+      scheduleAutoSave();
+      renderAll();
+      showToast(`Re-Paced from Day ${cutoffDay + 1} to 31! All channels strictly locked to budget.`);
+    }
+
     function saveMonthlySalesTargets() {
       if (!currentProject) return;
-      const targetOrders = Math.max(0, parseInt(document.getElementById('inputTargetOrders')?.value, 10) || 0);
+      const targetOrders = Math.max(0, parseInt(String(document.getElementById('inputTargetOrders')?.value || 0).replace(/,/g, ''), 10) || 0);
       const targetRoas = Math.max(0.1, parseFloat(document.getElementById('inputTargetRoas')?.value) || 0);
-      const targetGmv = Math.max(0, parseFloat(document.getElementById('inputTargetGmv')?.value) || 0);
+      const targetGmv = parseNum(document.getElementById('inputTargetGmv')?.value);
 
       currentProject.targets = {
         targetOrders: targetOrders,
@@ -1814,7 +2069,7 @@
         platformSortAsc = !platformSortAsc;
       } else {
         platformSortKey = key;
-        platformSortAsc = false; // Default high to low
+        platformSortAsc = false;
       }
       renderSalesPerformance();
     }
@@ -1824,7 +2079,6 @@
       const pFoot = document.getElementById('tablePlatformPerfFoot');
       if (!pBody) return;
 
-      // Update header arrow indicators
       const columns = ['name', 'spend', 'orders', 'gmv', 'aov', 'cpo', 'roas', 'share'];
       columns.forEach(col => {
         const icon = document.getElementById(`sort_icon_${col}`);
@@ -1839,7 +2093,6 @@
         }
       });
 
-      // Prepare list of platform records
       const platformList = Object.entries(currentProject.platforms).map(([pKey, pObj]) => {
         const stats = platformStats[pKey] || { spend: 0, orders: 0, gmv: 0 };
         const pRoas = stats.spend > 0 ? (stats.gmv / stats.spend) : 0;
@@ -1862,7 +2115,6 @@
         };
       });
 
-      // Sort platform list
       platformList.sort((a, b) => {
         let valA = a[platformSortKey];
         let valB = b[platformSortKey];
@@ -1890,7 +2142,7 @@
           <td class="py-2.5 px-3 text-right font-black ${isHealthy ? 'text-emerald-700' : 'text-amber-700'}">${p.roas.toFixed(2)}x</td>
           <td class="py-2.5 px-3 text-right font-semibold text-slate-600">${p.share.toFixed(1)}%</td>
           <td class="py-2.5 px-3.5 text-center">
-            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold ${isHealthy ? 'bg-emerald-50 text-emerald-700' : (p.spend === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-700')}">
+            <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold ${p.spend === 0 ? 'bg-slate-100 text-slate-400' : (isHealthy ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700')}">
               ${p.spend === 0 ? 'No Spend' : (isHealthy ? 'Great' : 'Needs Optimization')}
             </span>
           </td>
@@ -1986,7 +2238,7 @@
       title.innerText = `Log Spend & Performance • Day ${dayObj.day}`;
       subtitle.innerText = `${currentProject.name} • Record ad spend, orders, and GMV revenue`;
       dayTypeSelect.value = dayObj.type;
-      dailyPlanInput.value = dayObj.plannedSpend;
+      dailyPlanInput.value = formatCurrency(dayObj.plannedSpend);
 
       inputGroups.innerHTML = '';
       Object.values(currentProject.platforms).forEach(plat => {
@@ -2000,46 +2252,48 @@
             <span class="text-[10px] text-slate-400">Spend | Orders | GMV</span>
           </div>
           <div class="space-y-2">
-            ${plat.channels.map(ch => `
+            ${plat.channels.map(ch => {
+              const spVal = Number(dayObj.spends?.[ch.id] || 0);
+              const ordVal = Number(dayObj.orders?.[ch.id] || 0);
+              const gmvVal = Number(dayObj.gmv?.[ch.id] || 0);
+              const roasVal = spVal > 0 ? (gmvVal / spVal).toFixed(2) : '0.00';
+              return `
               <div class="bg-white p-2.5 rounded-xl border border-slate-200">
                 <div class="flex items-center justify-between mb-1.5">
                   <span class="text-xs font-bold text-slate-800 truncate">${ch.name}</span>
-                  <span id="modal_calc_roas_${ch.id}" class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">0.00x ROAS</span>
+                  <span id="modal_calc_roas_${ch.id}" class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">${roasVal}x ROAS</span>
                 </div>
                 <div class="grid grid-cols-3 gap-2 text-xs">
                   <div>
                     <label class="block text-[10px] font-semibold text-slate-500">Spend (฿)</label>
-                    <input type="number" 
+                    <input type="text" 
+                           inputmode="decimal"
                            id="modal_spend_${ch.id}" 
-                           value="${dayObj.spends?.[ch.id] || 0}" 
-                           step="50" 
-                           min="0"
-                           oninput="recalculateModalTotal()"
+                           value="${formatCurrency(spVal)}" 
+                           oninput="formatCommaNumberInput(this, true); recalculateModalTotal();"
                            class="w-full mt-0.5 px-2 py-1 text-right text-xs font-bold text-slate-800 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                   </div>
                   <div>
                     <label class="block text-[10px] font-semibold text-slate-500">Orders</label>
-                    <input type="number" 
+                    <input type="text" 
+                           inputmode="numeric"
                            id="modal_orders_${ch.id}" 
-                           value="${dayObj.orders?.[ch.id] || 0}" 
-                           step="1" 
-                           min="0"
-                           oninput="recalculateModalTotal()"
+                           value="${ordVal.toLocaleString()}" 
+                           oninput="formatCommaNumberInput(this, false); recalculateModalTotal();"
                            class="w-full mt-0.5 px-2 py-1 text-right text-xs font-bold text-indigo-700 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                   </div>
                   <div>
                     <label class="block text-[10px] font-semibold text-slate-500">GMV (฿)</label>
-                    <input type="number" 
+                    <input type="text" 
+                           inputmode="decimal"
                            id="modal_gmv_${ch.id}" 
-                           value="${dayObj.gmv?.[ch.id] || 0}" 
-                           step="100" 
-                           min="0"
-                           oninput="recalculateModalTotal()"
+                           value="${formatCurrency(gmvVal)}" 
+                           oninput="formatCommaNumberInput(this, true); recalculateModalTotal();"
                            class="w-full mt-0.5 px-2 py-1 text-right text-xs font-bold text-emerald-700 rounded border border-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500">
                   </div>
                 </div>
               </div>
-            `).join('')}
+            `}).join('')}
           </div>
         `;
         inputGroups.appendChild(platBox);
@@ -2060,9 +2314,9 @@
         const inputGmv = document.getElementById(`modal_gmv_${ch.id}`);
         const roasBadge = document.getElementById(`modal_calc_roas_${ch.id}`);
 
-        const sp = Math.max(0, parseFloat(inputSp?.value) || 0);
-        const ord = Math.max(0, parseInt(inputOrd?.value, 10) || 0);
-        const gmv = Math.max(0, parseFloat(inputGmv?.value) || 0);
+        const sp = parseNum(inputSp?.value);
+        const ord = Math.max(0, parseInt(String(inputOrd?.value || 0).replace(/,/g, ''), 10) || 0);
+        const gmv = parseNum(inputGmv?.value);
 
         sumSpend += sp;
         sumOrders += ord;
@@ -2091,7 +2345,7 @@
       const dailyPlanInput = document.getElementById('modalDailyPlanInput');
 
       if (dayTypeSelect) dayObj.type = dayTypeSelect.value;
-      if (dailyPlanInput) dayObj.plannedSpend = Math.max(0, parseFloat(dailyPlanInput.value) || 0);
+      if (dailyPlanInput) dayObj.plannedSpend = parseNum(dailyPlanInput.value);
 
       if (!dayObj.spends) dayObj.spends = {};
       if (!dayObj.orders) dayObj.orders = {};
@@ -2102,9 +2356,9 @@
         const inputOrd = document.getElementById(`modal_orders_${ch.id}`);
         const inputGmv = document.getElementById(`modal_gmv_${ch.id}`);
 
-        if (inputSp) dayObj.spends[ch.id] = Math.max(0, parseFloat(inputSp.value) || 0);
-        if (inputOrd) dayObj.orders[ch.id] = Math.max(0, parseInt(inputOrd.value, 10) || 0);
-        if (inputGmv) dayObj.gmv[ch.id] = Math.max(0, parseFloat(inputGmv.value) || 0);
+        if (inputSp) dayObj.spends[ch.id] = parseNum(inputSp.value);
+        if (inputOrd) dayObj.orders[ch.id] = Math.max(0, parseInt(String(inputOrd.value || 0).replace(/,/g, ''), 10) || 0);
+        if (inputGmv) dayObj.gmv[ch.id] = parseNum(inputGmv.value);
       });
 
       closeDailySpendModal();
@@ -2117,7 +2371,7 @@
       if (!rawHeader) return 'spend';
       const h = String(rawHeader).toLowerCase().trim();
 
-      // Check Spend keywords first (prevents TikTok GMV MAX Ad Spend from false-triggering as GMV)
+      // Check Spend keywords first
       if (h.includes('spend') || h.includes('cost') || h.includes('ค่าแอด') || h.includes('จ่ายจริง') || h.includes('จ่าย') || h.includes('actual') || h.includes('งบ')) {
         return 'spend';
       }
@@ -2714,23 +2968,24 @@
       if (!canvas || !currentProject || typeof Chart === 'undefined') return;
 
       const labels = [];
-      const plannedPoints = [];
-      const actualPoints = [];
+      const plannedData = [];
+      const actualData = [];
       const barColors = [];
 
       (currentProject.dailyData || []).forEach(d => {
         labels.push(`D${d.day}`);
-        plannedPoints.push(Number(d.plannedSpend || 0));
+        plannedData.push(d.plannedSpend || 0);
 
         let dayActual = 0;
         ALL_CHANNELS.forEach(ch => {
           dayActual += Number(d.spends?.[ch.id] || 0);
         });
-        actualPoints.push(dayActual);
+        actualData.push(dayActual);
 
-        if (d.type === 'DDAY') barColors.push('#f87171');
-        else if (d.type === 'MIDMONTH') barColors.push('#818cf8');
-        else if (d.type === 'PAYDAY') barColors.push('#fbbf24');
+        // Tier colors for actual spend bars
+        if (d.type === 'DDAY') barColors.push('#ef4444');
+        else if (d.type === 'MIDMONTH') barColors.push('#6366f1');
+        else if (d.type === 'PAYDAY') barColors.push('#f59e0b');
         else barColors.push('#10b981');
       });
 
@@ -2740,28 +2995,30 @@
 
       const ctx = canvas.getContext('2d');
       pacingChartInstance = new Chart(ctx, {
+        type: 'bar',
         data: {
           labels: labels,
           datasets: [
             {
               type: 'line',
-              label: 'Planned Target',
-              data: plannedPoints,
+              label: 'Planned Curve (฿)',
+              data: plannedData,
               borderColor: '#6366f1',
               backgroundColor: 'rgba(99, 102, 241, 0.08)',
-              borderWidth: 2,
-              pointRadius: 2,
-              tension: 0.25,
+              borderWidth: 2.5,
+              tension: 0.35,
               fill: true,
-              yAxisID: 'y'
+              pointRadius: 2.5,
+              pointHoverRadius: 5,
+              order: 1
             },
             {
               type: 'bar',
-              label: 'Actual Spend',
-              data: actualPoints,
+              label: 'Actual Spend (฿)',
+              data: actualData,
               backgroundColor: barColors,
               borderRadius: 4,
-              yAxisID: 'y'
+              order: 2
             }
           ]
         },
@@ -2772,8 +3029,8 @@
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: function(ctx) {
-                  return `${ctx.dataset.label}: ฿${Number(ctx.raw || 0).toLocaleString()}`;
+                label: function(context) {
+                  return ` ${context.dataset.label}: ฿${Number(context.raw || 0).toLocaleString()}`;
                 }
               }
             }
@@ -2781,14 +3038,16 @@
           scales: {
             x: {
               grid: { display: false },
-              ticks: { font: { size: 10 } }
+              ticks: { font: { size: 10, weight: '600' }, color: '#64748b' }
             },
             y: {
-              beginAtZero: true,
               grid: { color: '#f1f5f9' },
               ticks: {
                 font: { size: 10 },
-                callback: function(v) { return '฿' + (v >= 1000 ? (v / 1000) + 'k' : v); }
+                color: '#64748b',
+                callback: function(value) {
+                  return '฿' + (value >= 1000 ? (value / 1000).toLocaleString() + 'k' : value);
+                }
               }
             }
           }
@@ -2796,10 +3055,30 @@
       });
     }
 
+    function setChannelShareGrouping(mode) {
+      shareChartGroupingMode = mode;
+      const btnPlat = document.getElementById('btnShareGroupPlatform');
+      const btnChan = document.getElementById('btnShareGroupChannels');
+
+      if (btnPlat && btnChan) {
+        if (mode === 'platform') {
+          btnPlat.className = "px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs transition font-bold";
+          btnChan.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold";
+        } else {
+          btnPlat.className = "px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition font-bold";
+          btnChan.className = "px-3 py-1.5 rounded-lg bg-white text-indigo-600 shadow-xs transition font-bold";
+        }
+      }
+
+      renderChannelShareChart();
+    }
+
     function renderChannelShareChart() {
       const canvas = document.getElementById('channelSharePieChart');
       const summaryList = document.getElementById('channelShareSummaryList');
       const footerNote = document.getElementById('channelCountFooterNote');
+      const centerTotal = document.getElementById('doughnutCenterTotal');
+      const centerChannels = document.getElementById('doughnutCenterChannels');
 
       if (!canvas || !currentProject || typeof Chart === 'undefined') return;
 
@@ -2807,35 +3086,136 @@
       if (footerNote) {
         footerNote.innerText = `${ALL_CHANNELS.length} channels configured across ${Object.keys(currentProject.platforms).length} platforms`;
       }
+      if (centerTotal) centerTotal.innerText = `฿${masterTotal >= 1000 ? (masterTotal / 1000).toLocaleString() + 'k' : masterTotal.toLocaleString()}`;
 
-      const labels = [];
-      const dataValues = [];
-      const bgColors = [];
+      let labels = [];
+      let dataValues = [];
+      let bgColors = [];
 
-      ALL_CHANNELS.forEach(ch => {
-        labels.push(ch.name);
-        dataValues.push(ch.budget);
-        bgColors.push(ch.platformColor || '#6366f1');
-      });
+      if (shareChartGroupingMode === 'platform') {
+        // --- 1. PLATFORM SUMMARY MODE (รวมช่องทางหลัก เช่น Shopee, Tiktok, Facebook, Lazada) ---
+        const platformSummaries = Object.entries(currentProject.platforms).map(([pKey, pObj]) => {
+          let pBudget = 0;
+          const subChannels = (pObj.channels || []).map(ch => {
+            const b = Number(ch.budget || 0);
+            pBudget += b;
+            return { name: ch.name, budget: b };
+          });
 
-      if (summaryList) {
-        summaryList.innerHTML = '';
-        ALL_CHANNELS.forEach(ch => {
-          const pct = masterTotal > 0 ? ((ch.budget / masterTotal) * 100).toFixed(1) : 0;
-          const row = document.createElement('div');
-          row.className = "flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs";
-          row.innerHTML = `
-            <div class="flex items-center space-x-2 truncate">
-              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${ch.platformColor}"></span>
-              <span class="font-bold text-slate-800 truncate">${ch.name}</span>
-            </div>
-            <div class="flex items-center space-x-2 shrink-0">
-              <span class="font-semibold text-slate-500">${pct}%</span>
-              <span class="font-bold text-slate-900">฿${ch.budget.toLocaleString()}</span>
-            </div>
-          `;
-          summaryList.appendChild(row);
+          return {
+            key: pKey,
+            name: pObj.name,
+            color: pObj.color,
+            badgeBg: pObj.badgeBg,
+            textColor: pObj.textColor,
+            budget: pBudget,
+            channels: subChannels
+          };
         });
+
+        // Sort descending by budget
+        platformSummaries.sort((a, b) => b.budget - a.budget);
+
+        if (centerChannels) centerChannels.innerText = `${platformSummaries.length} Platforms`;
+
+        platformSummaries.forEach(p => {
+          labels.push(p.name);
+          dataValues.push(p.budget);
+          bgColors.push(p.color);
+        });
+
+        if (summaryList) {
+          summaryList.innerHTML = '';
+          platformSummaries.forEach(p => {
+            const pctNum = masterTotal > 0 ? ((p.budget / masterTotal) * 100) : 0;
+            const pct = pctNum.toFixed(1);
+
+            // Sub-channels mini tags
+            const subListText = p.channels.length > 0 
+              ? p.channels.map(c => `<span class="inline-block bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[10px] text-slate-600">${c.name}: ฿${c.budget.toLocaleString()}</span>`).join(' ')
+              : '<span class="text-[10px] text-slate-400 italic">No sub-channels</span>';
+
+            const card = document.createElement('div');
+            card.className = "p-3 rounded-xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200 transition flex flex-col gap-2";
+            card.innerHTML = `
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="w-3 h-3 rounded-full shrink-0 shadow-2xs" style="background-color: ${p.color}"></span>
+                  <span class="font-extrabold text-sm ${p.textColor}">${p.name}</span>
+                  <span class="text-[10px] font-semibold text-slate-400">(${p.channels.length} Sub-Channels)</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <span class="px-2.5 py-0.5 rounded-lg font-black text-xs bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    ${pct}%
+                  </span>
+                  <span class="font-extrabold text-slate-900 text-xs">฿${p.budget.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <!-- Visual progress bar -->
+              <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                <div class="h-1.5 rounded-full transition-all duration-300" style="width: ${pctNum}%; background-color: ${p.color}"></div>
+              </div>
+
+              <!-- Granular sub-channel breakdown inline list -->
+              <div class="flex flex-wrap gap-1 pt-0.5">
+                ${subListText}
+              </div>
+            `;
+            summaryList.appendChild(card);
+          });
+        }
+
+      } else {
+        // --- 2. GRANULAR SUB-CHANNEL MODE (แยกรายช่องทางย่อยเดิม) ---
+        const channelColorPalette = [
+          '#EE4D2D', '#ff6b4a', '#ff9076',
+          '#0f172a', '#334155', '#475569', '#64748b',
+          '#1877F2', '#4b9bf9',
+          '#4f46e5', '#7c3aed', '#06b6d4'
+        ];
+
+        const sortedChannels = [...ALL_CHANNELS].sort((a, b) => (b.budget || 0) - (a.budget || 0));
+
+        if (centerChannels) centerChannels.innerText = `${ALL_CHANNELS.length} Channels`;
+
+        ALL_CHANNELS.forEach((ch, idx) => {
+          labels.push(ch.name);
+          dataValues.push(ch.budget);
+          bgColors.push(channelColorPalette[idx % channelColorPalette.length]);
+        });
+
+        if (summaryList) {
+          summaryList.innerHTML = '';
+          sortedChannels.forEach(ch => {
+            const pctNum = masterTotal > 0 ? ((ch.budget / masterTotal) * 100) : 0;
+            const pct = pctNum.toFixed(1);
+            const origIdx = ALL_CHANNELS.findIndex(c => c.id === ch.id);
+            const sliceColor = bgColors[origIdx >= 0 ? origIdx : 0] || ch.platformColor;
+
+            const row = document.createElement('div');
+            row.className = "p-2 rounded-xl bg-slate-50 hover:bg-slate-100/70 border border-slate-200/80 transition flex flex-col gap-1.5";
+            row.innerHTML = `
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center space-x-2 truncate">
+                  <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${sliceColor}"></span>
+                  <span class="font-bold text-slate-800 truncate">${ch.name}</span>
+                  <span class="text-[10px] text-slate-400">(${ch.platformName})</span>
+                </div>
+                <div class="flex items-center space-x-2 shrink-0">
+                  <span class="px-2 py-0.5 rounded-md font-extrabold text-[11px] bg-indigo-50 text-indigo-700 border border-indigo-200">
+                    ${pct}%
+                  </span>
+                  <span class="font-bold text-slate-900 text-xs">฿${ch.budget.toLocaleString()}</span>
+                </div>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1 overflow-hidden">
+                <div class="h-1 rounded-full" style="width: ${pctNum}%; background-color: ${sliceColor}"></div>
+              </div>
+            `;
+            summaryList.appendChild(row);
+          });
+        }
       }
 
       if (shareChartInstance) {
@@ -2851,14 +3231,26 @@
             data: dataValues.length > 0 ? dataValues : [1],
             backgroundColor: bgColors.length > 0 ? bgColors : ['#cbd5e1'],
             borderWidth: 2,
-            borderColor: '#ffffff'
+            borderColor: '#ffffff',
+            hoverOffset: 6
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          cutout: '68%'
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const val = Number(ctx.raw || 0);
+                  const sharePct = masterTotal > 0 ? ((val / masterTotal) * 100).toFixed(1) : 0;
+                  return ` ${ctx.label}: ฿${val.toLocaleString()} (${sharePct}% of Total Budget)`;
+                }
+              }
+            }
+          },
+          cutout: '72%'
         }
       });
     }
@@ -2903,7 +3295,6 @@
         activeChannelTabId = ALL_CHANNELS[0].id;
       }
 
-      // Group options by platform
       const groups = {};
       ALL_CHANNELS.forEach(ch => {
         if (!groups[ch.platformName]) groups[ch.platformName] = [];
@@ -3012,12 +3403,17 @@
             <td class="py-2.5 px-3 font-bold">
               <span class="inline-block w-6 text-slate-400 font-mono">D${d.day}</span>
               <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${getDayBadgeClass(d.type)}">${d.type}</span>
+              ${d.isRePaced ? '<span class="ml-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-violet-100 text-violet-700">Re-Paced</span>' : ''}
             </td>
-            <td class="py-2.5 px-3 text-right font-medium text-slate-600">฿${planned.toLocaleString()}</td>
+            <td class="py-2.5 px-3 text-right font-medium text-slate-600">฿${formatCurrency(planned)}</td>
             <td class="py-2.5 px-3 text-right">
-              <input type="number" value="${actual}" min="0" step="50"
+              <input type="text" inputmode="decimal" value="${formatCurrency(actual)}"
+                     oninput="formatCommaNumberInput(this, true)"
                      onchange="updateInlineChannelSpend(${d.day}, '${activeCh.id}', this.value)"
                      class="w-24 px-2 py-1 text-right font-bold text-indigo-700 bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            </td>
+            <td class="py-2.5 px-3 text-right font-bold ${runningRemaining < 0 ? 'text-rose-600' : 'text-slate-800'}">
+              ฿${formatCurrency(runningRemaining)}
             </td>
             <td class="py-2.5 px-3 text-right font-bold ${runningRemaining < 0 ? 'text-rose-600' : 'text-slate-800'}">
               ฿${runningRemaining.toLocaleString()}
@@ -3084,7 +3480,8 @@
             dayTotal += sp;
             tdChannels += `
               <td class="py-1.5 px-1.5 text-right">
-                <input type="number" value="${sp}" min="0" step="50"
+                <input type="text" inputmode="decimal" value="${formatCurrency(sp)}"
+                       oninput="formatCommaNumberInput(this, true)"
                        onchange="updateInlineChannelSpend(${d.day}, '${ch.id}', this.value)"
                        class="w-20 px-1.5 py-0.5 text-right text-[11px] font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
               </td>
@@ -3098,6 +3495,7 @@
             <td class="py-2 px-3 font-bold sticky left-0 bg-white z-10">
               <span class="font-mono text-slate-400">D${d.day}</span>
               <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${getDayBadgeClass(d.type)}">${d.type}</span>
+              ${d.isRePaced ? '<span class="ml-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-violet-100 text-violet-700">Re-Paced</span>' : ''}
             </td>
             <td class="py-2 px-3 text-right text-slate-600 font-medium">฿${Number(d.plannedSpend || 0).toLocaleString()}</td>
             <td class="py-2 px-3 text-right font-bold text-slate-900">฿${dayTotal.toLocaleString()}</td>
@@ -3173,6 +3571,7 @@
           <td class="py-2.5 px-3 font-bold">
             <span class="font-mono text-slate-400">D${d.day}</span>
             <span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${getDayBadgeClass(d.type)}">${d.type}</span>
+            ${d.isRePaced ? '<span class="ml-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-violet-100 text-violet-700">Re-Paced</span>' : ''}
           </td>
           <td class="py-2.5 px-3 text-right text-slate-600 font-medium">฿${Number(d.plannedSpend || 0).toLocaleString()}</td>
           <td class="py-2.5 px-3 text-right font-black text-slate-900">฿${daySpentTotal.toLocaleString()}</td>
@@ -3209,7 +3608,7 @@
     }
 
     function updateInlineChannelSpend(dayNum, channelId, val) {
-      const numVal = Math.max(0, parseFloat(val) || 0);
+      const numVal = parseNum(val);
       const dayObj = (currentProject.dailyData || []).find(d => d.day === dayNum);
       if (!dayObj) return;
 
@@ -3233,41 +3632,52 @@
     function renderChannelControls() {
       const container = document.getElementById('channelListControl');
       const displayTotal = document.getElementById('displayMasterBudget');
+      const displayChannels = document.getElementById('displayMasterChannelsCount');
       if (!container || !currentProject) return;
 
       const masterTotal = getProjectMasterBudget();
       if (displayTotal) displayTotal.innerText = `฿${masterTotal.toLocaleString()}`;
+      if (displayChannels) displayChannels.innerText = `(${ALL_CHANNELS.length} Channels across ${Object.keys(currentProject.platforms).length} Platforms)`;
 
       container.innerHTML = '';
       Object.entries(currentProject.platforms).forEach(([platformKey, pObj]) => {
         let pTotal = 0;
         (pObj.channels || []).forEach(c => pTotal += Number(c.budget || 0));
+        const pShare = masterTotal > 0 ? ((pTotal / masterTotal) * 100).toFixed(1) : 0;
 
         const box = document.createElement('div');
-        box.className = "p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2.5";
+        box.className = "p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition flex flex-col justify-between";
         box.innerHTML = `
-          <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
-            <div class="flex items-center space-x-2">
-              <span class="w-3 h-3 rounded-full" style="background-color: ${pObj.color}"></span>
-              <span class="font-extrabold ${pObj.textColor} text-xs">${pObj.name}</span>
-            </div>
-            <span class="text-xs font-bold text-slate-800">฿${pTotal.toLocaleString()}</span>
-          </div>
-          <div class="space-y-2">
-            ${(pObj.channels || []).map(ch => `
-              <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
-                <span class="text-xs font-bold text-slate-700 truncate pr-2">${ch.name}</span>
-                <div class="flex items-center space-x-1 shrink-0">
-                  <span class="text-slate-400 text-xs">฿</span>
-                  <input type="number" value="${ch.budget}" min="0" step="5000"
-                         onchange="updateChannelBudget('${ch.id}', this.value)"
-                         class="w-24 px-2 py-0.5 text-right font-bold text-xs rounded border border-slate-200 text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500">
-                  <button onclick="openEditChannelModal('${ch.id}')" class="p-1 text-slate-400 hover:text-indigo-600 rounded transition" title="Edit or rename channel">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                  </button>
-                </div>
+          <div>
+            <div class="flex items-center justify-between border-b border-slate-200/80 pb-2 mb-2.5">
+              <div class="flex items-center space-x-2 min-w-0">
+                <span class="w-3 h-3 rounded-full shrink-0 shadow-2xs" style="background-color: ${pObj.color}"></span>
+                <span class="font-extrabold ${pObj.textColor} text-xs truncate">${pObj.name}</span>
+                <span class="text-[10px] font-semibold text-slate-400">(${(pObj.channels || []).length})</span>
               </div>
-            `).join('')}
+              <span class="text-xs font-black text-slate-900 bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs shrink-0">฿${pTotal.toLocaleString()}</span>
+            </div>
+            <div class="space-y-1.5">
+              ${(pObj.channels || []).map(ch => `
+                <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200/80 shadow-2xs hover:border-slate-300 transition">
+                  <span class="text-xs font-bold text-slate-700 truncate pr-1.5" title="${ch.name}">${ch.name}</span>
+                  <div class="flex items-center space-x-1 shrink-0">
+                    <span class="text-slate-400 text-xs">฿</span>
+                    <input type="text" inputmode="decimal" value="${formatCurrency(ch.budget)}"
+                           oninput="formatCommaNumberInput(this, true)"
+                           onchange="updateChannelBudget('${ch.id}', this.value)"
+                           class="w-24 px-1.5 py-0.5 text-right font-bold text-xs rounded border border-slate-200 bg-slate-50/50 text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <button onclick="openEditChannelModal('${ch.id}')" class="p-1 text-slate-400 hover:text-indigo-600 rounded transition" title="Edit channel details">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          <div class="pt-2.5 mt-2.5 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+            <span class="text-slate-500 font-semibold">${pShare}% of Total</span>
+            <button onclick="openAddChannelModal()" class="text-indigo-600 hover:text-indigo-800 font-bold hover:underline">+ Add ${pObj.name}</button>
           </div>
         `;
         container.appendChild(box);
