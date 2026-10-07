@@ -153,85 +153,85 @@
       </div>
     </div>
 
-    <!-- 4 Primary KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- 1. Monthly Master Budget -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            <span id="kpiPlanTitleLabel">MONTHLY MASTER BUDGET</span>
-            <span class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">฿</span>
-          </div>
-          <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiTargetBudget">฿500,000</div>
-        </div>
-        <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-          <span>Active Ad Channels:</span>
-          <div class="flex items-center space-x-1.5">
-            <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Auto-Calculated</span>
-            <span id="kpiTotalChannelsCount" class="font-bold text-slate-800">10 channels</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. Actual Spent MTD -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            <span>ACTUAL SPENT MTD</span>
-            <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-            </span>
-          </div>
-          <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiActualSpent">฿0</div>
-        </div>
-        <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-          <span>Planned to Date: <strong id="kpiPlannedToDate" class="text-slate-700 font-bold ml-1">฿0</strong></span>
-          <span id="kpiSpentPercent" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">0.0%</span>
-        </div>
-      </div>
-
-      <!-- 3. Budget Variance MTD -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            <span>BUDGET VARIANCE MTD</span>
-            <span class="w-6 h-6 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-            </span>
-          </div>
-          <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiVariance">฿0</div>
-        </div>
-        <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-          <span>Burn Pacing: <strong id="kpiPacingRate" class="text-slate-700 font-bold ml-1">0.0%</strong></span>
-          <span id="kpiVarianceTag" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Under Budget</span>
-        </div>
-      </div>
-
-      <!-- 4. Remaining Budget -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            <span>REMAINING BUDGET</span>
-            <span class="w-6 h-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            </span>
-          </div>
-          <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiRemaining">฿0</div>
-        </div>
-        <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-          <span>Recommended Daily: <strong id="kpiRecDailySpend" class="text-amber-800 font-bold ml-1">฿0</strong></span>
-          <span id="kpiDaysLeft" class="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-bold">-- days left</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4 Platform Cards (Shopee, Tiktok, Facebook, Lazada) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="platformCardsContainer">
-      <!-- Injected dynamically via JS: Shopee, Tiktok, Facebook, Lazada -->
-    </div>
-
     <!-- SECTION: Daily Tracker -->
     <div id="sectionDailyTracker" class="space-y-5">
+      <!-- 4 Primary KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- 1. Monthly Master Budget -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span id="kpiPlanTitleLabel">MONTHLY MASTER BUDGET</span>
+              <span class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">฿</span>
+            </div>
+            <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiTargetBudget">฿500,000</div>
+          </div>
+          <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+            <span>Active Ad Channels:</span>
+            <div class="flex items-center space-x-1.5">
+              <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Auto-Calculated</span>
+              <span id="kpiTotalChannelsCount" class="font-bold text-slate-800">10 channels</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Actual Spent MTD -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span>ACTUAL SPENT MTD</span>
+              <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+              </span>
+            </div>
+            <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiActualSpent">฿0</div>
+          </div>
+          <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+            <span>Planned to Date: <strong id="kpiPlannedToDate" class="text-slate-700 font-bold ml-1">฿0</strong></span>
+            <span id="kpiSpentPercent" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">0.0%</span>
+          </div>
+        </div>
+
+        <!-- 3. Budget Variance MTD -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span>BUDGET VARIANCE MTD</span>
+              <span class="w-6 h-6 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+              </span>
+            </div>
+            <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiVariance">฿0</div>
+          </div>
+          <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+            <span>Burn Pacing: <strong id="kpiPacingRate" class="text-slate-700 font-bold ml-1">0.0%</strong></span>
+            <span id="kpiVarianceTag" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Under Budget</span>
+          </div>
+        </div>
+
+        <!-- 4. Remaining Budget -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span>REMAINING BUDGET</span>
+              <span class="w-6 h-6 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </span>
+            </div>
+            <div class="mt-2 text-2xl font-extrabold text-slate-900" id="kpiRemaining">฿0</div>
+          </div>
+          <div class="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
+            <span>Recommended Daily: <strong id="kpiRecDailySpend" class="text-amber-800 font-bold ml-1">฿0</strong></span>
+            <span id="kpiDaysLeft" class="text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-bold">-- days left</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 Platform Cards (Shopee, Tiktok, Facebook, Lazada) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="platformCardsContainer">
+        <!-- Injected dynamically via JS: Shopee, Tiktok, Facebook, Lazada -->
+      </div>
+
       <!-- Pacing Chart Container with Collapse Toggle -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
@@ -380,30 +380,7 @@
 
         <!-- 4 Comparative Cards: Target vs Actual Comparison -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-          <!-- 1. GMV Target vs Actual -->
-          <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-emerald-950 uppercase">Total Revenue (GMV)</span>
-                <span id="salesGmvPacePct" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">0% Achieved</span>
-              </div>
-              <div class="mt-3">
-                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target GMV (฿)</label>
-                <input type="text" inputmode="decimal" id="inputTargetGmv" value="1,200,000" oninput="formatCommaNumberInput(this, true);" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-emerald-500 mt-0.5">
-              </div>
-            </div>
-            <div class="mt-3 pt-2.5 border-t border-emerald-100/80">
-              <div class="flex justify-between items-baseline text-xs">
-                <span class="text-slate-500">Actual GMV:</span>
-                <span id="salesActualGmvLabel" class="text-base font-black text-emerald-700">฿0</span>
-              </div>
-              <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
-                <div id="barGmvAchieved" class="bg-emerald-600 h-1.5 rounded-full" style="width: 0%"></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. Orders Target vs Actual -->
+          <!-- 1. Orders Target vs Actual -->
           <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50/20 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between">
@@ -422,6 +399,29 @@
               </div>
               <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
                 <div id="barOrdersAchieved" class="bg-indigo-600 h-1.5 rounded-full" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. GMV Target vs Actual -->
+          <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-emerald-950 uppercase">Total Revenue (GMV)</span>
+                <span id="salesGmvPacePct" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800">0% Achieved</span>
+              </div>
+              <div class="mt-3">
+                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target GMV (฿)</label>
+                <input type="text" inputmode="decimal" id="inputTargetGmv" value="1,200,000" oninput="formatCommaNumberInput(this, true);" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-emerald-500 mt-0.5">
+              </div>
+            </div>
+            <div class="mt-3 pt-2.5 border-t border-emerald-100/80">
+              <div class="flex justify-between items-baseline text-xs">
+                <span class="text-slate-500">Actual GMV:</span>
+                <span id="salesActualGmvLabel" class="text-base font-black text-emerald-700">฿0</span>
+              </div>
+              <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
+                <div id="barGmvAchieved" class="bg-emerald-600 h-1.5 rounded-full" style="width: 0%"></div>
               </div>
             </div>
           </div>
@@ -450,25 +450,29 @@
             </div>
           </div>
 
-          <!-- 4. Budget vs Spent -->
+          <!-- 4. AOV Target vs Actual (Replaced Budget vs Spent) -->
           <div class="p-4 rounded-xl border border-amber-200 bg-amber-50/20 flex flex-col justify-between">
             <div>
               <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-amber-950 uppercase">Budget vs Spent</span>
-                <span id="salesSpendBurnBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800">0% Spent</span>
+                <span class="text-xs font-bold text-amber-950 uppercase">Average Order Value (AOV)</span>
+                <span id="salesAovStatusBadge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800">Target</span>
               </div>
               <div class="mt-3">
-                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Master Budget (฿)</label>
-                <div id="salesCompareMasterBudget" class="w-full text-base font-black text-slate-800 bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1 mt-0.5">฿0</div>
+                <label class="block text-[10px] font-semibold text-slate-400 uppercase">Target AOV (฿)</label>
+                <input type="text" inputmode="decimal" id="inputTargetAov" value="500" oninput="formatCommaNumberInput(this, true);" class="w-full text-base font-black text-slate-900 bg-white border border-slate-200 rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-amber-500 mt-0.5">
               </div>
             </div>
             <div class="mt-3 pt-2.5 border-t border-amber-100/80">
               <div class="flex justify-between items-baseline text-xs">
-                <span class="text-slate-500">Actual Spend:</span>
-                <span id="salesCompareActualSpent" class="text-base font-black text-amber-900">฿0</span>
+                <span class="text-slate-500">Actual AOV:</span>
+                <span id="salesActualAovLabel" class="text-base font-black text-amber-800">฿0</span>
               </div>
               <div class="w-full bg-slate-200 rounded-full h-1.5 mt-2 overflow-hidden">
-                <div id="barSpendBurned" class="bg-amber-600 h-1.5 rounded-full" style="width: 0%"></div>
+                <div id="barAovAchieved" class="bg-amber-600 h-1.5 rounded-full" style="width: 0%"></div>
+              </div>
+              <div class="text-[10px] text-slate-500 mt-1.5 flex justify-between">
+                <span>Actual CPO:</span>
+                <span id="salesActualCpoSub" class="font-bold text-slate-700">฿0 / Order</span>
               </div>
             </div>
           </div>
@@ -3707,31 +3711,58 @@
     }
 
     function renderChannelShareChart() {
-      const barContainer = document.getElementById('horizontalShareBarContainer');
+      const planBarContainer = document.getElementById('horizontalShareBarContainer');
+      const actBarContainer = document.getElementById('horizontalActualShareBarContainer');
       const summaryList = document.getElementById('channelShareSummaryList');
       const footerNote = document.getElementById('channelCountFooterNote');
-      const barCenterText = document.getElementById('barCenterBudgetSummary');
+      const planTotalText = document.getElementById('barPlannedTotalText');
+      const actTotalText = document.getElementById('barActualTotalText');
 
-      if (!barContainer || !currentProject) return;
+      if (!planBarContainer || !currentProject) return;
 
       const masterTotal = getProjectMasterBudget();
+      let totalActualSpent = 0;
+
+      (currentProject.dailyData || []).forEach(d => {
+        ALL_CHANNELS.forEach(ch => {
+          totalActualSpent += Number(d.spends?.[ch.id] || 0);
+        });
+      });
+
       if (footerNote) {
         footerNote.innerText = `${ALL_CHANNELS.length} channels configured across ${Object.keys(currentProject.platforms).length} platforms`;
       }
-      if (barCenterText) {
-        barCenterText.innerText = `Total ฿${masterTotal.toLocaleString()}`;
+      if (planTotalText) {
+        planTotalText.innerText = `Plan Total: ฿${masterTotal.toLocaleString()}`;
+      }
+      if (actTotalText) {
+        actTotalText.innerText = `Actual Spent: ฿${totalActualSpent.toLocaleString()}`;
       }
 
-      barContainer.innerHTML = '';
+      planBarContainer.innerHTML = '';
+      if (actBarContainer) actBarContainer.innerHTML = '';
 
       if (shareChartGroupingMode === 'platform') {
         const platformSummaries = Object.entries(currentProject.platforms).map(([pKey, pObj]) => {
           let pBudget = 0;
+          let pSpent = 0;
+
           const subChannels = (pObj.channels || []).map(ch => {
             const b = Number(ch.budget || 0);
             pBudget += b;
-            return { name: ch.name, budget: b };
+
+            let chSpent = 0;
+            (currentProject.dailyData || []).forEach(d => {
+              chSpent += Number(d.spends?.[ch.id] || 0);
+            });
+            pSpent += chSpent;
+
+            return { name: ch.name, budget: b, spent: chSpent };
           });
+
+          const planSharePct = masterTotal > 0 ? (pBudget / masterTotal) * 100 : 0;
+          const actSharePct = totalActualSpent > 0 ? (pSpent / totalActualSpent) * 100 : 0;
+          const burnRate = pBudget > 0 ? (pSpent / pBudget) * 100 : 0;
 
           return {
             key: pKey,
@@ -3740,39 +3771,79 @@
             badgeBg: pObj.badgeBg,
             textColor: pObj.textColor,
             budget: pBudget,
+            spent: pSpent,
+            planSharePct: planSharePct,
+            actSharePct: actSharePct,
+            burnRate: burnRate,
             channels: subChannels
           };
         });
 
         platformSummaries.sort((a, b) => b.budget - a.budget);
 
+        // 1. Render Planned Bar
         platformSummaries.forEach(p => {
-          const pct = masterTotal > 0 ? ((p.budget / masterTotal) * 100) : 0;
-          if (pct <= 0) return;
-
+          if (p.planSharePct <= 0) return;
           const seg = document.createElement('div');
-          seg.style.width = `${pct}%`;
+          seg.style.width = `${p.planSharePct}%`;
           seg.style.backgroundColor = p.color;
-          seg.className = "h-full transition-all relative group flex items-center justify-center text-white text-[10px] font-black overflow-hidden px-1";
-          seg.title = `${p.name}: ฿${p.budget.toLocaleString()} (${pct.toFixed(1)}%)`;
-          if (pct >= 8) {
-            seg.innerText = `${pct.toFixed(0)}%`;
+          seg.className = "h-full transition-all relative flex items-center justify-center text-white text-[10px] font-black overflow-hidden px-1";
+          seg.title = `Planned ${p.name}: ฿${p.budget.toLocaleString()} (${p.planSharePct.toFixed(1)}%)`;
+          if (p.planSharePct >= 8) {
+            seg.innerText = `${p.planSharePct.toFixed(0)}%`;
           }
-          barContainer.appendChild(seg);
+          planBarContainer.appendChild(seg);
         });
 
+        // 2. Render Actual Spend Bar
+        if (actBarContainer) {
+          if (totalActualSpent === 0) {
+            actBarContainer.innerHTML = '<div class="w-full h-full flex items-center justify-center text-[10px] text-slate-400 italic">No spend logged yet</div>';
+          } else {
+            platformSummaries.forEach(p => {
+              if (p.actSharePct <= 0) return;
+              const seg = document.createElement('div');
+              seg.style.width = `${p.actSharePct}%`;
+              seg.style.backgroundColor = p.color;
+              seg.className = "h-full transition-all relative flex items-center justify-center text-white text-[10px] font-black overflow-hidden px-1";
+              seg.title = `Actual ${p.name}: ฿${p.spent.toLocaleString()} (${p.actSharePct.toFixed(1)}% of total spend)`;
+              if (p.actSharePct >= 8) {
+                seg.innerText = `${p.actSharePct.toFixed(0)}%`;
+              }
+              actBarContainer.appendChild(seg);
+            });
+          }
+        }
+
+        // 3. Render Comparative Breakdown Cards
         if (summaryList) {
           summaryList.innerHTML = '';
           platformSummaries.forEach(p => {
-            const pctNum = masterTotal > 0 ? ((p.budget / masterTotal) * 100) : 0;
-            const pct = pctNum.toFixed(1);
+            const planPct = p.planSharePct.toFixed(1);
+            const actPct = p.actSharePct.toFixed(1);
+            const variance = (p.actSharePct - p.planSharePct).toFixed(1);
+            const isOverShare = Number(variance) > 0.5;
+            const isUnderShare = Number(variance) < -0.5;
 
-            const subListText = p.channels.length > 0 
-              ? p.channels.map(c => `<span class="inline-block bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[10px] text-slate-600">${c.name}: ฿${c.budget.toLocaleString()}</span>`).join(' ')
-              : '<span class="text-[10px] text-slate-400 italic">No sub-channels</span>';
+            let varianceBadgeClass = "bg-slate-100 text-slate-600";
+            let varianceText = "On Plan (0.0%)";
+            if (totalActualSpent > 0) {
+              if (isOverShare) {
+                varianceBadgeClass = "bg-rose-50 text-rose-700 border border-rose-200";
+                varianceText = `+${variance}% Over Planned Share`;
+              } else if (isUnderShare) {
+                varianceBadgeClass = "bg-blue-50 text-blue-700 border border-blue-200";
+                varianceText = `${variance}% Under Planned Share`;
+              } else {
+                varianceBadgeClass = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+                varianceText = "Balanced on Plan";
+              }
+            } else {
+              varianceText = "Awaiting Spend";
+            }
 
             const card = document.createElement('div');
-            card.className = "p-3 rounded-xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200 transition flex flex-col gap-2";
+            card.className = "p-3 rounded-xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200 transition flex flex-col gap-2.5";
             card.innerHTML = `
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
@@ -3780,24 +3851,44 @@
                   <span class="font-extrabold text-sm ${p.textColor}">${p.name}</span>
                   <span class="text-[10px] font-semibold text-slate-400">(${p.channels.length} Sub-Channels)</span>
                 </div>
-                <div class="flex items-center space-x-2">
-                  <span class="px-2.5 py-0.5 rounded-lg font-black text-xs bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    ${pct}%
+                <div class="flex items-center space-x-1.5">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold ${varianceBadgeClass}">
+                    ${varianceText}
                   </span>
-                  <span class="font-extrabold text-slate-900 text-xs">฿${p.budget.toLocaleString()}</span>
+                  <span class="text-[11px] font-extrabold text-slate-800">
+                    ${p.burnRate.toFixed(1)}% Spent
+                  </span>
                 </div>
               </div>
-              <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                <div class="h-1.5 rounded-full transition-all duration-300" style="width: ${pctNum}%; background-color: ${p.color}"></div>
-              </div>
-              <div class="flex flex-wrap gap-1 pt-0.5">
-                ${subListText}
+
+              <!-- Comparative Metric Strips -->
+              <div class="grid grid-cols-2 gap-2 text-xs bg-white p-2 rounded-lg border border-slate-200/80">
+                <div>
+                  <div class="flex justify-between text-[11px] mb-1">
+                    <span class="text-slate-500 font-medium">Budget Share:</span>
+                    <span class="font-black text-indigo-700">${planPct}% (฿${p.budget.toLocaleString()})</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                    <div class="h-1.5 rounded-full transition-all duration-300" style="width: ${p.planSharePct}%; background-color: ${p.color}"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-[11px] mb-1">
+                    <span class="text-slate-500 font-medium">Actual Spend Share:</span>
+                    <span class="font-black text-emerald-700">${totalActualSpent > 0 ? actPct + '%' : '0.0%'} (฿${p.spent.toLocaleString()})</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                    <div class="h-1.5 rounded-full bg-emerald-500 transition-all duration-300" style="width: ${p.actSharePct}%;"></div>
+                  </div>
+                </div>
               </div>
             `;
             summaryList.appendChild(card);
           });
         }
       } else {
+        // Mode: By Sub-Channel
         const channelColorPalette = [
           '#EE4D2D', '#ff6b4a', '#ff9076',
           '#0f172a', '#334155', '#475569', '#64748b',
@@ -3805,49 +3896,130 @@
           '#4f46e5', '#7c3aed', '#06b6d4'
         ];
 
-        const sortedChannels = [...ALL_CHANNELS].sort((a, b) => (b.budget || 0) - (a.budget || 0));
+        const channelSummaries = ALL_CHANNELS.map((ch, idx) => {
+          let chSpent = 0;
+          (currentProject.dailyData || []).forEach(d => {
+            chSpent += Number(d.spends?.[ch.id] || 0);
+          });
 
-        sortedChannels.forEach((ch, idx) => {
-          const pct = masterTotal > 0 ? ((ch.budget / masterTotal) * 100) : 0;
-          if (pct <= 0) return;
-
+          const planSharePct = masterTotal > 0 ? (ch.budget / masterTotal) * 100 : 0;
+          const actSharePct = totalActualSpent > 0 ? (chSpent / totalActualSpent) * 100 : 0;
+          const burnRate = ch.budget > 0 ? (chSpent / ch.budget) * 100 : 0;
           const sliceColor = channelColorPalette[idx % channelColorPalette.length];
-          const seg = document.createElement('div');
-          seg.style.width = `${pct}%`;
-          seg.style.backgroundColor = sliceColor;
-          seg.className = "h-full transition-all relative group flex items-center justify-center text-white text-[10px] font-black overflow-hidden px-1";
-          seg.title = `${ch.name}: ฿${ch.budget.toLocaleString()} (${pct.toFixed(1)}%)`;
-          if (pct >= 8) {
-            seg.innerText = `${pct.toFixed(0)}%`;
-          }
-          barContainer.appendChild(seg);
+
+          return {
+            id: ch.id,
+            name: ch.name,
+            platformName: ch.platformName,
+            color: sliceColor,
+            budget: ch.budget,
+            spent: chSpent,
+            planSharePct: planSharePct,
+            actSharePct: actSharePct,
+            burnRate: burnRate
+          };
         });
 
+        channelSummaries.sort((a, b) => b.budget - a.budget);
+
+        // 1. Render Planned Bar for Channels
+        channelSummaries.forEach(ch => {
+          if (ch.planSharePct <= 0) return;
+          const seg = document.createElement('div');
+          seg.style.width = `${ch.planSharePct}%`;
+          seg.style.backgroundColor = ch.color;
+          seg.className = "h-full transition-all relative flex items-center justify-center text-white text-[10px] font-black overflow-hidden px-0.5";
+          seg.title = `Planned ${ch.name}: ฿${ch.budget.toLocaleString()} (${ch.planSharePct.toFixed(1)}%)`;
+          if (ch.planSharePct >= 7) {
+            seg.innerText = `${ch.planSharePct.toFixed(0)}%`;
+          }
+          planBarContainer.appendChild(seg);
+        });
+
+        // 2. Render Actual Spend Bar for Channels
+        if (actBarContainer) {
+          if (totalActualSpent === 0) {
+            actBarContainer.innerHTML = '<div class="w-full h-full flex items-center justify-center text-[10px] text-slate-400 italic">No spend logged yet</div>';
+          } else {
+            channelSummaries.forEach(ch => {
+              if (ch.actSharePct <= 0) return;
+              const seg = document.createElement('div');
+              seg.style.width = `${ch.actSharePct}%`;
+              seg.style.backgroundColor = ch.color;
+              seg.className = "h-full transition-all relative flex items-center justify-center text-white text-[10px] font-black overflow-hidden px-0.5";
+              seg.title = `Actual ${ch.name}: ฿${ch.spent.toLocaleString()} (${ch.actSharePct.toFixed(1)}%)`;
+              if (ch.actSharePct >= 7) {
+                seg.innerText = `${ch.actSharePct.toFixed(0)}%`;
+              }
+              actBarContainer.appendChild(seg);
+            });
+          }
+        }
+
+        // 3. Render Comparative Breakdown Cards for Channels
         if (summaryList) {
           summaryList.innerHTML = '';
-          sortedChannels.forEach((ch, idx) => {
-            const pctNum = masterTotal > 0 ? ((ch.budget / masterTotal) * 100) : 0;
-            const pct = pctNum.toFixed(1);
-            const sliceColor = channelColorPalette[idx % channelColorPalette.length];
+          channelSummaries.forEach(ch => {
+            const planPct = ch.planSharePct.toFixed(1);
+            const actPct = ch.actSharePct.toFixed(1);
+            const variance = (ch.actSharePct - ch.planSharePct).toFixed(1);
+            const isOverShare = Number(variance) > 0.5;
+            const isUnderShare = Number(variance) < -0.5;
+
+            let varianceBadgeClass = "bg-slate-100 text-slate-600";
+            let varianceText = "On Plan";
+            if (totalActualSpent > 0) {
+              if (isOverShare) {
+                varianceBadgeClass = "bg-rose-50 text-rose-700 border border-rose-200";
+                varianceText = `+${variance}% Over Share`;
+              } else if (isUnderShare) {
+                varianceBadgeClass = "bg-blue-50 text-blue-700 border border-blue-200";
+                varianceText = `${variance}% Under Share`;
+              } else {
+                varianceBadgeClass = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+                varianceText = "Balanced";
+              }
+            } else {
+              varianceText = "No Spend";
+            }
 
             const row = document.createElement('div');
-            row.className = "p-2 rounded-xl bg-slate-50 hover:bg-slate-100/70 border border-slate-200/80 transition flex flex-col gap-1.5";
+            row.className = "p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100/70 border border-slate-200/80 transition flex flex-col gap-2";
             row.innerHTML = `
               <div class="flex items-center justify-between text-xs">
                 <div class="flex items-center space-x-2 truncate">
-                  <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${sliceColor}"></span>
+                  <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${ch.color}"></span>
                   <span class="font-bold text-slate-800 truncate">${ch.name}</span>
                   <span class="text-[10px] text-slate-400">(${ch.platformName})</span>
                 </div>
-                <div class="flex items-center space-x-2 shrink-0">
-                  <span class="px-2 py-0.5 rounded-md font-extrabold text-[11px] bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    ${pct}%
+                <div class="flex items-center space-x-1.5 shrink-0">
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${varianceBadgeClass}">
+                    ${varianceText}
                   </span>
-                  <span class="font-bold text-slate-900 text-xs">฿${ch.budget.toLocaleString()}</span>
+                  <span class="text-[10px] font-extrabold text-slate-700">${ch.burnRate.toFixed(1)}% Spent</span>
                 </div>
               </div>
-              <div class="w-full bg-slate-200 rounded-full h-1 overflow-hidden">
-                <div class="h-1 rounded-full" style="width: ${pctNum}%; background-color: ${sliceColor}"></div>
+
+              <div class="grid grid-cols-2 gap-2 text-[11px] bg-white p-2 rounded-lg border border-slate-200/80">
+                <div>
+                  <div class="flex justify-between text-[10px] mb-0.5">
+                    <span class="text-slate-500">Plan Share:</span>
+                    <span class="font-bold text-indigo-700">${planPct}% (฿${ch.budget.toLocaleString()})</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
+                    <div class="h-1 rounded-full" style="width: ${ch.planSharePct}%; background-color: ${ch.color}"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-[10px] mb-0.5">
+                    <span class="text-slate-500">Actual Share:</span>
+                    <span class="font-bold text-emerald-700">${totalActualSpent > 0 ? actPct + '%' : '0.0%'} (฿${ch.spent.toLocaleString()})</span>
+                  </div>
+                  <div class="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
+                    <div class="h-1 rounded-full bg-emerald-500" style="width: ${ch.actSharePct}%;"></div>
+                  </div>
+                </div>
               </div>
             `;
             summaryList.appendChild(row);
@@ -4191,6 +4363,47 @@
       const container = document.getElementById('calendarDayTypeSelector');
       if (!container || !currentProject) return;
 
+      if (!currentProject.dayTypeWeights) {
+        currentProject.dayTypeWeights = { DDAY: 4.0, MIDMONTH: 2.2, PAYDAY: 2.8, NORMAL: 1.0 };
+      }
+      const weights = currentProject.dayTypeWeights;
+
+      // Populate weight multiplier inputs with saved project values
+      const inDday = document.getElementById('weightDday');
+      const inMid = document.getElementById('weightMidmonth');
+      const inPay = document.getElementById('weightPayday');
+      const inNorm = document.getElementById('weightNormal');
+
+      if (inDday && !inDday.matches(':focus')) inDday.value = weights.DDAY ?? 4.0;
+      if (inMid && !inMid.matches(':focus')) inMid.value = weights.MIDMONTH ?? 2.2;
+      if (inPay && !inPay.matches(':focus')) inPay.value = weights.PAYDAY ?? 2.8;
+      if (inNorm && !inNorm.matches(':focus')) inNorm.value = weights.NORMAL ?? 1.0;
+
+      // Calculate planned spend & day counts per tier
+      const tierSums = {
+        DDAY: { total: 0, count: 0 },
+        MIDMONTH: { total: 0, count: 0 },
+        PAYDAY: { total: 0, count: 0 },
+        NORMAL: { total: 0, count: 0 }
+      };
+
+      (currentProject.dailyData || []).forEach(d => {
+        if (tierSums[d.type]) {
+          tierSums[d.type].total += (d.plannedSpend || 0);
+          tierSums[d.type].count++;
+        }
+      });
+
+      const sumD = document.getElementById('summaryDdayAlloc');
+      const sumM = document.getElementById('summaryMidmonthAlloc');
+      const sumP = document.getElementById('summaryPaydayAlloc');
+      const sumN = document.getElementById('summaryNormalAlloc');
+
+      if (sumD) sumD.innerText = `Planned/Day: ~฿${tierSums.DDAY.count > 0 ? Math.round(tierSums.DDAY.total / tierSums.DDAY.count).toLocaleString() : '0'} (${tierSums.DDAY.count} days)`;
+      if (sumM) sumM.innerText = `Planned/Day: ~฿${tierSums.MIDMONTH.count > 0 ? Math.round(tierSums.MIDMONTH.total / tierSums.MIDMONTH.count).toLocaleString() : '0'} (${tierSums.MIDMONTH.count} days)`;
+      if (sumP) sumP.innerText = `Planned/Day: ~฿${tierSums.PAYDAY.count > 0 ? Math.round(tierSums.PAYDAY.total / tierSums.PAYDAY.count).toLocaleString() : '0'} (${tierSums.PAYDAY.count} days)`;
+      if (sumN) sumN.innerText = `Planned/Day: ~฿${tierSums.NORMAL.count > 0 ? Math.round(tierSums.NORMAL.total / tierSums.NORMAL.count).toLocaleString() : '0'} (${tierSums.NORMAL.count} days)`;
+
       container.innerHTML = '';
       (currentProject.dailyData || []).forEach(d => {
         const btn = document.createElement('button');
@@ -4214,7 +4427,7 @@
       dayObj.type = cycle[nextIdx];
 
       autoDistributePlannedBudget();
-      scheduleAutoSave();
+      saveCurrentProject(true);
     }
 
     function updateWeights() {
@@ -4233,8 +4446,8 @@
       };
 
       autoDistributePlannedBudget();
-      scheduleAutoSave();
-      showToast('Updated Day Weights!');
+      saveCurrentProject(true);
+      showToast('Updated & Saved Day Weights!');
     }
 
     function exportSpendToCSV() {
